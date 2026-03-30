@@ -70,14 +70,14 @@ export function Modal({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 transition-opacity"
+        className="fixed inset-0 bg-black/50 transition-opacity duration-200 animate-fade-in"
         onClick={handleBackdropClick}
       />
       
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div 
-          className={`relative bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} transform transition-all ${className}`}
+          className={`relative bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} transform transition-all duration-200 animate-scale-in ${className}`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

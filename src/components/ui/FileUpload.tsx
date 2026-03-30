@@ -130,9 +130,9 @@ export function FileUpload({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`
-          border-2 border-dashed rounded-lg p-8 text-center transition-all
+          border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200
           ${isDragging 
-            ? 'border-primary bg-primary/5' 
+            ? 'border-primary bg-primary/5 scale-[1.02]' 
             : 'border-gray-300 hover:border-primary/50'
           }
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
@@ -150,8 +150,8 @@ export function FileUpload({
         />
 
         <div className="flex flex-col items-center gap-3">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-            isDragging ? 'bg-primary/20' : 'bg-gray-100'
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 ${
+            isDragging ? 'bg-primary/20 scale-110' : 'bg-gray-100'
           }`}>
             <Upload className={`w-8 h-8 ${isDragging ? 'text-primary' : 'text-gray-400'}`} />
           </div>
@@ -195,7 +195,7 @@ export function FileUpload({
             </p>
             <button
               onClick={() => setSelectedFiles([])}
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               Clear all
             </button>

@@ -12,9 +12,9 @@ export function Card({ children, className = '', title, accent = false, hover = 
   return (
     <div
       className={`
-        bg-white rounded-lg shadow
+        bg-white rounded-lg shadow transition-all duration-200
         ${accent ? 'border-l-4 border-primary' : ''}
-        ${hover ? 'hover:shadow-md transition-shadow' : ''}
+        ${hover ? 'hover:shadow-lg hover:-translate-y-0.5' : ''}
         ${className}
       `}
     >

@@ -40,13 +40,13 @@ export function SlidePanel({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+        className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 animate-fade-in"
         onClick={onClose}
       />
 
       {/* Panel */}
       <div
-        className={`fixed top-0 right-0 h-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ${
+        className={`fixed top-0 right-0 h-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out animate-slide-in-right ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         } ${sizeClasses[size]} w-full`}
       >
