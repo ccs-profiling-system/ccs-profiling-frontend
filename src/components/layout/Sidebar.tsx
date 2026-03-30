@@ -23,10 +23,10 @@ export function Sidebar() {
               <NavLink
                 to={link.to}
                 className={({ isActive }) =>
-                  `block px-4 py-3 rounded-lg transition ${
+                  `block px-4 py-3 rounded-lg transition-all duration-200 ${
                     isActive
-                      ? 'bg-primary-dark text-white font-semibold'
-                      : 'text-white/90 hover:bg-primary-dark hover:text-white'
+                      ? 'bg-primary-dark text-white font-semibold shadow-md border-l-4 border-white'
+                      : 'text-white/90 hover:bg-primary-dark hover:text-white hover:shadow-sm hover:translate-x-1'
                   }`
                 }
               >
