@@ -93,7 +93,7 @@ export function SearchBar({
     }
   };
 
-  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && onSearch) {
       // Clear debounce timer and search immediately on Enter
       if (debounceTimerRef.current) {
@@ -133,7 +133,7 @@ export function SearchBar({
         type="text"
         value={value}
         onChange={handleChange}
-        onKeyPress={handleKeyPress}
+        onKeyDown={handleKeyDown}
         onFocus={() => value && showResults && setIsOpen(true)}
         placeholder={placeholder}
         className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"

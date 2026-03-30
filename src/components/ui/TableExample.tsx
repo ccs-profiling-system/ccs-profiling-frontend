@@ -68,7 +68,7 @@ export function StudentTableExample() {
       key: 'actions',
       header: 'Actions',
       align: 'center',
-      render: (student) => (
+      render: () => (
         <div className="flex items-center justify-center gap-2">
           <button className="p-1 hover:bg-primary/10 rounded transition">
             <Eye className="w-4 h-4 text-gray-600" />

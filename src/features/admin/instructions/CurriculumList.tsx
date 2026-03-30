@@ -1,6 +1,23 @@
 import { useState } from 'react';
-import { Card, Table, type Column, SearchBar, ExportButtons, Modal } from '@/components/layout';
-import { Plus, Edit, Trash2, Eye, BookOpen } from 'lucide-react';
+import { Card, SearchBar, ExportButtons, Modal } from '@/components/ui';
+import { Plus, Edit, Trash2, Eye, BookOpen, ChevronDown, ChevronRight } from 'lucide-react';
+
+export interface Column<T> {
+  key: string;
+  header: string;
+  render?: (item: T) => React.ReactNode;
+  width?: string;
+  align?: 'left' | 'center' | 'right';
+}
+
+interface Subject {
+  id: number;
+  code: string;
+  name: string;
+  units: number;
+  semester: number;
+  yearLevel: number;
+}
 
 interface Curriculum {
   id: number;
@@ -11,19 +28,29 @@ interface Curriculum {
   effectiveYear: string;
   status: 'active' | 'inactive' | 'archived';
   subjects: number;
+  subjectList?: Subject[];
 }
 
 export function CurriculumList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCurriculum, setSelectedCurriculum] = useState<Curriculum | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+
+  const sampleSubjects: Subject[] = [
+    { id: 1, code: 'CS101', name: 'Introduction to Programming', units: 3, semester: 1, yearLevel: 1 },
+    { id: 2, code: 'CS102', name: 'Data Structures', units: 3, semester: 2, yearLevel: 1 },
+    { id: 3, code: 'CS201', name: 'Object-Oriented Programming', units: 3, semester: 1, yearLevel: 2 },
+    { id: 4, code: 'CS202', name: 'Database Systems', units: 3, semester: 2, yearLevel: 2 },
+    { id: 5, code: 'CS301', name: 'Software Engineering', units: 3, semester: 1, yearLevel: 3 },
+  ];
 
   const curriculumData: Curriculum[] = [
-    { id: 1, code: 'BSCS-2024', name: 'BS Computer Science 2024', program: 'BSCS', yearLevel: 4, effectiveYear: '2024', status: 'active', subjects: 45 },
-    { id: 2, code: 'BSIT-2024', name: 'BS Information Technology 2024', program: 'BSIT', yearLevel: 4, effectiveYear: '2024', status: 'active', subjects: 42 },
-    { id: 3, code: 'BSIS-2024', name: 'BS Information Systems 2024', program: 'BSIS', yearLevel: 4, effectiveYear: '2024', status: 'active', subjects: 40 },
-    { id: 4, code: 'BSCS-2023', name: 'BS Computer Science 2023', program: 'BSCS', yearLevel: 4, effectiveYear: '2023', status: 'inactive', subjects: 44 },
-    { id: 5, code: 'ACT-2024', name: 'Associate in Computer Technology 2024', program: 'ACT', yearLevel: 2, effectiveYear: '2024', status: 'active', subjects: 28 },
+    { id: 1, code: 'BSCS-2024', name: 'BS Computer Science 2024', program: 'BSCS', yearLevel: 4, effectiveYear: '2024', status: 'active', subjects: 45, subjectList: sampleSubjects },
+    { id: 2, code: 'BSIT-2024', name: 'BS Information Technology 2024', program: 'BSIT', yearLevel: 4, effectiveYear: '2024', status: 'active', subjects: 42, subjectList: sampleSubjects.slice(0, 3) },
+    { id: 3, code: 'BSIS-2024', name: 'BS Information Systems 2024', program: 'BSIS', yearLevel: 4, effectiveYear: '2024', status: 'active', subjects: 40, subjectList: sampleSubjects.slice(0, 4) },
+    { id: 4, code: 'BSCS-2023', name: 'BS Computer Science 2023', program: 'BSCS', yearLevel: 4, effectiveYear: '2023', status: 'inactive', subjects: 44, subjectList: sampleSubjects },
+    { id: 5, code: 'ACT-2024', name: 'Associate in Computer Technology 2024', program: 'ACT', yearLevel: 2, effectiveYear: '2024', status: 'active', subjects: 28, subjectList: sampleSubjects.slice(0, 2) },
   ];
 
   const filteredData = curriculumData.filter(
@@ -33,7 +60,37 @@ export function CurriculumList() {
       item.program.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const toggleExpand = (id: number) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedRows(newExpanded);
+  };
+
   const columns: Column<Curriculum>[] = [
+    {
+      key: 'expand',
+      header: '',
+      width: '50px',
+      render: (item) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleExpand(item.id);
+          }}
+          className="p-1 hover:bg-primary/10 rounded transition"
+        >
+          {expandedRows.has(item.id) ? (
+            <ChevronDown className="w-5 h-5 text-primary" />
+          ) : (
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          )}
+        </button>
+      ),
+    },
     {
       key: 'code',
       header: 'Code',
@@ -205,18 +262,95 @@ export function CurriculumList() {
         </Card>
       </div>
 
-      {/* Table */}
+      {/* Table with Expandable Rows */}
       <Card>
-        <Table
-          data={filteredData}
-          columns={columns}
-          onRowClick={(item) => {
-            setSelectedCurriculum(item);
-            setIsModalOpen(true);
-          }}
-          hoverable
-          emptyMessage="No curriculum found"
-        />
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                {columns.map((column) => (
+                  <th
+                    key={column.key}
+                    className={`px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider ${
+                      column.align === 'center' ? 'text-center' : 
+                      column.align === 'right' ? 'text-right' : 'text-left'
+                    }`}
+                    style={{ width: column.width }}
+                  >
+                    {column.header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredData.map((item) => (
+                <>
+                  {/* Main Row */}
+                  <tr
+                    key={item.id}
+                    onClick={() => toggleExpand(item.id)}
+                    className="hover:bg-primary/5 transition-colors cursor-pointer"
+                  >
+                    {columns.map((column) => (
+                      <td
+                        key={column.key}
+                        className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${
+                          column.align === 'center' ? 'text-center' : 
+                          column.align === 'right' ? 'text-right' : 'text-left'
+                        }`}
+                      >
+                        {column.render ? column.render(item) : String(item[column.key as keyof Curriculum] ?? '')}
+                      </td>
+                    ))}
+                  </tr>
+                  
+                  {/* Expanded Row - Subject List */}
+                  {expandedRows.has(item.id) && item.subjectList && (
+                    <tr>
+                      <td colSpan={columns.length} className="px-6 py-4 bg-gray-50">
+                        <div className="space-y-3">
+                          <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+                            <BookOpen className="w-4 h-4 text-primary" />
+                            Subjects ({item.subjectList.length})
+                          </h4>
+                          <div className="grid gap-2">
+                            {item.subjectList.map((subject) => (
+                              <div
+                                key={subject.id}
+                                className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-primary transition"
+                              >
+                                <div className="flex items-center gap-4">
+                                  <span className="px-3 py-1 bg-primary/10 text-primary rounded font-mono text-sm font-medium">
+                                    {subject.code}
+                                  </span>
+                                  <div>
+                                    <p className="font-medium text-gray-900">{subject.name}</p>
+                                    <p className="text-xs text-gray-500">
+                                      Year {subject.yearLevel} • Semester {subject.semester}
+                                    </p>
+                                  </div>
+                                </div>
+                                <span className="text-sm text-gray-600 font-medium">
+                                  {subject.units} {subject.units === 1 ? 'unit' : 'units'}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              ))}
+            </tbody>
+          </table>
+          
+          {filteredData.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              No curriculum found
+            </div>
+          )}
+        </div>
       </Card>
 
       {/* View Modal */}
