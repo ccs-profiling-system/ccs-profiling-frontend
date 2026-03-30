@@ -9,5 +9,7 @@ export { Table } from './Table';
 export { ExportButtons } from './ExportButtons';
 export { SlidePanel } from './SlidePanel';
 export { FileViewer } from './FileViewer';
+export { Button } from './Button';
 export type { SearchResult } from './SearchBar';
 export type { Column } from './Table';
+export type { ButtonProps } from './Button';
