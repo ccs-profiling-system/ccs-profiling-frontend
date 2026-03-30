@@ -1,6 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-primary: rgb(234 88 12);
+  --color-primary-dark: rgb(194 65 12);
+  --color-secondary: rgb(239 68 68);
+}
 
 * {
   margin: 0;
