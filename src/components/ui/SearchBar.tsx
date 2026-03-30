@@ -1,5 +1,5 @@
 import { Search, X } from 'lucide-react';
-import { useState, ChangeEvent, KeyboardEvent } from 'react';
+import { useState, ChangeEvent, KeyboardEvent, useEffect, useRef } from 'react';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -7,6 +7,7 @@ interface SearchBarProps {
   onChange?: (query: string) => void;
   value?: string;
   className?: string;
+  debounceMs?: number;
 }
 
 export function SearchBar({ 
@@ -14,22 +15,52 @@ export function SearchBar({
   onSearch, 
   onChange,
   value: controlledValue,
-  className = '' 
+  className = '',
+  debounceMs = 300
 }: SearchBarProps) {
   const [internalValue, setInternalValue] = useState('');
   const isControlled = controlledValue !== undefined;
   const value = isControlled ? controlledValue : internalValue;
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+    
+    // Update internal state immediately for responsive UI
     if (!isControlled) {
       setInternalValue(newValue);
     }
+    
+    // Call onChange immediately if provided
     onChange?.(newValue);
+
+    // Debounce the onSearch callback
+    if (onSearch) {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      
+      debounceTimerRef.current = setTimeout(() => {
+        onSearch(newValue);
+      }, debounceMs);
+    }
   };
 
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && onSearch) {
+      // Clear debounce timer and search immediately on Enter
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
       onSearch(value);
     }
   };
@@ -38,6 +69,12 @@ export function SearchBar({
     if (!isControlled) {
       setInternalValue('');
     }
+    
+    // Clear debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
     onChange?.('');
     onSearch?.('');
   };
