@@ -1,4 +1,5 @@
 import { Search, Menu } from 'lucide-react';
+import { SearchBar } from '../ui/SearchBar';
 
 interface NavbarProps {
   title?: string;
@@ -6,6 +7,11 @@ interface NavbarProps {
 }
 
 export function Navbar({ title = 'Dashboard', onMenuClick }: NavbarProps) {
+  const handleSearch = (query: string) => {
+    console.log('Search query:', query);
+    // Implement search functionality here
+  };
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
       <div className="px-4 lg:px-6 py-4">
@@ -24,14 +30,11 @@ export function Navbar({ title = 'Dashboard', onMenuClick }: NavbarProps) {
 
           {/* Search Input - Hidden on small screens */}
           <div className="hidden md:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
-              />
-            </div>
+            <SearchBar 
+              placeholder="Search..." 
+              onSearch={handleSearch}
+              className="w-full"
+            />
           </div>
 
           {/* Right Section - User Info Placeholder */}
