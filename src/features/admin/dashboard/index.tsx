@@ -1,5 +1,5 @@
 import { MainLayout, Card } from '@/components/layout';
-import { Users, BookOpen, FileText, TrendingUp, GraduationCap, Calendar, FlaskConical } from 'lucide-react';
+import { Users, BookOpen, FileText, TrendingUp, GraduationCap, Calendar, FlaskConical, AlertCircle } from 'lucide-react';
 
 export function AdminDashboard() {
   const stats = [
@@ -16,6 +16,15 @@ export function AdminDashboard() {
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
           <p className="text-gray-600 mt-1">Welcome to CCS Profiling System</p>
+        </div>
+
+        {/* Alert Banner */}
+        <div className="bg-secondary/10 border-l-4 border-secondary p-4 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-secondary">Action Required</p>
+            <p className="text-sm text-gray-700 mt-1">3 faculty members have pending profile updates. Please review and approve.</p>
+          </div>
         </div>
 
         {/* Stats Grid - Responsive: 1 col mobile, 2 cols tablet, 4 cols desktop */}
@@ -52,6 +61,11 @@ export function AdminDashboard() {
                 <span className="text-sm text-gray-700">New Enrollments</span>
                 <span className="font-semibold text-primary">+23</span>
               </div>
+              {/* Warning Alert */}
+              <div className="flex items-center gap-2 p-3 bg-secondary/10 border border-secondary/20 rounded-lg">
+                <AlertCircle className="w-4 h-4 text-secondary flex-shrink-0" />
+                <span className="text-xs text-secondary font-medium">5 students with incomplete profiles</span>
+              </div>
               <button className="w-full mt-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition text-sm">
                 View All Students
               </button>
@@ -69,9 +83,14 @@ export function AdminDashboard() {
                 <span className="text-sm text-gray-700">Part-time Faculty</span>
                 <span className="font-semibold text-gray-900">22</span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm text-gray-700">On Leave</span>
+              <div className="flex justify-between items-center p-3 bg-secondary/10 border border-secondary/20 rounded-lg">
+                <span className="text-sm text-secondary font-medium">On Leave</span>
                 <span className="font-semibold text-secondary">3</span>
+              </div>
+              {/* Warning Alert */}
+              <div className="flex items-center gap-2 p-3 bg-secondary/10 border border-secondary/20 rounded-lg">
+                <AlertCircle className="w-4 h-4 text-secondary flex-shrink-0" />
+                <span className="text-xs text-secondary font-medium">2 pending approvals required</span>
               </div>
               <button className="w-full mt-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition text-sm">
                 Manage Faculty
@@ -83,9 +102,9 @@ export function AdminDashboard() {
           <Card title="Events" accent>
             <div className="space-y-3">
               {[
-                { title: 'Research Symposium', date: 'April 5, 2026', status: 'Upcoming' },
-                { title: 'Faculty Meeting', date: 'April 2, 2026', status: 'This Week' },
-                { title: 'Student Orientation', date: 'April 10, 2026', status: 'Upcoming' },
+                { title: 'Research Symposium', date: 'April 5, 2026', status: 'Upcoming', urgent: false },
+                { title: 'Faculty Meeting', date: 'April 2, 2026', status: 'This Week', urgent: true },
+                { title: 'Student Orientation', date: 'April 10, 2026', status: 'Upcoming', urgent: false },
               ].map((event, index) => (
                 <div key={index} className="p-3 bg-gray-50 rounded-lg">
                   <div className="flex justify-between items-start">
@@ -93,12 +112,21 @@ export function AdminDashboard() {
                       <p className="font-medium text-gray-800 text-sm">{event.title}</p>
                       <p className="text-xs text-gray-600 mt-1">{event.date}</p>
                     </div>
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      event.urgent 
+                        ? 'bg-secondary/10 text-secondary border border-secondary/20' 
+                        : 'bg-primary/10 text-primary'
+                    }`}>
                       {event.status}
                     </span>
                   </div>
                 </div>
               ))}
+              {/* Warning Alert */}
+              <div className="flex items-center gap-2 p-3 bg-secondary/10 border border-secondary/20 rounded-lg">
+                <AlertCircle className="w-4 h-4 text-secondary flex-shrink-0" />
+                <span className="text-xs text-secondary font-medium">1 event needs confirmation</span>
+              </div>
               <button className="w-full mt-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition text-sm">
                 View All Events
               </button>
@@ -115,6 +143,10 @@ export function AdminDashboard() {
               <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <span className="text-sm text-gray-700">Completed</span>
                 <span className="font-semibold text-gray-900">6</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-secondary/10 border border-secondary/20 rounded-lg">
+                <span className="text-sm text-secondary font-medium">Pending Review</span>
+                <span className="font-semibold text-secondary">4</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <span className="text-sm text-gray-700">Publications</span>
@@ -133,10 +165,10 @@ export function AdminDashboard() {
           <Card className="lg:col-span-2" title="Recent Activity">
             <div className="space-y-4">
               {[
-                { text: 'New student enrolled in BSCS program', time: '2 hours ago' },
-                { text: 'Faculty member published research paper', time: '5 hours ago' },
-                { text: 'Event "Research Symposium" scheduled', time: '1 day ago' },
-                { text: 'System backup completed successfully', time: '1 day ago' },
+                { text: 'New student enrolled in BSCS program', time: '2 hours ago', type: 'normal' },
+                { text: 'Faculty member published research paper', time: '5 hours ago', type: 'normal' },
+                { text: 'Event "Research Symposium" scheduled', time: '1 day ago', type: 'normal' },
+                { text: 'System backup completed successfully', time: '1 day ago', type: 'normal' },
               ].map((item, index) => (
                 <div key={index} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition">
                   <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
@@ -163,8 +195,9 @@ export function AdminDashboard() {
               <button className="w-full bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 px-4 py-3 rounded-lg transition text-left">
                 Schedule Event
               </button>
-              <button className="w-full bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 px-4 py-3 rounded-lg transition text-left">
-                View Analytics
+              <button className="w-full bg-secondary hover:bg-red-600 text-white px-4 py-3 rounded-lg transition text-left flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                Review Pending Items
               </button>
             </div>
           </Card>
