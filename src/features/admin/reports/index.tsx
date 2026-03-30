@@ -1,40 +1,86 @@
+import { useState } from 'react';
 import { MainLayout, Card } from '@/components/layout';
 import { FileText, Download, Filter, Calendar, Users, TrendingUp } from 'lucide-react';
 
 export function Reports() {
+  const [selectedModule, setSelectedModule] = useState('all');
+  const [selectedDateRange, setSelectedDateRange] = useState('30days');
+  const [filteredReports, setFilteredReports] = useState<any[]>([]);
+
   const reportTypes = [
     { 
       title: 'Student Reports', 
       description: 'Generate comprehensive student performance and enrollment reports',
       icon: Users,
-      color: 'bg-blue-500'
+      color: 'bg-blue-500',
+      module: 'students'
     },
     { 
       title: 'Faculty Reports', 
       description: 'View faculty workload, performance, and activity reports',
       icon: Users,
-      color: 'bg-green-500'
+      color: 'bg-green-500',
+      module: 'faculty'
     },
     { 
       title: 'Research Reports', 
       description: 'Track research projects, publications, and outcomes',
       icon: TrendingUp,
-      color: 'bg-primary'
+      color: 'bg-primary',
+      module: 'research'
     },
     { 
       title: 'Event Reports', 
       description: 'Analyze event attendance and participation metrics',
       icon: Calendar,
-      color: 'bg-purple-500'
+      color: 'bg-purple-500',
+      module: 'events'
     },
   ];
 
-  const recentReports = [
-    { name: 'Student Enrollment Report Q1 2026', date: 'March 28, 2026', size: '2.4 MB' },
-    { name: 'Faculty Performance Review', date: 'March 25, 2026', size: '1.8 MB' },
-    { name: 'Research Output Summary', date: 'March 20, 2026', size: '3.1 MB' },
-    { name: 'Event Attendance Report', date: 'March 15, 2026', size: '1.2 MB' },
+  const allReports = [
+    { name: 'Student Enrollment Report Q1 2026', date: 'March 28, 2026', size: '2.4 MB', module: 'students', timestamp: new Date('2026-03-28') },
+    { name: 'Faculty Performance Review', date: 'March 25, 2026', size: '1.8 MB', module: 'faculty', timestamp: new Date('2026-03-25') },
+    { name: 'Research Output Summary', date: 'March 20, 2026', size: '3.1 MB', module: 'research', timestamp: new Date('2026-03-20') },
+    { name: 'Event Attendance Report', date: 'March 15, 2026', size: '1.2 MB', module: 'events', timestamp: new Date('2026-03-15') },
+    { name: 'Student Grade Distribution', date: 'February 28, 2026', size: '1.9 MB', module: 'students', timestamp: new Date('2026-02-28') },
+    { name: 'Faculty Teaching Load', date: 'February 15, 2026', size: '2.2 MB', module: 'faculty', timestamp: new Date('2026-02-15') },
   ];
+
+  const handleApplyFilters = () => {
+    let filtered = [...allReports];
+
+    // Filter by module
+    if (selectedModule !== 'all') {
+      filtered = filtered.filter(report => report.module === selectedModule);
+    }
+
+    // Filter by date range
+    const now = new Date('2026-03-30'); // Current date from context
+    let cutoffDate = new Date(now);
+
+    switch (selectedDateRange) {
+      case '30days':
+        cutoffDate.setDate(now.getDate() - 30);
+        break;
+      case '3months':
+        cutoffDate.setMonth(now.getMonth() - 3);
+        break;
+      case '6months':
+        cutoffDate.setMonth(now.getMonth() - 6);
+        break;
+      case '1year':
+        cutoffDate.setFullYear(now.getFullYear() - 1);
+        break;
+      default:
+        cutoffDate = new Date(0); // Show all
+    }
+
+    filtered = filtered.filter(report => report.timestamp >= cutoffDate);
+    setFilteredReports(filtered);
+  };
+
+  const displayReports = filteredReports.length > 0 ? filteredReports : allReports;
 
   return (
     <MainLayout title="Reports">
@@ -58,24 +104,80 @@ export function Reports() {
               <Filter className="w-5 h-5 text-gray-500" />
               <span className="text-sm font-medium text-gray-700">Filters:</span>
             </div>
-            <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-              <option>All Report Types</option>
-              <option>Student Reports</option>
-              <option>Faculty Reports</option>
-              <option>Research Reports</option>
-              <option>Event Reports</option>
-            </select>
-            <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-              <option>Last 30 Days</option>
-              <option>Last 3 Months</option>
-              <option>Last 6 Months</option>
-              <option>Last Year</option>
-              <option>Custom Range</option>
-            </select>
-            <button className="px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition text-sm">
+            
+            {/* Module Type Filter */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-600">Module Type</label>
+              <select 
+                value={selectedModule}
+                onChange={(e) => setSelectedModule(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+              >
+                <option value="all">All Modules</option>
+                <option value="students">Student Reports</option>
+                <option value="faculty">Faculty Reports</option>
+                <option value="research">Research Reports</option>
+                <option value="events">Event Reports</option>
+              </select>
+            </div>
+
+            {/* Date Range Filter */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-600">Date Range</label>
+              <select 
+                value={selectedDateRange}
+                onChange={(e) => setSelectedDateRange(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+              >
+                <option value="30days">Last 30 Days</option>
+                <option value="3months">Last 3 Months</option>
+                <option value="6months">Last 6 Months</option>
+                <option value="1year">Last Year</option>
+                <option value="all">All Time</option>
+              </select>
+            </div>
+
+            <button 
+              onClick={handleApplyFilters}
+              className="px-6 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition text-sm font-medium mt-auto"
+            >
               Apply Filters
             </button>
+
+            {(selectedModule !== 'all' || selectedDateRange !== '30days') && (
+              <button 
+                onClick={() => {
+                  setSelectedModule('all');
+                  setSelectedDateRange('30days');
+                  setFilteredReports([]);
+                }}
+                className="px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition text-sm mt-auto"
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
+
+          {/* Active Filters Display */}
+          {(selectedModule !== 'all' || selectedDateRange !== '30days') && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-gray-600">Active filters:</span>
+                {selectedModule !== 'all' && (
+                  <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                    Module: {selectedModule}
+                  </span>
+                )}
+                {selectedDateRange !== '30days' && (
+                  <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                    Range: {selectedDateRange === '3months' ? '3 Months' : 
+                            selectedDateRange === '6months' ? '6 Months' : 
+                            selectedDateRange === '1year' ? '1 Year' : 'All Time'}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Report Types Grid */}
@@ -101,29 +203,43 @@ export function Reports() {
 
         {/* Recent Reports */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Recent Reports</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">
+              {filteredReports.length > 0 ? 'Filtered Reports' : 'Recent Reports'}
+            </h2>
+            <span className="text-sm text-gray-500">
+              Showing {displayReports.length} report{displayReports.length !== 1 ? 's' : ''}
+            </span>
+          </div>
           <Card>
-            <div className="space-y-3">
-              {recentReports.map((report, index) => (
-                <div 
-                  key={index} 
-                  className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-primary" />
+            {displayReports.length > 0 ? (
+              <div className="space-y-3">
+                {displayReports.map((report, index) => (
+                  <div 
+                    key={index} 
+                    className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">{report.name}</p>
+                        <p className="text-sm text-gray-500">{report.date} • {report.size}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-800">{report.name}</p>
-                      <p className="text-sm text-gray-500">{report.date} • {report.size}</p>
-                    </div>
+                    <button className="p-2 hover:bg-primary/10 rounded-lg transition group">
+                      <Download className="w-5 h-5 text-gray-600 group-hover:text-primary" />
+                    </button>
                   </div>
-                  <button className="p-2 hover:bg-primary/10 rounded-lg transition group">
-                    <Download className="w-5 h-5 text-gray-600 group-hover:text-primary" />
-                  </button>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No reports found matching your filters</p>
+              </div>
+            )}
           </Card>
         </div>
 
