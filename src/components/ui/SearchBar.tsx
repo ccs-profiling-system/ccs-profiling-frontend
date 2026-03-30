@@ -162,7 +162,7 @@ export function SearchBar({
                 <li key={result.id}>
                   <button
                     onClick={() => handleResultClick(result)}
-                    className="w-full px-4 py-3 text-left hover:bg-primary hover:text-white transition-colors flex items-center gap-3 group"
+                    className="w-full px-4 py-3 text-left hover:bg-primary-dark hover:text-white transition-colors flex items-center gap-3 group"
                   >
                     {result.icon && (
                       <div className="flex-shrink-0 text-gray-400 group-hover:text-white">

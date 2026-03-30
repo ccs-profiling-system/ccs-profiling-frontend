@@ -19,7 +19,7 @@ export function ExportButtons({
         <button
           onClick={onExportPDF}
           disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-red-600 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow hover:shadow-md"
+          className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/90 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow hover:shadow-md"
         >
           <FileDown className="w-4 h-4" />
           <span className="text-sm font-medium">Export PDF</span>
