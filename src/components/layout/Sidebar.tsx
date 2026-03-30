@@ -7,9 +7,9 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navLinks = [
-    { to: '/admin/dashboard', label: 'Dashboard' },
-    { to: '/admin/reports', label: 'Reports' },
-    { to: '/admin/instructions', label: 'Instructions' },
+    { to: '/dashboard', label: 'Dashboard' },
+    { to: '/reports', label: 'Reports' },
+    { to: '/instructions', label: 'Instructions' },
   ];
 
   return (

@@ -9,11 +9,10 @@ export function AppRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/reports" element={<Reports />} />
-        <Route path="/admin/instructions" element={<Instructions />} />
-        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/dashboard" element={<AdminDashboard />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/instructions" element={<Instructions />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );
