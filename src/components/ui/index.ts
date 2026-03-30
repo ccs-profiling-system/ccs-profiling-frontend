@@ -5,4 +5,6 @@ export { Spinner } from './Spinner';
 export { ErrorAlert } from './ErrorAlert';
 export { SearchBar } from './SearchBar';
 export { Modal } from './Modal';
+export { Table } from './Table';
 export type { SearchResult } from './SearchBar';
+export type { Column } from './Table';
