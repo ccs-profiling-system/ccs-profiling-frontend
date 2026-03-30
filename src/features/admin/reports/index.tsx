@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { MainLayout, Card } from '@/components/layout';
+import { MainLayout, Card, Modal } from '@/components/layout';
 import { FileText, Download, Filter, Calendar, Users, TrendingUp } from 'lucide-react';
 
 export function Reports() {
   const [selectedModule, setSelectedModule] = useState('all');
   const [selectedDateRange, setSelectedDateRange] = useState('30days');
   const [filteredReports, setFilteredReports] = useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedReportType, setSelectedReportType] = useState('');
 
   const reportTypes = [
     { 
@@ -82,6 +84,17 @@ export function Reports() {
 
   const displayReports = filteredReports.length > 0 ? filteredReports : allReports;
 
+  const handleGenerateReport = (reportType: string) => {
+    setSelectedReportType(reportType);
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmGenerate = () => {
+    console.log('Generating report:', selectedReportType);
+    // Add API call here
+    setIsModalOpen(false);
+  };
+
   return (
     <MainLayout title="Reports">
       <div className="space-y-6">
@@ -91,7 +104,10 @@ export function Reports() {
             <h1 className="text-3xl font-bold text-gray-800">Reports</h1>
             <p className="text-gray-600 mt-1">Generate and download system reports</p>
           </div>
-          <button className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg transition flex items-center gap-2">
+          <button 
+            onClick={() => handleGenerateReport('custom')}
+            className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg transition flex items-center gap-2 shadow-md hover:shadow-lg"
+          >
             <FileText className="w-5 h-5" />
             Generate Custom Report
           </button>
@@ -192,7 +208,10 @@ export function Reports() {
                   </div>
                   <h3 className="font-semibold text-gray-800 mb-2">{report.title}</h3>
                   <p className="text-sm text-gray-600 mb-4">{report.description}</p>
-                  <button className="w-full bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition text-sm">
+                  <button 
+                    onClick={() => handleGenerateReport(report.module)}
+                    className="w-full bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition text-sm font-medium shadow hover:shadow-md"
+                  >
                     Generate
                   </button>
                 </div>
@@ -268,6 +287,61 @@ export function Reports() {
           </Card>
         </div>
       </div>
+
+      {/* Generate Report Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Generate Report"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            You are about to generate a <span className="font-semibold text-gray-800">{selectedReportType}</span> report.
+          </p>
+          
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Report Format
+              </label>
+              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                <option>PDF</option>
+                <option>Excel (XLSX)</option>
+                <option>CSV</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date Range
+              </label>
+              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                <option>Current Month</option>
+                <option>Last Month</option>
+                <option>Last 3 Months</option>
+                <option>Last 6 Months</option>
+                <option>Current Year</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmGenerate}
+              className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition shadow hover:shadow-md"
+            >
+              Generate Report
+            </button>
+          </div>
+        </div>
+      </Modal>
     </MainLayout>
   );
 }
