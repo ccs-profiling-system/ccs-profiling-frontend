@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MainLayout, Card, BarChart, PieChart } from '@/components/layout';
+import { MainLayout, Card, BarChart, PieChart, Spinner } from '@/components/layout';
 import { Users, TrendingUp, GraduationCap, Calendar, FlaskConical, AlertCircle } from 'lucide-react';
 import { dashboardService, type DashboardStats, type EnrollmentData, type ProgramDistribution } from '@/services';
 
@@ -70,11 +70,8 @@ export function AdminDashboard() {
   if (loading) {
     return (
       <MainLayout title="Dashboard">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading dashboard...</p>
-          </div>
+        <div className="h-64">
+          <Spinner size="lg" text="Loading dashboard..." />
         </div>
       </MainLayout>
     );
