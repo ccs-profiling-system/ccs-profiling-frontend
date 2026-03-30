@@ -10,6 +10,8 @@ export { ExportButtons } from './ExportButtons';
 export { SlidePanel } from './SlidePanel';
 export { FileViewer } from './FileViewer';
 export { Button } from './Button';
+export { Badge } from './Badge';
 export type { SearchResult } from './SearchBar';
 export type { Column } from './Table';
 export type { ButtonProps } from './Button';
+export type { BadgeProps } from './Badge';
