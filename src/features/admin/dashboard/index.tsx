@@ -1,12 +1,12 @@
 import { MainLayout, Card } from '@/components/layout';
-import { Users, BookOpen, FileText, TrendingUp } from 'lucide-react';
+import { Users, BookOpen, FileText, TrendingUp, GraduationCap, Calendar, FlaskConical } from 'lucide-react';
 
 export function AdminDashboard() {
   const stats = [
-    { label: 'Total Students', value: '1,234', icon: Users, color: 'bg-blue-500' },
+    { label: 'Total Students', value: '1,234', icon: GraduationCap, color: 'bg-blue-500' },
     { label: 'Total Faculty', value: '89', icon: Users, color: 'bg-green-500' },
-    { label: 'Active Courses', value: '45', icon: BookOpen, color: 'bg-primary' },
-    { label: 'Reports Generated', value: '156', icon: FileText, color: 'bg-purple-500' },
+    { label: 'Active Events', value: '12', icon: Calendar, color: 'bg-purple-500' },
+    { label: 'Research Projects', value: '24', icon: FlaskConical, color: 'bg-primary' },
   ];
 
   return (
@@ -35,31 +35,123 @@ export function AdminDashboard() {
           ))}
         </div>
 
-        {/* Main Content Grid - Responsive: 1 col mobile, 3 cols desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Activity - Takes 2 columns on large screens */}
-          <Card className="lg:col-span-2" title="Recent Activity">
-            <div className="flex items-center justify-end mb-4">
-              <button className="text-primary hover:text-primary-dark text-sm font-medium">
-                View All
+        {/* Main Content Grid - 4 Cards in 2x2 Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Students Card */}
+          <Card title="Students" accent>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-700">Active Students</span>
+                <span className="font-semibold text-gray-900">1,180</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-700">Graduated</span>
+                <span className="font-semibold text-gray-900">54</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-700">New Enrollments</span>
+                <span className="font-semibold text-primary">+23</span>
+              </div>
+              <button className="w-full mt-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition text-sm">
+                View All Students
               </button>
             </div>
+          </Card>
+
+          {/* Faculty Card */}
+          <Card title="Faculty" accent>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-700">Full-time Faculty</span>
+                <span className="font-semibold text-gray-900">67</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-700">Part-time Faculty</span>
+                <span className="font-semibold text-gray-900">22</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-700">On Leave</span>
+                <span className="font-semibold text-secondary">3</span>
+              </div>
+              <button className="w-full mt-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition text-sm">
+                Manage Faculty
+              </button>
+            </div>
+          </Card>
+
+          {/* Events Card */}
+          <Card title="Events" accent>
+            <div className="space-y-3">
+              {[
+                { title: 'Research Symposium', date: 'April 5, 2026', status: 'Upcoming' },
+                { title: 'Faculty Meeting', date: 'April 2, 2026', status: 'This Week' },
+                { title: 'Student Orientation', date: 'April 10, 2026', status: 'Upcoming' },
+              ].map((event, index) => (
+                <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-gray-800 text-sm">{event.title}</p>
+                      <p className="text-xs text-gray-600 mt-1">{event.date}</p>
+                    </div>
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                      {event.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              <button className="w-full mt-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition text-sm">
+                View All Events
+              </button>
+            </div>
+          </Card>
+
+          {/* Research Card */}
+          <Card title="Research" accent>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-700">Active Projects</span>
+                <span className="font-semibold text-gray-900">18</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-700">Completed</span>
+                <span className="font-semibold text-gray-900">6</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-700">Publications</span>
+                <span className="font-semibold text-primary">42</span>
+              </div>
+              <button className="w-full mt-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition text-sm">
+                View Research
+              </button>
+            </div>
+          </Card>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Recent Activity */}
+          <Card className="lg:col-span-2" title="Recent Activity">
             <div className="space-y-4">
-              {[1, 2, 3, 4].map((item) => (
-                <div key={item} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition">
+              {[
+                { text: 'New student enrolled in BSCS program', time: '2 hours ago' },
+                { text: 'Faculty member published research paper', time: '5 hours ago' },
+                { text: 'Event "Research Symposium" scheduled', time: '1 day ago' },
+                { text: 'System backup completed successfully', time: '1 day ago' },
+              ].map((item, index) => (
+                <div key={index} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition">
                   <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                     <TrendingUp className="w-5 h-5 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">Activity Item {item}</p>
-                    <p className="text-xs text-gray-500">2 hours ago</p>
+                    <p className="text-sm font-medium text-gray-800">{item.text}</p>
+                    <p className="text-xs text-gray-500">{item.time}</p>
                   </div>
                 </div>
               ))}
             </div>
           </Card>
 
-          {/* Quick Actions - Takes 1 column */}
+          {/* Quick Actions */}
           <Card title="Quick Actions">
             <div className="space-y-3">
               <button className="w-full bg-primary hover:bg-primary-dark text-white px-4 py-3 rounded-lg transition text-left">
@@ -69,57 +161,11 @@ export function AdminDashboard() {
                 Generate Report
               </button>
               <button className="w-full bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 px-4 py-3 rounded-lg transition text-left">
-                Manage Faculty
+                Schedule Event
               </button>
               <button className="w-full bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 px-4 py-3 rounded-lg transition text-left">
                 View Analytics
               </button>
-            </div>
-          </Card>
-        </div>
-
-        {/* Bottom Grid - Responsive: 1 col mobile, 2 cols tablet+ */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card title="Upcoming Events" accent>
-            <div className="space-y-3">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="p-3 bg-gray-50 rounded">
-                  <p className="font-medium text-gray-800">Event Title {item}</p>
-                  <p className="text-sm text-gray-600">March 30, 2026</p>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card title="System Status" accent>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600">Database</span>
-                  <span className="text-green-600 font-medium">Healthy</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: '95%' }}></div>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600">Storage</span>
-                  <span className="text-primary font-medium">75%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-primary h-2 rounded-full" style={{ width: '75%' }}></div>
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600">API Response</span>
-                  <span className="text-green-600 font-medium">Fast</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: '88%' }}></div>
-                </div>
-              </div>
             </div>
           </Card>
         </div>
