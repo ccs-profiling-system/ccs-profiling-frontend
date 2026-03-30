@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card, SearchBar, ExportButtons, Modal } from '@/components/ui';
 import { Plus, Edit, Trash2, Eye, BookOpen, ChevronDown, ChevronRight } from 'lucide-react';
+import { SubjectDetailsPanel } from './SubjectDetailsPanel';
 
 export interface Column<T> {
   key: string;
@@ -17,6 +18,21 @@ interface Subject {
   units: number;
   semester: number;
   yearLevel: number;
+  description?: string;
+  prerequisites?: string[];
+  corequisites?: string[];
+  type?: 'core' | 'elective' | 'major' | 'minor';
+  hours?: {
+    lecture: number;
+    laboratory: number;
+  };
+  objectives?: string[];
+  topics?: string[];
+  faculty?: string;
+  schedule?: string;
+  room?: string;
+  enrolledStudents?: number;
+  maxCapacity?: number;
 }
 
 interface Curriculum {
@@ -36,13 +52,131 @@ export function CurriculumList() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCurriculum, setSelectedCurriculum] = useState<Curriculum | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [isSubjectPanelOpen, setIsSubjectPanelOpen] = useState(false);
 
   const sampleSubjects: Subject[] = [
-    { id: 1, code: 'CS101', name: 'Introduction to Programming', units: 3, semester: 1, yearLevel: 1 },
-    { id: 2, code: 'CS102', name: 'Data Structures', units: 3, semester: 2, yearLevel: 1 },
-    { id: 3, code: 'CS201', name: 'Object-Oriented Programming', units: 3, semester: 1, yearLevel: 2 },
-    { id: 4, code: 'CS202', name: 'Database Systems', units: 3, semester: 2, yearLevel: 2 },
-    { id: 5, code: 'CS301', name: 'Software Engineering', units: 3, semester: 1, yearLevel: 3 },
+    { 
+      id: 1, 
+      code: 'CS101', 
+      name: 'Introduction to Programming', 
+      units: 3, 
+      semester: 1, 
+      yearLevel: 1,
+      type: 'core',
+      description: 'This course introduces students to the fundamental concepts of programming using a high-level language. Topics include problem-solving, algorithm development, data types, control structures, functions, and basic data structures.',
+      prerequisites: [],
+      hours: { lecture: 2, laboratory: 3 },
+      objectives: [
+        'Understand basic programming concepts and problem-solving techniques',
+        'Write, compile, and debug programs in a high-level language',
+        'Apply control structures and functions to solve problems',
+        'Implement basic data structures and algorithms'
+      ],
+      topics: ['Variables', 'Data Types', 'Control Flow', 'Functions', 'Arrays', 'Debugging'],
+      faculty: 'Prof. John Smith',
+      schedule: 'MWF 9:00-10:00 AM',
+      room: 'CS Lab 1',
+      enrolledStudents: 35,
+      maxCapacity: 40
+    },
+    { 
+      id: 2, 
+      code: 'CS102', 
+      name: 'Data Structures', 
+      units: 3, 
+      semester: 2, 
+      yearLevel: 1,
+      type: 'core',
+      description: 'An in-depth study of data structures and their applications. Topics include linked lists, stacks, queues, trees, graphs, and hash tables.',
+      prerequisites: ['CS101'],
+      hours: { lecture: 2, laboratory: 3 },
+      objectives: [
+        'Understand and implement fundamental data structures',
+        'Analyze time and space complexity of algorithms',
+        'Choose appropriate data structures for specific problems',
+        'Apply data structures to solve real-world problems'
+      ],
+      topics: ['Linked Lists', 'Stacks', 'Queues', 'Trees', 'Graphs', 'Hash Tables', 'Sorting'],
+      faculty: 'Prof. Jane Doe',
+      schedule: 'TTH 1:00-2:30 PM',
+      room: 'CS Lab 2',
+      enrolledStudents: 38,
+      maxCapacity: 40
+    },
+    { 
+      id: 3, 
+      code: 'CS201', 
+      name: 'Object-Oriented Programming', 
+      units: 3, 
+      semester: 1, 
+      yearLevel: 2,
+      type: 'major',
+      description: 'This course covers object-oriented programming principles and practices. Students learn to design and implement programs using classes, inheritance, polymorphism, and design patterns.',
+      prerequisites: ['CS102'],
+      corequisites: ['CS202'],
+      hours: { lecture: 2, laboratory: 3 },
+      objectives: [
+        'Master object-oriented programming concepts',
+        'Design and implement class hierarchies',
+        'Apply design patterns to software development',
+        'Develop maintainable and reusable code'
+      ],
+      topics: ['Classes', 'Inheritance', 'Polymorphism', 'Encapsulation', 'Design Patterns', 'UML'],
+      faculty: 'Prof. Robert Johnson',
+      schedule: 'MWF 2:00-3:00 PM',
+      room: 'CS Lab 3',
+      enrolledStudents: 42,
+      maxCapacity: 45
+    },
+    { 
+      id: 4, 
+      code: 'CS202', 
+      name: 'Database Systems', 
+      units: 3, 
+      semester: 2, 
+      yearLevel: 2,
+      type: 'major',
+      description: 'Introduction to database management systems, including data modeling, SQL, normalization, and transaction management.',
+      prerequisites: ['CS102'],
+      hours: { lecture: 2, laboratory: 3 },
+      objectives: [
+        'Design and implement relational databases',
+        'Write complex SQL queries',
+        'Understand database normalization and optimization',
+        'Manage database transactions and concurrency'
+      ],
+      topics: ['ER Modeling', 'SQL', 'Normalization', 'Indexing', 'Transactions', 'NoSQL'],
+      faculty: 'Prof. Maria Garcia',
+      schedule: 'TTH 10:00-11:30 AM',
+      room: 'CS Lab 1',
+      enrolledStudents: 30,
+      maxCapacity: 40
+    },
+    { 
+      id: 5, 
+      code: 'CS301', 
+      name: 'Software Engineering', 
+      units: 3, 
+      semester: 1, 
+      yearLevel: 3,
+      type: 'major',
+      description: 'Comprehensive study of software development methodologies, project management, and software quality assurance.',
+      prerequisites: ['CS201', 'CS202'],
+      hours: { lecture: 3, laboratory: 0 },
+      objectives: [
+        'Apply software development methodologies',
+        'Manage software projects effectively',
+        'Ensure software quality through testing',
+        'Work collaboratively in development teams'
+      ],
+      topics: ['SDLC', 'Agile', 'Testing', 'Version Control', 'CI/CD', 'Project Management'],
+      faculty: 'Prof. David Lee',
+      schedule: 'MWF 11:00-12:00 PM',
+      room: 'Room 301',
+      enrolledStudents: 28,
+      maxCapacity: 35
+    },
   ];
 
   const curriculumData: Curriculum[] = [
@@ -315,9 +449,14 @@ export function CurriculumList() {
                           </h4>
                           <div className="grid gap-2">
                             {item.subjectList.map((subject) => (
-                              <div
+                              <button
                                 key={subject.id}
-                                className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-primary transition"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedSubject(subject);
+                                  setIsSubjectPanelOpen(true);
+                                }}
+                                className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-primary hover:shadow-md transition text-left"
                               >
                                 <div className="flex items-center gap-4">
                                   <span className="px-3 py-1 bg-primary/10 text-primary rounded font-mono text-sm font-medium">
@@ -327,13 +466,17 @@ export function CurriculumList() {
                                     <p className="font-medium text-gray-900">{subject.name}</p>
                                     <p className="text-xs text-gray-500">
                                       Year {subject.yearLevel} • Semester {subject.semester}
+                                      {subject.type && ` • ${subject.type.toUpperCase()}`}
                                     </p>
                                   </div>
                                 </div>
-                                <span className="text-sm text-gray-600 font-medium">
-                                  {subject.units} {subject.units === 1 ? 'unit' : 'units'}
-                                </span>
-                              </div>
+                                <div className="flex items-center gap-4">
+                                  <span className="text-sm text-gray-600 font-medium">
+                                    {subject.units} {subject.units === 1 ? 'unit' : 'units'}
+                                  </span>
+                                  <Eye className="w-4 h-4 text-gray-400" />
+                                </div>
+                              </button>
                             ))}
                           </div>
                         </div>
@@ -413,6 +556,17 @@ export function CurriculumList() {
           </div>
         )}
       </Modal>
+
+      {/* Subject Details Panel */}
+      <SubjectDetailsPanel
+        isOpen={isSubjectPanelOpen}
+        onClose={() => {
+          setIsSubjectPanelOpen(false);
+          setSelectedSubject(null);
+        }}
+        subject={selectedSubject}
+        curriculumCode={selectedCurriculum?.code}
+      />
     </div>
   );
 }
