@@ -6,5 +6,6 @@ export { ErrorAlert } from './ErrorAlert';
 export { SearchBar } from './SearchBar';
 export { Modal } from './Modal';
 export { Table } from './Table';
+export { ExportButtons } from './ExportButtons';
 export type { SearchResult } from './SearchBar';
 export type { Column } from './Table';

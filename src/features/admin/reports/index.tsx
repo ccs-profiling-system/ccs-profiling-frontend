@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MainLayout, Card, Modal } from '@/components/layout';
+import { MainLayout, Card, Modal, ExportButtons } from '@/components/layout';
 import { FileText, Download, Filter, Calendar, Users, TrendingUp } from 'lucide-react';
 
 export function Reports() {
@@ -8,6 +8,7 @@ export function Reports() {
   const [filteredReports, setFilteredReports] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedReportType, setSelectedReportType] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   const reportTypes = [
     { 
@@ -95,22 +96,61 @@ export function Reports() {
     setIsModalOpen(false);
   };
 
+  const handleExportPDF = async () => {
+    setExporting(true);
+    try {
+      console.log('Exporting to PDF...');
+      // Add PDF export logic here
+      // Example: await api.get('/reports/export/pdf', { responseType: 'blob' });
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      alert('PDF export successful!');
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      alert('PDF export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      console.log('Exporting to Excel...');
+      // Add Excel export logic here
+      // Example: await api.get('/reports/export/excel', { responseType: 'blob' });
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      alert('Excel export successful!');
+    } catch (error) {
+      console.error('Excel export failed:', error);
+      alert('Excel export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <MainLayout title="Reports">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">Reports</h1>
             <p className="text-gray-600 mt-1">Generate and download system reports</p>
           </div>
-          <button 
-            onClick={() => handleGenerateReport('custom')}
-            className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg transition flex items-center gap-2 shadow-md hover:shadow-lg"
-          >
-            <FileText className="w-5 h-5" />
-            Generate Custom Report
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <ExportButtons
+              onExportPDF={handleExportPDF}
+              onExportExcel={handleExportExcel}
+              loading={exporting}
+            />
+            <button 
+              onClick={() => handleGenerateReport('custom')}
+              className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg transition flex items-center gap-2 shadow-md hover:shadow-lg"
+            >
+              <FileText className="w-5 h-5" />
+              Generate Custom Report
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -222,13 +262,22 @@ export function Reports() {
 
         {/* Recent Reports */}
         <div>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
             <h2 className="text-xl font-semibold text-gray-800">
               {filteredReports.length > 0 ? 'Filtered Reports' : 'Recent Reports'}
             </h2>
-            <span className="text-sm text-gray-500">
-              Showing {displayReports.length} report{displayReports.length !== 1 ? 's' : ''}
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-500">
+                Showing {displayReports.length} report{displayReports.length !== 1 ? 's' : ''}
+              </span>
+              {displayReports.length > 0 && (
+                <ExportButtons
+                  onExportPDF={handleExportPDF}
+                  onExportExcel={handleExportExcel}
+                  loading={exporting}
+                />
+              )}
+            </div>
           </div>
           <Card>
             {displayReports.length > 0 ? (
