@@ -33,6 +33,12 @@ interface Subject {
   room?: string;
   enrolledStudents?: number;
   maxCapacity?: number;
+  syllabus?: {
+    fileName: string;
+    fileUrl: string;
+    uploadedDate: string;
+    fileSize: string;
+  };
 }
 
 interface Curriculum {
@@ -78,7 +84,13 @@ export function CurriculumList() {
       schedule: 'MWF 9:00-10:00 AM',
       room: 'CS Lab 1',
       enrolledStudents: 35,
-      maxCapacity: 40
+      maxCapacity: 40,
+      syllabus: {
+        fileName: 'CS101_Syllabus_2024.pdf',
+        fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        uploadedDate: 'Jan 15, 2024',
+        fileSize: '2.4 MB'
+      }
     },
     { 
       id: 2, 
@@ -102,7 +114,13 @@ export function CurriculumList() {
       schedule: 'TTH 1:00-2:30 PM',
       room: 'CS Lab 2',
       enrolledStudents: 38,
-      maxCapacity: 40
+      maxCapacity: 40,
+      syllabus: {
+        fileName: 'CS102_DataStructures_Syllabus.pdf',
+        fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        uploadedDate: 'Jan 18, 2024',
+        fileSize: '1.8 MB'
+      }
     },
     { 
       id: 3, 
@@ -127,7 +145,13 @@ export function CurriculumList() {
       schedule: 'MWF 2:00-3:00 PM',
       room: 'CS Lab 3',
       enrolledStudents: 42,
-      maxCapacity: 45
+      maxCapacity: 45,
+      syllabus: {
+        fileName: 'CS201_OOP_Syllabus_2024.pdf',
+        fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+        uploadedDate: 'Jan 20, 2024',
+        fileSize: '3.1 MB'
+      }
     },
     { 
       id: 4, 

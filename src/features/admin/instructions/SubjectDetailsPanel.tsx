@@ -1,4 +1,6 @@
 import { SlidePanel } from '@/components/ui/SlidePanel';
+import { FileViewer } from '@/components/ui/FileViewer';
+import { useState } from 'react';
 import { 
   BookOpen, 
   Clock, 
@@ -9,7 +11,11 @@ import {
   CheckCircle,
   AlertCircle,
   Edit,
-  Trash2
+  Trash2,
+  Download,
+  Eye,
+  Upload,
+  File
 } from 'lucide-react';
 
 interface Subject {
@@ -34,6 +40,12 @@ interface Subject {
   room?: string;
   enrolledStudents?: number;
   maxCapacity?: number;
+  syllabus?: {
+    fileName: string;
+    fileUrl: string;
+    uploadedDate: string;
+    fileSize: string;
+  };
 }
 
 interface SubjectDetailsPanelProps {
@@ -49,6 +61,8 @@ export function SubjectDetailsPanel({
   subject,
   curriculumCode 
 }: SubjectDetailsPanelProps) {
+  const [isFileViewerOpen, setIsFileViewerOpen] = useState(false);
+
   if (!subject) return null;
 
   const getTypeColor = (type?: string) => {
@@ -69,6 +83,21 @@ export function SubjectDetailsPanel({
   const enrollmentPercentage = subject.enrolledStudents && subject.maxCapacity
     ? (subject.enrolledStudents / subject.maxCapacity) * 100
     : 0;
+
+  const handleDownloadSyllabus = () => {
+    if (subject.syllabus) {
+      const link = document.createElement('a');
+      link.href = subject.syllabus.fileUrl;
+      link.download = subject.syllabus.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handleViewSyllabus = () => {
+    setIsFileViewerOpen(true);
+  };
 
   return (
     <SlidePanel
@@ -287,6 +316,63 @@ export function SubjectDetailsPanel({
           </div>
         )}
 
+        {/* Syllabus Section */}
+        {subject.syllabus ? (
+          <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg p-5">
+            <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-green-600" />
+              Course Syllabus
+            </h4>
+            <div className="bg-white rounded-lg p-4 border border-green-200">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <File className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{subject.syllabus.fileName}</p>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-600">
+                      <span>{subject.syllabus.fileSize}</span>
+                      <span>•</span>
+                      <span>Uploaded: {subject.syllabus.uploadedDate}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={handleViewSyllabus}
+                    className="p-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition"
+                    title="View Syllabus"
+                  >
+                    <Eye className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={handleDownloadSyllabus}
+                    className="p-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition"
+                    title="Download Syllabus"
+                  >
+                    <Download className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+            <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-gray-600" />
+              Course Syllabus
+            </h4>
+            <div className="text-center py-6">
+              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 mb-3">No syllabus uploaded yet</p>
+              <button className="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition text-sm">
+                Upload Syllabus
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4 border-t border-gray-200">
           <button className="flex-1 px-4 py-3 bg-primary hover:bg-primary-dark text-white rounded-lg transition flex items-center justify-center gap-2 font-medium">
@@ -299,6 +385,17 @@ export function SubjectDetailsPanel({
           </button>
         </div>
       </div>
+
+      {/* File Viewer Modal */}
+      {subject.syllabus && (
+        <FileViewer
+          isOpen={isFileViewerOpen}
+          onClose={() => setIsFileViewerOpen(false)}
+          fileUrl={subject.syllabus.fileUrl}
+          fileName={subject.syllabus.fileName}
+          fileType="Course Syllabus"
+        />
+      )}
     </SlidePanel>
   );
 }
