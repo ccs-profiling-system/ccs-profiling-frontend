@@ -1,4 +1,4 @@
-import { MainLayout } from '@/components/layout';
+import { MainLayout, Card } from '@/components/layout';
 import { Users, BookOpen, FileText, TrendingUp } from 'lucide-react';
 
 export function AdminDashboard() {
@@ -21,10 +21,7 @@ export function AdminDashboard() {
         {/* Stats Grid - Responsive: 1 col mobile, 2 cols tablet, 4 cols desktop */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {stats.map((stat, index) => (
-            <div
-              key={index}
-              className="bg-white p-6 rounded-lg shadow hover:shadow-md transition"
-            >
+            <Card key={index}>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
@@ -34,16 +31,15 @@ export function AdminDashboard() {
                   <stat.icon className="w-6 h-6 text-white" />
                 </div>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
 
         {/* Main Content Grid - Responsive: 1 col mobile, 3 cols desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent Activity - Takes 2 columns on large screens */}
-          <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">Recent Activity</h2>
+          <Card className="lg:col-span-2" title="Recent Activity">
+            <div className="flex items-center justify-end mb-4">
               <button className="text-primary hover:text-primary-dark text-sm font-medium">
                 View All
               </button>
@@ -61,11 +57,10 @@ export function AdminDashboard() {
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* Quick Actions - Takes 1 column */}
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
+          <Card title="Quick Actions">
             <div className="space-y-3">
               <button className="w-full bg-primary hover:bg-primary-dark text-white px-4 py-3 rounded-lg transition text-left">
                 Add New Student
@@ -80,25 +75,23 @@ export function AdminDashboard() {
                 View Analytics
               </button>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Bottom Grid - Responsive: 1 col mobile, 2 cols tablet+ */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Upcoming Events</h2>
+          <Card title="Upcoming Events" accent>
             <div className="space-y-3">
               {[1, 2, 3].map((item) => (
-                <div key={item} className="p-3 border-l-4 border-primary bg-gray-50 rounded">
+                <div key={item} className="p-3 bg-gray-50 rounded">
                   <p className="font-medium text-gray-800">Event Title {item}</p>
                   <p className="text-sm text-gray-600">March 30, 2026</p>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">System Status</h2>
+          <Card title="System Status" accent>
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-1">
@@ -128,7 +121,7 @@ export function AdminDashboard() {
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
     </MainLayout>
