@@ -1,29 +1,84 @@
+import { useState, useEffect } from 'react';
 import { MainLayout, Card, BarChart, PieChart } from '@/components/layout';
 import { Users, TrendingUp, GraduationCap, Calendar, FlaskConical, AlertCircle } from 'lucide-react';
+import { dashboardService, type DashboardStats, type EnrollmentData, type ProgramDistribution } from '@/services';
 
 export function AdminDashboard() {
-  const stats = [
-    { label: 'Total Students', value: '1,234', icon: GraduationCap, color: 'bg-blue-500' },
-    { label: 'Total Faculty', value: '89', icon: Users, color: 'bg-green-500' },
-    { label: 'Active Events', value: '12', icon: Calendar, color: 'bg-purple-500' },
-    { label: 'Research Projects', value: '24', icon: FlaskConical, color: 'bg-primary' },
+  const [stats, setStats] = useState<DashboardStats>({
+    totalStudents: 0,
+    totalFaculty: 0,
+    activeEvents: 0,
+    researchProjects: 0,
+  });
+  const [enrollmentData, setEnrollmentData] = useState<EnrollmentData[]>([]);
+  const [programDistribution, setProgramDistribution] = useState<ProgramDistribution[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch all dashboard data
+        const data = await dashboardService.getDashboardStats();
+        
+        setStats(data.stats);
+        setEnrollmentData(data.enrollmentTrend);
+        setProgramDistribution(data.programDistribution);
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
+        setError('Failed to load dashboard data. Using sample data.');
+        
+        // Fallback to sample data
+        setStats({
+          totalStudents: 1234,
+          totalFaculty: 89,
+          activeEvents: 12,
+          researchProjects: 24,
+        });
+        setEnrollmentData([
+          { name: 'Jan', value: 120 },
+          { name: 'Feb', value: 150 },
+          { name: 'Mar', value: 180 },
+          { name: 'Apr', value: 220 },
+          { name: 'May', value: 190 },
+          { name: 'Jun', value: 240 },
+        ]);
+        setProgramDistribution([
+          { name: 'BSCS', value: 450 },
+          { name: 'BSIT', value: 380 },
+          { name: 'BSIS', value: 280 },
+          { name: 'ACT', value: 124 },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const statsDisplay = [
+    { label: 'Total Students', value: stats.totalStudents.toLocaleString(), icon: GraduationCap, color: 'bg-blue-500' },
+    { label: 'Total Faculty', value: stats.totalFaculty.toString(), icon: Users, color: 'bg-green-500' },
+    { label: 'Active Events', value: stats.activeEvents.toString(), icon: Calendar, color: 'bg-purple-500' },
+    { label: 'Research Projects', value: stats.researchProjects.toString(), icon: FlaskConical, color: 'bg-primary' },
   ];
 
-  const enrollmentData = [
-    { name: 'Jan', value: 120 },
-    { name: 'Feb', value: 150 },
-    { name: 'Mar', value: 180 },
-    { name: 'Apr', value: 220 },
-    { name: 'May', value: 190 },
-    { name: 'Jun', value: 240 },
-  ];
-
-  const programDistribution = [
-    { name: 'BSCS', value: 450 },
-    { name: 'BSIT', value: 380 },
-    { name: 'BSIS', value: 280 },
-    { name: 'ACT', value: 124 },
-  ];
+  if (loading) {
+    return (
+      <MainLayout title="Dashboard">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading dashboard...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout title="Dashboard">
@@ -33,6 +88,17 @@ export function AdminDashboard() {
           <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
           <p className="text-gray-600 mt-1">Welcome to CCS Profiling System</p>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="bg-secondary/10 border-l-4 border-secondary p-4 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-secondary">Warning</p>
+              <p className="text-sm text-gray-700 mt-1">{error}</p>
+            </div>
+          </div>
+        )}
 
         {/* Alert Banner */}
         <div className="bg-secondary/10 border-l-4 border-secondary p-4 rounded-lg flex items-start gap-3">
@@ -45,7 +111,7 @@ export function AdminDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          {stats.map((stat, index) => (
+          {statsDisplay.map((stat, index) => (
             <Card key={index}>
               <div className="flex items-center justify-between">
                 <div>
