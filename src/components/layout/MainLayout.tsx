@@ -24,8 +24,10 @@ export function MainLayout({ children, title }: MainLayoutProps) {
         <Navbar title={title} onMenuClick={toggleSidebar} />
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
-          {children}
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+            {children}
+          </div>
         </main>
       </div>
     </div>

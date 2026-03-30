@@ -37,14 +37,14 @@ export function Table<T extends Record<string, any>>({
   };
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-xl border border-gray-200">
       <table className="w-full">
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={`px-6 py-3 text-xs font-semibold text-gray-700 uppercase tracking-wider ${getAlignClass(
+                className={`px-6 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider ${getAlignClass(
                   column.align
                 )}`}
                 style={{ width: column.width }}
@@ -54,7 +54,7 @@ export function Table<T extends Record<string, any>>({
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white divide-y divide-gray-100">
           {data.length > 0 ? (
             data.map((item, index) => (
               <tr
@@ -62,14 +62,14 @@ export function Table<T extends Record<string, any>>({
                 onClick={() => onRowClick?.(item)}
                 className={`
                   ${striped && index % 2 === 1 ? 'bg-gray-50' : ''}
-                  ${hoverable ? 'hover:bg-primary/5 transition-colors' : ''}
+                  ${hoverable ? 'hover:bg-gray-50 transition-colors' : ''}
                   ${onRowClick ? 'cursor-pointer' : ''}
                 `}
               >
                 {columns.map((column) => (
                   <td
                     key={column.key}
-                    className={`px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${getAlignClass(
+                    className={`px-6 py-4 text-sm text-gray-900 ${getAlignClass(
                       column.align
                     )}`}
                   >

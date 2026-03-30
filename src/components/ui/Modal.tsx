@@ -77,19 +77,19 @@ export function Modal({
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div 
-          className={`relative bg-white rounded-lg shadow-xl w-full ${sizeClasses[size]} transform transition-all duration-200 animate-scale-in ${className}`}
+          className={`relative bg-white rounded-xl shadow-lg w-full ${sizeClasses[size]} transform transition-all duration-200 animate-scale-in ${className}`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
+          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <h3 className="text-xl font-semibold text-gray-900">{title}</h3>
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition p-1 hover:bg-gray-100 rounded"
+                className="text-gray-400 hover:text-gray-600 transition p-1.5 hover:bg-gray-100 rounded-lg"
                 aria-label="Close modal"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             )}
           </div>
@@ -101,7 +101,7 @@ export function Modal({
 
           {/* Footer */}
           {footer && (
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-100 bg-gray-50 rounded-b-xl">
               {footer}
             </div>
           )}

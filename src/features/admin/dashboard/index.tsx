@@ -60,13 +60,6 @@ export function AdminDashboard() {
     }
   };
 
-  const statsDisplay = [
-    { label: 'Total Students', value: stats.totalStudents.toLocaleString(), icon: GraduationCap, color: 'bg-blue-500' },
-    { label: 'Total Faculty', value: stats.totalFaculty.toString(), icon: Users, color: 'bg-green-500' },
-    { label: 'Active Events', value: stats.activeEvents.toString(), icon: Calendar, color: 'bg-purple-500' },
-    { label: 'Research Projects', value: stats.researchProjects.toString(), icon: FlaskConical, color: 'bg-primary' },
-  ];
-
   if (loading) {
     return (
       <MainLayout title="Dashboard">
@@ -80,10 +73,15 @@ export function AdminDashboard() {
   return (
     <MainLayout title="Dashboard">
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome to CCS Profiling System</p>
+        {/* Gradient Welcome Banner */}
+        <div className="welcome-banner animate-fade-in">
+          <div className="relative z-10">
+            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, Admin User! 👋</h1>
+            <p className="text-white/90">Here's what's happening in your CCS Profiling System today</p>
+          </div>
+          <div className="absolute top-4 right-4 w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
+            <TrendingUp className="w-10 h-10 text-white" />
+          </div>
         </div>
 
         {/* Error Alert */}
@@ -96,30 +94,55 @@ export function AdminDashboard() {
           />
         )}
 
-        {/* Alert Banner */}
-        <div className="bg-secondary/10 border-l-4 border-secondary p-4 rounded-lg flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-secondary">Action Required</p>
-            <p className="text-sm text-gray-700 mt-1">3 faculty members have pending profile updates. Please review and approve.</p>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          {statsDisplay.map((stat, index) => (
-            <Card key={index}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
-                  <p className="text-3xl font-bold text-gray-800">{stat.value}</p>
-                </div>
-                <div className={`${stat.color} p-3 rounded-lg`}>
-                  <stat.icon className="w-6 h-6 text-white" />
-                </div>
+        {/* Colorful Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Total Students - Blue */}
+          <div className="stat-card animate-slide-in-up" style={{ animationDelay: '0ms' }}>
+            <div className="flex items-start justify-between mb-3">
+              <div className="stat-icon stat-icon-blue">
+                <GraduationCap className="w-6 h-6 text-white" />
               </div>
-            </Card>
-          ))}
+            </div>
+            <p className="text-sm font-medium text-gray-600 mb-1">Total Students</p>
+            <p className="text-3xl font-bold text-gray-900 mb-2">{stats.totalStudents.toLocaleString()}</p>
+            <p className="text-xs text-green-600 font-medium">↑ +12% from last month</p>
+          </div>
+
+          {/* Total Faculty - Green */}
+          <div className="stat-card animate-slide-in-up" style={{ animationDelay: '100ms' }}>
+            <div className="flex items-start justify-between mb-3">
+              <div className="stat-icon stat-icon-green">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-600 mb-1">Total Faculty</p>
+            <p className="text-3xl font-bold text-gray-900 mb-2">{stats.totalFaculty}</p>
+            <p className="text-xs text-green-600 font-medium">↑ +3 new this month</p>
+          </div>
+
+          {/* Upcoming Events - Purple */}
+          <div className="stat-card animate-slide-in-up" style={{ animationDelay: '200ms' }}>
+            <div className="flex items-start justify-between mb-3">
+              <div className="stat-icon stat-icon-purple">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-600 mb-1">Upcoming Events</p>
+            <p className="text-3xl font-bold text-gray-900 mb-2">{stats.activeEvents}</p>
+            <p className="text-xs text-blue-600 font-medium">📅 Next: Tomorrow 9:00 AM</p>
+          </div>
+
+          {/* Active Research - Orange */}
+          <div className="stat-card animate-slide-in-up" style={{ animationDelay: '300ms' }}>
+            <div className="flex items-start justify-between mb-3">
+              <div className="stat-icon stat-icon-orange">
+                <FlaskConical className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-600 mb-1">Active Research</p>
+            <p className="text-3xl font-bold text-gray-900 mb-2">{stats.researchProjects}</p>
+            <p className="text-xs text-purple-600 font-medium">📚 5 published this year</p>
+          </div>
         </div>
 
         {/* Charts Grid */}
@@ -241,44 +264,93 @@ export function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Bottom Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2" title="Recent Activity">
-            <div className="space-y-4">
-              {[
-                { text: 'New student enrolled in BSCS program', time: '2 hours ago' },
-                { text: 'Faculty member published research paper', time: '5 hours ago' },
-                { text: 'Event "Research Symposium" scheduled', time: '1 day ago' },
-                { text: 'System backup completed successfully', time: '1 day ago' },
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition">
-                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-800">{item.text}</p>
-                    <p className="text-xs text-gray-500">{item.time}</p>
-                  </div>
+        {/* Quick Actions & Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Quick Actions */}
+          <Card>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                <span className="text-lg">⚡</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="action-card">
+                <div className="action-icon bg-orange-100">
+                  <GraduationCap className="w-5 h-5 text-primary" />
                 </div>
-              ))}
+                <h4 className="font-semibold text-gray-900 text-sm mb-1">Add Student</h4>
+                <p className="text-xs text-gray-600">Register a new student</p>
+              </div>
+              <div className="action-card">
+                <div className="action-icon bg-blue-100">
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 text-sm mb-1">Schedule Event</h4>
+                <p className="text-xs text-gray-600">Create a new event</p>
+              </div>
+              <div className="action-card">
+                <div className="action-icon bg-green-100">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 text-sm mb-1">View Reports</h4>
+                <p className="text-xs text-gray-600">Generate analytics</p>
+              </div>
+              <div className="action-card">
+                <div className="action-icon bg-purple-100">
+                  <FlaskConical className="w-5 h-5 text-purple-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 text-sm mb-1">Research</h4>
+                <p className="text-xs text-gray-600">Manage projects</p>
+              </div>
             </div>
           </Card>
 
-          <Card title="Quick Actions">
+          {/* Recent Activity */}
+          <Card>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                <span className="text-lg">📋</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+            </div>
             <div className="space-y-3">
-              <button className="w-full bg-primary hover:bg-primary-dark text-white px-4 py-3 rounded-lg transition text-left">
-                Add New Student
-              </button>
-              <button className="w-full bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 px-4 py-3 rounded-lg transition text-left">
-                Generate Report
-              </button>
-              <button className="w-full bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 px-4 py-3 rounded-lg transition text-left">
-                Schedule Event
-              </button>
-              <button className="w-full bg-secondary hover:bg-red-600 text-white px-4 py-3 rounded-lg transition text-left flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                Review Pending Items
-              </button>
+              <div className="activity-item">
+                <div className="activity-icon bg-orange-100">
+                  <GraduationCap className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">New student John Doe registered</p>
+                  <p className="text-xs text-gray-500">2 minutes ago</p>
+                </div>
+              </div>
+              <div className="activity-item">
+                <div className="activity-icon bg-orange-100">
+                  <Calendar className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">Academic Conference scheduled for next week</p>
+                  <p className="text-xs text-gray-500">1 hour ago</p>
+                </div>
+              </div>
+              <div className="activity-item">
+                <div className="activity-icon bg-orange-100">
+                  <FlaskConical className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">Research paper "AI in Education" submitted</p>
+                  <p className="text-xs text-gray-500">3 hours ago</p>
+                </div>
+              </div>
+              <div className="activity-item">
+                <div className="activity-icon bg-orange-100">
+                  <Users className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">Dr. Smith updated course materials</p>
+                  <p className="text-xs text-gray-500">5 hours ago</p>
+                </div>
+              </div>
             </div>
           </Card>
         </div>
