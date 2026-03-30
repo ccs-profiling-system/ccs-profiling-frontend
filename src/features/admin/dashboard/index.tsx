@@ -1,4 +1,4 @@
-import { MainLayout, Card, BarChart } from '@/components/layout';
+import { MainLayout, Card, BarChart, PieChart } from '@/components/layout';
 import { Users, BookOpen, FileText, TrendingUp, GraduationCap, Calendar, FlaskConical, AlertCircle } from 'lucide-react';
 
 export function AdminDashboard() {
@@ -16,6 +16,13 @@ export function AdminDashboard() {
     { name: 'Apr', value: 220 },
     { name: 'May', value: 190 },
     { name: 'Jun', value: 240 },
+  ];
+
+  const programDistribution = [
+    { name: 'BSCS', value: 450 },
+    { name: 'BSIT', value: 380 },
+    { name: 'BSIS', value: 280 },
+    { name: 'ACT', value: 124 },
   ];
 
   return (
@@ -53,10 +60,18 @@ export function AdminDashboard() {
           ))}
         </div>
 
-        {/* Enrollment Chart */}
-        <Card title="Student Enrollment Trend" accent>
-          <BarChart data={enrollmentData} height={300} />
-        </Card>
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Enrollment Chart */}
+          <Card title="Student Enrollment Trend" accent>
+            <BarChart data={enrollmentData} height={300} />
+          </Card>
+
+          {/* Program Distribution Chart */}
+          <Card title="Program Distribution" accent>
+            <PieChart data={programDistribution} height={300} />
+          </Card>
+        </div>
 
         {/* Main Content Grid - 4 Cards in 2x2 Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
