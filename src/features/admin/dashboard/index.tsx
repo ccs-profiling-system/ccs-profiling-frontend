@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MainLayout, Card, BarChart, PieChart, Spinner } from '@/components/layout';
+import { MainLayout, Card, BarChart, PieChart, Spinner, ErrorAlert } from '@/components/layout';
 import { Users, TrendingUp, GraduationCap, Calendar, FlaskConical, AlertCircle } from 'lucide-react';
 import { dashboardService, type DashboardStats, type EnrollmentData, type ProgramDistribution } from '@/services';
 
@@ -16,49 +16,49 @@ export function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Fetch all dashboard data
-        const data = await dashboardService.getDashboardStats();
-        
-        setStats(data.stats);
-        setEnrollmentData(data.enrollmentTrend);
-        setProgramDistribution(data.programDistribution);
-      } catch (err) {
-        console.error('Failed to fetch dashboard data:', err);
-        setError('Failed to load dashboard data. Using sample data.');
-        
-        // Fallback to sample data
-        setStats({
-          totalStudents: 1234,
-          totalFaculty: 89,
-          activeEvents: 12,
-          researchProjects: 24,
-        });
-        setEnrollmentData([
-          { name: 'Jan', value: 120 },
-          { name: 'Feb', value: 150 },
-          { name: 'Mar', value: 180 },
-          { name: 'Apr', value: 220 },
-          { name: 'May', value: 190 },
-          { name: 'Jun', value: 240 },
-        ]);
-        setProgramDistribution([
-          { name: 'BSCS', value: 450 },
-          { name: 'BSIT', value: 380 },
-          { name: 'BSIS', value: 280 },
-          { name: 'ACT', value: 124 },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch all dashboard data
+      const data = await dashboardService.getDashboardStats();
+      
+      setStats(data.stats);
+      setEnrollmentData(data.enrollmentTrend);
+      setProgramDistribution(data.programDistribution);
+    } catch (err) {
+      console.error('Failed to fetch dashboard data:', err);
+      setError('Failed to load dashboard data. Using sample data.');
+      
+      // Fallback to sample data
+      setStats({
+        totalStudents: 1234,
+        totalFaculty: 89,
+        activeEvents: 12,
+        researchProjects: 24,
+      });
+      setEnrollmentData([
+        { name: 'Jan', value: 120 },
+        { name: 'Feb', value: 150 },
+        { name: 'Mar', value: 180 },
+        { name: 'Apr', value: 220 },
+        { name: 'May', value: 190 },
+        { name: 'Jun', value: 240 },
+      ]);
+      setProgramDistribution([
+        { name: 'BSCS', value: 450 },
+        { name: 'BSIT', value: 380 },
+        { name: 'BSIS', value: 280 },
+        { name: 'ACT', value: 124 },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const statsDisplay = [
     { label: 'Total Students', value: stats.totalStudents.toLocaleString(), icon: GraduationCap, color: 'bg-blue-500' },
@@ -88,13 +88,12 @@ export function AdminDashboard() {
 
         {/* Error Alert */}
         {error && (
-          <div className="bg-secondary/10 border-l-4 border-secondary p-4 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-secondary">Warning</p>
-              <p className="text-sm text-gray-700 mt-1">{error}</p>
-            </div>
-          </div>
+          <ErrorAlert
+            title="Connection Error"
+            message={error}
+            onRetry={fetchDashboardData}
+            onDismiss={() => setError(null)}
+          />
         )}
 
         {/* Alert Banner */}
