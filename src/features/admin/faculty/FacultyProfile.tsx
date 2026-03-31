@@ -73,7 +73,7 @@ export function FacultyProfile() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center gap-6 transition-all duration-200 hover:shadow-md hover:-translate-y-1">
         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
           <User className="w-10 h-10 text-primary" />
         </div>
