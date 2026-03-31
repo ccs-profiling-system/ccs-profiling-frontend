@@ -136,6 +136,7 @@ export function FacultyProfile() {
           {activeTab === 3 && <SkillsAffiliations skills={SAMPLE_SKILLS} affiliations={SAMPLE_AFFILIATIONS} />}
         </div>
       </div>
+      </div>
     </MainLayout>
   );
 }

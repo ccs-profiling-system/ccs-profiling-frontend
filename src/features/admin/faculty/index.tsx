@@ -94,6 +94,7 @@ export function Faculty() {
           </tbody>
         </table>
       </div>
+      </div>
     </MainLayout>
   );
 }

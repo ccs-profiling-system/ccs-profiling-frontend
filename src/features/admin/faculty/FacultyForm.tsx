@@ -128,7 +128,7 @@ export function FacultyForm() {
           </button>
         </div>
       </form>
-    </div>
+      </div>
     </MainLayout>
   );
 }
