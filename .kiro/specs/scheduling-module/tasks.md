@@ -1,6 +1,7 @@
 # Implementation Plan — Scheduling Module
 
-- [-] 1. Set up types and service layer
+- [x] 1. Set up types and service layer
+
 
 
 
