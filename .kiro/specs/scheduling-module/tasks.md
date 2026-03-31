@@ -60,7 +60,9 @@
     - **Property 2: Schedule type is always a valid enum value**
     - **Validates: Requirements 1.3**
 
-  - [-] 2.4 Write property test for room conflict detection (Property 5)
+  - [x] 2.4 Write property test for room conflict detection (Property 5)
+
+
 
 
 
@@ -68,59 +70,120 @@
     - **Property 5: Overlap detection — room conflict**
     - **Validates: Requirements 3.4, 5.1, 5.3**
 
-  - [ ]* 2.5 Write property test for instructor conflict detection (Property 6)
+  - [x] 2.5 Write property test for instructor conflict detection (Property 6)
+
+
+
+
+
+
     - **Property 6: Overlap detection — instructor conflict**
     - **Validates: Requirements 5.2, 5.3**
 
-  - [ ]* 2.6 Write property test for non-overlapping schedules (Property 7)
+  - [x] 2.6 Write property test for non-overlapping schedules (Property 7)
+
+
+
+
+
+
     - **Property 7: Non-overlapping schedules produce no conflicts**
     - **Validates: Requirements 5.4**
 
-  - [ ]* 2.7 Write property test for self-exclusion in conflict detection (Property 8)
+  - [x] 2.7 Write property test for self-exclusion in conflict detection (Property 8)
+
+
+
+
+
+
     - **Property 8: Self-exclusion in conflict detection**
     - **Validates: Requirements 5.5**
 
-- [ ] 3. Implement custom hook
-  - [ ] 3.1 Create `useSchedules.ts` — manages schedule list state, exposes `fetchSchedules`, `createSchedule`, `updateSchedule`, `deleteSchedule`, loading and error state
+- [x] 3. Implement custom hook
+
+
+
+
+  - [x] 3.1 Create `useSchedules.ts` — manages schedule list state, exposes `fetchSchedules`, `createSchedule`, `updateSchedule`, `deleteSchedule`, loading and error state
+
+
     - _Requirements: 1.1, 2.3, 4.4_
 
-  - [ ]* 3.2 Write property test for delete removes entry from list (Property 10)
+
+  - [x] 3.2 Write property test for delete removes entry from list (Property 10)
+
+
+
+
+
+
+
+
+
+
     - **Property 10: Delete removes entry from list**
     - **Validates: Requirements 2.3**
 
-- [ ] 4. Build UI components
-  - [ ] 4.1 Create `ScheduleTypeBadge.tsx` — renders a colored badge for `class` (blue) and `exam` (amber)
+
+- [x] 4. Build UI components
+
+
+
+
+  - [x] 4.1 Create `ScheduleTypeBadge.tsx` — renders a colored badge for `class` (blue) and `exam` (amber)
+
+
     - _Requirements: 2.2_
 
   - [ ]* 4.2 Write property test for type badge rendering (Property 4)
     - **Property 4: Class and exam schedules render differently**
     - **Validates: Requirements 2.2**
 
-  - [ ] 4.3 Create `CalendarCell.tsx` — renders a single schedule entry showing subject, instructor, room, and time slot; emits `onEdit` and `onDelete` callbacks
-    - _Requirements: 3.3, 4.3_
+  - [x] 4.3 Create `CalendarCell.tsx` — renders a single schedule entry showing subject, instructor, room, and time slot; emits `onEdit` and `onDelete` callbacks
 
-  - [ ]* 4.4 Write property test for schedule entry rendering completeness (Property 3)
+
+    - _Requirements: 3.3, 4.3_
+-
+
+  - [-] 4.4 Write property test for schedule entry rendering completeness (Property 3)
+
+
+
+
+
+
+
+
     - **Property 3: Schedule entry rendering completeness**
     - **Validates: Requirements 3.3, 4.3**
 
-  - [ ] 4.5 Create `ConflictAlert.tsx` — displays a warning listing conflicting schedule entries
+  - [x] 4.5 Create `ConflictAlert.tsx` — displays a warning listing conflicting schedule entries
+
+
     - _Requirements: 5.3_
 
-  - [ ] 4.6 Create `CalendarView.tsx` — calendar component accepting `viewMode`, `schedules`, and `dateRange` props; renders `CalendarCell` components in appropriate time slots; emits `onNavigate`
+  - [x] 4.6 Create `CalendarView.tsx` — calendar component accepting `viewMode`, `schedules`, and `dateRange` props; renders `CalendarCell` components in appropriate time slots; emits `onNavigate`
+
+
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
   - [ ]* 4.7 Write property test for calendar view mode validation (Property 9)
     - **Property 9: Calendar view mode is always a valid value**
     - **Validates: Requirements 4.2**
 
-  - [ ] 4.8 Create `ScheduleFormModal.tsx` — controlled form modal for create and edit
+  - [x] 4.8 Create `ScheduleFormModal.tsx` — controlled form modal for create and edit
+
+
     - Fields: subject (select), instructor (select), room (select), startTime (datetime-local), endTime (datetime-local), type (select)
     - Runs `validateScheduleForm` on submit; shows per-field errors
     - Runs `detectConflicts` before submission; shows `ConflictAlert` if conflicts found
     - Calls `useSchedules` create or update; shows API error inline; preserves form data on error
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 3.4, 5.1, 5.2, 5.3, 5.4, 5.5_
 
-  - [ ] 4.9 Create `SchedulingPage.tsx` — main scheduling page
+  - [x] 4.9 Create `SchedulingPage.tsx` — main scheduling page
+
+
     - Fetches schedules on mount via `useSchedules.fetchSchedules`
     - Renders `CalendarView` defaulting to weekly view
     - View mode switcher (daily / weekly / monthly)
