@@ -138,7 +138,10 @@
 
 
 
-  - [ ] 4.4 Create `FileAttachmentPanel.tsx` — file upload and attachment list panel
+  - [x] 4.4 Create `FileAttachmentPanel.tsx` — file upload and attachment list panel
+
+
+
 
 
 
@@ -150,7 +153,11 @@
 
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ] 4.5 Create `EventsPage.tsx` — main events list page
+  - [x] 4.5 Create `EventsPage.tsx` — main events list page
+
+
+
+
     - Fetches events on mount via `useEvents.fetchEvents`
     - Renders events in a table with columns: title, type, date, venue, status (badge), actions
     - Status filter dropdown (all / upcoming / ongoing / completed)
@@ -158,14 +165,27 @@
     - Shows loading state and error alert
     - _Requirements: 2.1, 2.4, 5.3, 5.4_
 
-- [ ] 5. Wire up the Events feature entry point
+- [x] 5. Wire up the Events feature entry point
+
+
+
+
+
+
   - Update `src/features/admin/events/index.tsx` to export and render `EventsPage`
   - Verify the `/admin/events` route in `src/app/routes.tsx` renders the Events feature
   - _Requirements: 1.1, 2.1_
 
-- [ ] 6. Checkpoint — Ensure all tests pass, ask the user if questions arise.
+- [x] 6. Checkpoint — Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Install testing dependencies and configure test setup
+
+
+
+
+
+- [-] 7. Install testing dependencies and configure test setup
+
+
   - Install `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `fast-check` as dev dependencies
   - Add `test` script to `package.json` (`vitest --run`)
   - Create `src/setupTests.ts` with `@testing-library/jest-dom` import
