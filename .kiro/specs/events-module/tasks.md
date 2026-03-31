@@ -62,7 +62,11 @@
     - **Validates: Requirements 4.4**
     - Use fast-check to generate file sizes > 10 MB; assert `validateFile` returns a size error
 
-- [-] 3. Implement custom hooks
+- [x] 3. Implement custom hooks
+
+
+
+
 
 
 
@@ -71,7 +75,9 @@
   - [x] 3.1 Create `useEvents.ts` — manages events list state, exposes `fetchEvents`, `createEvent`, `updateEvent`, `deleteEvent`, loading and error state
 
 
+
     - _Requirements: 1.1, 2.1, 2.3, 2.4_
+
 
   - [x] 3.2 Write property test for status filter correctness (Property 5)
 
@@ -82,7 +88,9 @@
   - [x] 3.3 Create `useParticipants.ts` — manages participant list state, exposes `fetchAvailable`, `assign`, `remove`, loading and error state
 
 
+
     - _Requirements: 3.1, 3.2, 3.3_
+
 
 
 
@@ -97,30 +105,49 @@
   - [x] 3.5 Create `useFileAttachments.ts` — manages attachment list state, exposes `upload`, `remove`, loading and error state
 
 
+
     - _Requirements: 4.1, 4.2, 4.3_
 
-- [ ] 4. Build UI components
-  - [ ] 4.1 Create `EventStatusBadge.tsx` — renders a colored badge for `upcoming` (blue), `ongoing` (amber), `completed` (green)
+- [x] 4. Build UI components
+
+
+
+
+
+  - [x] 4.1 Create `EventStatusBadge.tsx` — renders a colored badge for `upcoming` (blue), `ongoing` (amber), `completed` (green)
+
+
     - _Requirements: 5.3_
 
-  - [ ] 4.2 Create `EventFormModal.tsx` — controlled form modal for create and edit
+  - [x] 4.2 Create `EventFormModal.tsx` — controlled form modal for create and edit
+
+
     - Fields: title, type (select), date (datetime-local), venue, status (select), researchId (conditional on type defense/seminar), subjectIds (multi-select)
     - Runs `validateEventForm` on submit; shows per-field errors
     - Calls `useEvents` create or update; shows API error inline; preserves form data on error
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.2, 2.3, 5.1, 5.2, 6.1, 6.2_
 
-  - [ ] 4.3 Create `ParticipantAssignModal.tsx` — multi-select participant assignment modal
+  - [x] 4.3 Create `ParticipantAssignModal.tsx` — multi-select participant assignment modal
+
+
     - Fetches available students and faculty; renders them in separate tabs
     - Supports search/filter within the list
     - Save triggers `useParticipants.assign`; remove triggers `useParticipants.remove`
     - Shows API error; preserves selection state on error
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 6.3, 6.4_
 
+
+
   - [ ] 4.4 Create `FileAttachmentPanel.tsx` — file upload and attachment list panel
+
+
+
     - Drag-and-drop + click-to-upload input
     - Runs `validateFile` before upload; shows type/size errors
     - Displays attachment list with filename, type icon, delete button
     - Calls `useFileAttachments.upload` and `useFileAttachments.remove`
+
+
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
   - [ ] 4.5 Create `EventsPage.tsx` — main events list page
