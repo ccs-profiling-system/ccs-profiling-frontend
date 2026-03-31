@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Edit, Trash2, User } from 'lucide-react';
+import { MainLayout } from '@/components/layout';
 import type { Faculty, SubjectHandled, FacultySkill, FacultyAffiliation, ResearchRecord, EventParticipation } from './types';
 import { SubjectsHandled } from './components/SubjectsHandled';
 import { SkillsAffiliations } from './components/SkillsAffiliations';
@@ -52,8 +53,8 @@ export function FacultyProfile() {
   const faculty = SAMPLE_FACULTY;
 
   return (
-    // TODO: wrap with <MainLayout title="Faculty"> from @/components/layout on merge
-    <div className="max-w-5xl mx-auto space-y-6">
+    <MainLayout title="Faculty">
+      <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Faculty Profile</h1>
@@ -135,6 +136,6 @@ export function FacultyProfile() {
           {activeTab === 3 && <SkillsAffiliations skills={SAMPLE_SKILLS} affiliations={SAMPLE_AFFILIATIONS} />}
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }

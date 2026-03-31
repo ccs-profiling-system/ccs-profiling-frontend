@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { MainLayout } from '@/components/layout';
 import type { Faculty } from './types';
 
 type FormData = Omit<Faculty, 'id'>;
@@ -15,8 +16,8 @@ export function FacultyForm() {
   };
 
   return (
-    // TODO: wrap with <MainLayout title="Faculty"> from @/components/layout on merge
-    <div className="max-w-3xl mx-auto space-y-6">
+    <MainLayout title="Faculty">
+      <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Add Faculty</h1>
         <p className="text-sm text-gray-500">Fill in the faculty member's information</p>
@@ -128,5 +129,6 @@ export function FacultyForm() {
         </div>
       </form>
     </div>
+    </MainLayout>
   );
 }

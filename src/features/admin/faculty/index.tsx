@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Eye } from 'lucide-react';
+import { MainLayout } from '@/components/layout';
 import type { Faculty } from './types';
 
 const SAMPLE_FACULTY: Faculty[] = [
@@ -25,8 +26,8 @@ export function Faculty() {
   );
 
   return (
-    // TODO: wrap with <MainLayout title="Faculty"> from @/components/layout on merge
-    <div className="space-y-4">
+    <MainLayout title="Faculty">
+      <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Faculty</h1>
@@ -93,6 +94,6 @@ export function Faculty() {
           </tbody>
         </table>
       </div>
-    </div>
+    </MainLayout>
   );
 }
