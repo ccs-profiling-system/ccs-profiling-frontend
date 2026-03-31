@@ -220,7 +220,9 @@
   - Add `/admin/scheduling` route in `src/app/routes.tsx`
   - _Requirements: 1.1, 4.1_
 
-- [-] 6. Final Checkpoint — Ensure all tests pass, ask the user if questions arise.
+- [x] 6. Final Checkpoint — Ensure all tests pass, ask the user if questions arise.
+
+
 
 
 
