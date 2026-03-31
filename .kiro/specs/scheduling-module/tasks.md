@@ -5,13 +5,33 @@
 
 
 
+
+
+
+
+
   - Create `src/features/admin/scheduling/types.ts` with `Schedule`, `ScheduleType`, `CreateSchedulePayload`, `UpdateSchedulePayload`, `ConflictResult`, `ConflictDetail`, `CalendarViewMode`, `DateRange`
   - Create `src/features/admin/scheduling/schedulesService.ts` with axios functions: `getSchedules`, `createSchedule`, `updateSchedule`, `deleteSchedule`
   - Create `src/features/admin/scheduling/roomsService.ts` with: `getRooms`
   - _Requirements: 1.1, 2.1, 2.3, 3.1, 3.2, 4.4_
 
-- [ ] 2. Implement form validation and conflict detection utilities
-  - [ ] 2.1 Create `src/features/admin/scheduling/validation.ts` with:
+- [x] 2. Implement form validation and conflict detection utilities
+
+
+
+
+
+
+
+
+
+
+  - [x] 2.1 Create `src/features/admin/scheduling/validation.ts` with:
+
+
+
+
+
     - `validateScheduleForm` — checks required fields: subject, instructor, room, startTime, endTime, type
     - `detectConflicts` — checks room and instructor overlaps against existing schedules, excludes a given ID for edit mode
     - `VALID_SCHEDULE_TYPES` constant array
@@ -19,15 +39,32 @@
     - `timeSlotsOverlap(a, b)` — pure helper returning true if two time slots overlap
     - _Requirements: 1.2, 1.3, 2.1, 3.4, 5.1, 5.2, 5.3, 5.4, 5.5_
 
-  - [ ]* 2.2 Write property test for invalid schedule payloads (Property 1)
+  - [x] 2.2 Write property test for invalid schedule payloads (Property 1)
+
+
+
+
+
+
+
     - **Property 1: Invalid schedule payloads are rejected client-side**
     - **Validates: Requirements 1.2, 2.1**
 
-  - [ ]* 2.3 Write property test for schedule type enum (Property 2)
+  - [x] 2.3 Write property test for schedule type enum (Property 2)
+
+
+
+
+
+
     - **Property 2: Schedule type is always a valid enum value**
     - **Validates: Requirements 1.3**
 
-  - [ ]* 2.4 Write property test for room conflict detection (Property 5)
+  - [-] 2.4 Write property test for room conflict detection (Property 5)
+
+
+
+
     - **Property 5: Overlap detection — room conflict**
     - **Validates: Requirements 3.4, 5.1, 5.3**
 
