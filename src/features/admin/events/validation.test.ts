@@ -15,9 +15,6 @@ const nonBlankString = fc.string({ minLength: 1 }).filter((s) => s.trim().length
 // Arbitrary for a valid event type
 const validEventType = fc.constantFrom(...VALID_EVENT_TYPES);
 
-// Arbitrary for a valid event status
-const _validEventStatus = fc.constantFrom(...VALID_EVENT_STATUSES);
-
 // Arbitrary for a fully valid event payload
 const validPayload: fc.Arbitrary<CreateEventPayload> = fc.record({
   title: nonBlankString,
