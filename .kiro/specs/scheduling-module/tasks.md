@@ -136,7 +136,17 @@
 
     - _Requirements: 2.2_
 
-  - [ ]* 4.2 Write property test for type badge rendering (Property 4)
+  - [x] 4.2 Write property test for type badge rendering (Property 4)
+
+
+
+
+
+
+
+
+
+
     - **Property 4: Class and exam schedules render differently**
     - **Validates: Requirements 2.2**
 
@@ -146,7 +156,9 @@
     - _Requirements: 3.3, 4.3_
 -
 
-  - [-] 4.4 Write property test for schedule entry rendering completeness (Property 3)
+  - [x] 4.4 Write property test for schedule entry rendering completeness (Property 3)
+
+
 
 
 
@@ -168,7 +180,13 @@
 
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-  - [ ]* 4.7 Write property test for calendar view mode validation (Property 9)
+  - [x] 4.7 Write property test for calendar view mode validation (Property 9)
+
+
+
+
+
+
     - **Property 9: Calendar view mode is always a valid value**
     - **Validates: Requirements 4.2**
 
@@ -192,9 +210,17 @@
     - Shows loading state and error alert
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 5. Wire up the Scheduling feature entry point
+- [x] 5. Wire up the Scheduling feature entry point
+
+
+
+
+
   - Update `src/features/admin/scheduling/index.tsx` to export and render `SchedulingPage`
   - Add `/admin/scheduling` route in `src/app/routes.tsx`
   - _Requirements: 1.1, 4.1_
 
-- [ ] 6. Final Checkpoint — Ensure all tests pass, ask the user if questions arise.
+- [-] 6. Final Checkpoint — Ensure all tests pass, ask the user if questions arise.
+
+
+

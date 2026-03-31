@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
-import { validateScheduleForm, VALID_SCHEDULE_TYPES, detectConflicts } from './validation';
+import { validateScheduleForm, VALID_SCHEDULE_TYPES, VALID_CALENDAR_VIEWS, detectConflicts } from './validation';
 import { CalendarCell } from './CalendarCell';
+import { ScheduleTypeBadge } from './ScheduleTypeBadge';
 import type { CreateSchedulePayload, Schedule } from './types';
 
 // Feature: scheduling-module, Property 1: Invalid schedule payloads are rejected client-side
@@ -144,6 +145,41 @@ describe('Property 2: Schedule type is always a valid enum value', () => {
         (subject, instructor, room, startTime, endTime, type) => {
           const errors = validateScheduleForm({ subject, instructor, room, startTime, endTime, type });
           expect(errors.type).toBeUndefined();
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: scheduling-module, Property 4: Class and exam schedules render differently
+
+describe('Property 4: Class and exam schedules render differently', () => {
+  /**
+   * Validates: Requirements 2.2
+   *
+   * For any schedule entry, the rendered type badge for "class" should be
+   * visually distinct (different text/color class) from the rendered type badge
+   * for "exam".
+   */
+  it('renders a different badge for "class" than for "exam"', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom('class' as const, 'exam' as const),
+        (type) => {
+          const classBadge = renderToStaticMarkup(createElement(ScheduleTypeBadge, { type: 'class' }));
+          const examBadge = renderToStaticMarkup(createElement(ScheduleTypeBadge, { type: 'exam' }));
+
+          // The two badges must not be identical
+          expect(classBadge).not.toBe(examBadge);
+
+          // Each badge must contain its own type label
+          expect(classBadge).toContain('class');
+          expect(examBadge).toContain('exam');
+
+          // The badge for the given type must contain that type's label
+          const rendered = renderToStaticMarkup(createElement(ScheduleTypeBadge, { type }));
+          expect(rendered).toContain(type);
         }
       ),
       { numRuns: 100 }
@@ -543,6 +579,41 @@ describe('Property 3: Schedule entry rendering completeness', () => {
           expect(html).toContain(endFormatted);
         }
       ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: scheduling-module, Property 9: Calendar view mode is always a valid value
+
+describe('Property 9: Calendar view mode is always a valid value', () => {
+  /**
+   * Validates: Requirements 4.2
+   *
+   * For any view mode value, only "daily", "weekly", and "monthly" should be
+   * accepted as valid; all other strings should not be present in VALID_CALENDAR_VIEWS.
+   */
+  it('accepts only "daily", "weekly", and "monthly" as valid view modes', () => {
+    fc.assert(
+      fc.property(
+        fc.constantFrom('daily' as const, 'weekly' as const, 'monthly' as const),
+        (validMode) => {
+          expect(VALID_CALENDAR_VIEWS).toContain(validMode);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('rejects any string that is not a valid calendar view mode', () => {
+    const invalidMode = fc.string().filter(
+      (s) => !(['daily', 'weekly', 'monthly'] as string[]).includes(s)
+    );
+
+    fc.assert(
+      fc.property(invalidMode, (mode) => {
+        expect(VALID_CALENDAR_VIEWS).not.toContain(mode);
+      }),
       { numRuns: 100 }
     );
   });
