@@ -1,6 +1,8 @@
 # Implementation Plan — Research Module
 
-- [-] 1. Set up types and service layer
+- [x] 1. Set up types and service layer
+
+
 
 
 
@@ -9,8 +11,12 @@
   - Create `src/features/admin/research/peopleService.ts` with: `getPeople` (returns students and faculty)
   - _Requirements: 1.1, 1.3, 1.4, 4.1, 4.2, 6.1, 6.4_
 
-- [ ] 2. Implement validation and filter utilities
-  - [ ] 2.1 Create `src/features/admin/research/validation.ts` with:
+- [-] 2. Implement validation and filter utilities
+
+
+
+  - [-] 2.1 Create `src/features/admin/research/validation.ts` with:
+
     - `validateResearchForm` — checks required fields: title, abstract, category, status
     - `VALID_RESEARCH_STATUSES` constant array: `['ongoing', 'completed', 'published']`
     - _Requirements: 1.2, 5.1_
