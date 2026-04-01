@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout, Card, BarChart, PieChart, Spinner, ErrorAlert } from '@/components/layout';
 import { 
@@ -6,50 +5,12 @@ import {
   Clock, ArrowRight, FileText, UserPlus, CalendarPlus, Award, Activity,
   Zap, AlertTriangle, CheckCircle, ClipboardList
 } from 'lucide-react';
-import { dashboardService, type DashboardStats, type EnrollmentData, type ProgramDistribution } from '@/services';
 import { DashboardAside } from './DashboardAside';
+import { useDashboardData } from './useDashboardData';
 
 export function AdminDashboard() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalStudents: 0,
-    totalFaculty: 0,
-    activeEvents: 0,
-    researchProjects: 0,
-  });
-  const [enrollmentData, setEnrollmentData] = useState<EnrollmentData[]>([]);
-  const [programDistribution, setProgramDistribution] = useState<ProgramDistribution[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await dashboardService.getDashboardStats();
-      setStats(data.stats);
-      setEnrollmentData(data.enrollmentTrend);
-      setProgramDistribution(data.programDistribution);
-    } catch (err) {
-      console.error('Failed to fetch dashboard data:', err);
-      setError('Failed to load dashboard data. Using sample data.');
-      setStats({ totalStudents: 1234, totalFaculty: 89, activeEvents: 12, researchProjects: 24 });
-      setEnrollmentData([
-        { name: 'Jan', value: 120 }, { name: 'Feb', value: 150 }, { name: 'Mar', value: 180 },
-        { name: 'Apr', value: 220 }, { name: 'May', value: 190 }, { name: 'Jun', value: 240 },
-      ]);
-      setProgramDistribution([
-        { name: 'BSCS', value: 450 }, { name: 'BSIT', value: 380 },
-        { name: 'BSIS', value: 280 }, { name: 'ACT', value: 124 },
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { stats, enrollmentData, programDistribution, recentActivity, loading, error, refetch } = useDashboardData();
 
   const getCurrentDateInfo = () => {
     const now = new Date();
@@ -85,12 +46,16 @@ export function AdminDashboard() {
               <div className="grid grid-cols-2 gap-3 mt-4">
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
                   <p className="text-white/80 text-xs mb-1">Active Today</p>
-                  <p className="text-white text-xl sm:text-2xl font-bold">1,180</p>
+                  <p className="text-white text-xl sm:text-2xl font-bold">
+                    {stats.activeStudentsToday || 0}
+                  </p>
                   <p className="text-white/70 text-xs">Students</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
                   <p className="text-white/80 text-xs mb-1">This Week</p>
-                  <p className="text-white text-xl sm:text-2xl font-bold">8</p>
+                  <p className="text-white text-xl sm:text-2xl font-bold">
+                    {stats.eventsThisWeek || 0}
+                  </p>
                   <p className="text-white/70 text-xs">Events</p>
                 </div>
               </div>
@@ -100,7 +65,14 @@ export function AdminDashboard() {
             </div>
           </div>
 
-          {error && <ErrorAlert title="Connection Error" message={error} onRetry={fetchDashboardData} onDismiss={() => setError(null)} />}
+          {error && (
+            <ErrorAlert
+              title="Connection Error"
+              message={error}
+              onRetry={refetch}
+              onDismiss={() => {}}
+            />
+          )}
 
           {/* Quick Actions */}
           <div>
@@ -268,34 +240,54 @@ export function AdminDashboard() {
               </h3>
             </div>
             <div className="space-y-3">
-              {[
-                { icon: GraduationCap, text: 'New student John Doe registered', time: '2 minutes ago', color: 'blue' },
-                { icon: Calendar, text: 'Academic Conference scheduled', time: '1 hour ago', color: 'purple' },
-                { icon: FlaskConical, text: 'Research paper submitted', time: '3 hours ago', color: 'orange' },
-                { icon: Users, text: 'Dr. Smith updated course materials', time: '5 hours ago', color: 'green' },
-                { icon: FileText, text: 'Quarterly report generated', time: '1 day ago', color: 'gray' },
-              ].map((activity, index) => {
-                const Icon = activity.icon;
+              {recentActivity.map((activity) => {
+                const Icon = activity.type === 'student' ? GraduationCap :
+                            activity.type === 'event' ? Calendar :
+                            activity.type === 'research' ? FlaskConical :
+                            activity.type === 'faculty' ? Users :
+                            FileText;
+                
+                const color = activity.type === 'student' ? 'blue' :
+                             activity.type === 'event' ? 'purple' :
+                             activity.type === 'research' ? 'orange' :
+                             activity.type === 'faculty' ? 'green' :
+                             'gray';
+                
+                const getTimeAgo = (timestamp: string) => {
+                  const now = new Date();
+                  const past = new Date(timestamp);
+                  const diffMs = now.getTime() - past.getTime();
+                  const diffMins = Math.floor(diffMs / 60000);
+                  const diffHours = Math.floor(diffMs / 3600000);
+                  const diffDays = Math.floor(diffMs / 86400000);
+                  
+                  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+                  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+                  return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+                };
+                
                 return (
-                  <div key={index} className="activity-item">
+                  <div key={activity.id} className="activity-item">
                     <div className={`activity-icon ${
-                      activity.color === 'blue' ? 'bg-blue-100' :
-                      activity.color === 'purple' ? 'bg-purple-100' :
-                      activity.color === 'orange' ? 'bg-orange-100' :
-                      activity.color === 'green' ? 'bg-green-100' :
+                      color === 'blue' ? 'bg-blue-100' :
+                      color === 'purple' ? 'bg-purple-100' :
+                      color === 'orange' ? 'bg-orange-100' :
+                      color === 'green' ? 'bg-green-100' :
                       'bg-gray-100'
                     }`}>
                       <Icon className={`w-4 h-4 ${
-                        activity.color === 'blue' ? 'text-blue-600' :
-                        activity.color === 'purple' ? 'text-purple-600' :
-                        activity.color === 'orange' ? 'text-primary' :
-                        activity.color === 'green' ? 'text-green-600' :
+                        color === 'blue' ? 'text-blue-600' :
+                        color === 'purple' ? 'text-purple-600' :
+                        color === 'orange' ? 'text-primary' :
+                        color === 'green' ? 'text-green-600' :
                         'text-gray-600'
                       }`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{activity.text}</p>
-                      <p className="text-xs text-gray-500">{activity.time}</p>
+                      <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">
+                        {activity.description}
+                      </p>
+                      <p className="text-xs text-gray-500">{getTimeAgo(activity.timestamp)}</p>
                     </div>
                   </div>
                 );
@@ -337,8 +329,8 @@ export function AdminDashboard() {
                 <GraduationCap className="w-6 h-6 text-white" />
               </div>
               <p className="text-sm text-gray-600 mb-1">Active Students</p>
-              <p className="text-3xl font-bold text-gray-900">1,180</p>
-              <p className="text-xs text-green-600 mt-2">↑ 23 new enrollments</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.activeStudentsToday?.toLocaleString() || '0'}</p>
+              <p className="text-xs text-gray-500 mt-2">Today's active count</p>
             </div>
           </Card>
 
@@ -348,8 +340,8 @@ export function AdminDashboard() {
                 <Users className="w-6 h-6 text-white" />
               </div>
               <p className="text-sm text-gray-600 mb-1">Faculty Members</p>
-              <p className="text-3xl font-bold text-gray-900">89</p>
-              <p className="text-xs text-gray-500 mt-2">67 full-time, 22 part-time</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.totalFaculty || 0}</p>
+              <p className="text-xs text-gray-500 mt-2">Total faculty count</p>
             </div>
           </Card>
 
@@ -359,8 +351,8 @@ export function AdminDashboard() {
                 <FlaskConical className="w-6 h-6 text-white" />
               </div>
               <p className="text-sm text-gray-600 mb-1">Research Projects</p>
-              <p className="text-3xl font-bold text-gray-900">24</p>
-              <p className="text-xs text-purple-600 mt-2">18 active, 6 completed</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.researchProjects || 0}</p>
+              <p className="text-xs text-gray-500 mt-2">Active projects</p>
             </div>
           </Card>
 
@@ -369,9 +361,9 @@ export function AdminDashboard() {
               <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
                 <Award className="w-6 h-6 text-white" />
               </div>
-              <p className="text-sm text-gray-600 mb-1">Publications</p>
-              <p className="text-3xl font-bold text-gray-900">42</p>
-              <p className="text-xs text-primary mt-2">5 published this year</p>
+              <p className="text-sm text-gray-600 mb-1">Active Events</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.activeEvents || 0}</p>
+              <p className="text-xs text-gray-500 mt-2">This week's events</p>
             </div>
           </Card>
         </div>

@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { MainLayout, Card, Modal, ExportButtons } from '@/components/layout';
 import { FileText, Download, Filter, Calendar, Users, TrendingUp } from 'lucide-react';
+import { Spinner, ErrorAlert } from '@/components/ui';
+import { useReportsData } from './useReportsData';
+import { reportsService } from '@/services/api';
 
 export function Reports() {
+  const { reports, statistics, loading, error } = useReportsData();
   const [selectedModule, setSelectedModule] = useState('all');
   const [selectedDateRange, setSelectedDateRange] = useState('30days');
   const [filteredReports, setFilteredReports] = useState<any[]>([]);
@@ -41,25 +45,18 @@ export function Reports() {
     },
   ];
 
-  const allReports = [
-    { name: 'Student Enrollment Report Q1 2026', date: 'March 28, 2026', size: '2.4 MB', module: 'students', timestamp: new Date('2026-03-28') },
-    { name: 'Faculty Performance Review', date: 'March 25, 2026', size: '1.8 MB', module: 'faculty', timestamp: new Date('2026-03-25') },
-    { name: 'Research Output Summary', date: 'March 20, 2026', size: '3.1 MB', module: 'research', timestamp: new Date('2026-03-20') },
-    { name: 'Event Attendance Report', date: 'March 15, 2026', size: '1.2 MB', module: 'events', timestamp: new Date('2026-03-15') },
-    { name: 'Student Grade Distribution', date: 'February 28, 2026', size: '1.9 MB', module: 'students', timestamp: new Date('2026-02-28') },
-    { name: 'Faculty Teaching Load', date: 'February 15, 2026', size: '2.2 MB', module: 'faculty', timestamp: new Date('2026-02-15') },
-  ];
+  const allReports = reports;
 
   const handleApplyFilters = () => {
     let filtered = [...allReports];
 
     // Filter by module
     if (selectedModule !== 'all') {
-      filtered = filtered.filter(report => report.module === selectedModule);
+      filtered = filtered.filter(report => report.type === selectedModule);
     }
 
     // Filter by date range
-    const now = new Date('2026-03-30'); // Current date from context
+    const now = new Date();
     let cutoffDate = new Date(now);
 
     switch (selectedDateRange) {
@@ -79,7 +76,7 @@ export function Reports() {
         cutoffDate = new Date(0); // Show all
     }
 
-    filtered = filtered.filter(report => report.timestamp >= cutoffDate);
+    filtered = filtered.filter(report => new Date(report.timestamp) >= cutoffDate);
     setFilteredReports(filtered);
   };
 
@@ -90,23 +87,36 @@ export function Reports() {
     setIsModalOpen(true);
   };
 
-  const handleConfirmGenerate = () => {
-    console.log('Generating report:', selectedReportType);
-    // Add API call here
-    setIsModalOpen(false);
+  const handleConfirmGenerate = async () => {
+    try {
+      await reportsService.generateReport({
+        type: selectedReportType,
+        format: 'pdf',
+        dateRange: 'current-month'
+      });
+      alert('Report generated successfully!');
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Failed to generate report:', error);
+      alert('Failed to generate report');
+    }
   };
 
   const handleExportPDF = async () => {
     setExporting(true);
     try {
-      console.log('Exporting to PDF...');
-      // Add PDF export logic here
-      // Example: await api.get('/reports/export/pdf', { responseType: 'blob' });
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      alert('PDF export successful!');
+      const blob = await reportsService.exportToPDF({ format: 'pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `reports_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('PDF export failed:', error);
-      alert('PDF export failed');
+      alert('Failed to export PDF');
     } finally {
       setExporting(false);
     }
@@ -115,18 +125,57 @@ export function Reports() {
   const handleExportExcel = async () => {
     setExporting(true);
     try {
-      console.log('Exporting to Excel...');
-      // Add Excel export logic here
-      // Example: await api.get('/reports/export/excel', { responseType: 'blob' });
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      alert('Excel export successful!');
+      const blob = await reportsService.exportToExcel({ format: 'excel' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `reports_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Excel export failed:', error);
-      alert('Excel export failed');
+      alert('Failed to export Excel');
     } finally {
       setExporting(false);
     }
   };
+
+  const handleDownloadReport = async (reportId: string) => {
+    try {
+      const blob = await reportsService.downloadReport(reportId);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `report_${reportId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download report');
+    }
+  };
+
+  if (loading) {
+    return (
+      <MainLayout title="Reports">
+        <div className="flex items-center justify-center h-64">
+          <Spinner size="lg" />
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout title="Reports">
+        <ErrorAlert message={error} />
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout title="Reports">
@@ -282,9 +331,9 @@ export function Reports() {
           <Card>
             {displayReports.length > 0 ? (
               <div className="space-y-3">
-                {displayReports.map((report, index) => (
+                {displayReports.map((report) => (
                   <div 
-                    key={index} 
+                    key={report.id} 
                     className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition"
                   >
                     <div className="flex items-center gap-4">
@@ -292,11 +341,16 @@ export function Reports() {
                         <FileText className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-800">{report.name}</p>
-                        <p className="text-sm text-gray-500">{report.date} • {report.size}</p>
+                        <p className="font-medium text-gray-800">{report.title}</p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(report.timestamp).toLocaleDateString()} • {report.size || 'N/A'}
+                        </p>
                       </div>
                     </div>
-                    <button className="p-2 hover:bg-primary/10 rounded-lg transition group">
+                    <button 
+                      onClick={() => handleDownloadReport(report.id)}
+                      className="p-2 hover:bg-primary/10 rounded-lg transition group"
+                    >
                       <Download className="w-5 h-5 text-gray-600 group-hover:text-primary" />
                     </button>
                   </div>
@@ -305,7 +359,11 @@ export function Reports() {
             ) : (
               <div className="text-center py-12">
                 <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No reports found matching your filters</p>
+                <p className="text-gray-500">
+                  {reports.length === 0 
+                    ? 'No reports available. Please ensure the backend is running.' 
+                    : 'No reports found matching your filters'}
+                </p>
               </div>
             )}
           </Card>
@@ -316,22 +374,26 @@ export function Reports() {
           <Card accent>
             <div className="text-center">
               <p className="text-sm text-gray-600 mb-2">Total Reports Generated</p>
-              <p className="text-4xl font-bold text-gray-800">156</p>
-              <p className="text-sm text-primary mt-2">+12 this month</p>
+              <p className="text-4xl font-bold text-gray-800">{statistics?.totalReports || 0}</p>
+              <p className="text-sm text-primary mt-2">
+                {statistics?.reportsThisMonth ? `+${statistics.reportsThisMonth} this month` : 'No data'}
+              </p>
             </div>
           </Card>
           <Card accent>
             <div className="text-center">
               <p className="text-sm text-gray-600 mb-2">Reports This Month</p>
-              <p className="text-4xl font-bold text-gray-800">23</p>
-              <p className="text-sm text-green-600 mt-2">↑ 15% from last month</p>
+              <p className="text-4xl font-bold text-gray-800">{statistics?.reportsThisMonth || 0}</p>
+              <p className="text-sm text-green-600 mt-2">
+                {statistics?.monthlyGrowth ? `↑ ${statistics.monthlyGrowth}% from last month` : 'No data'}
+              </p>
             </div>
           </Card>
           <Card accent>
             <div className="text-center">
               <p className="text-sm text-gray-600 mb-2">Most Generated</p>
-              <p className="text-4xl font-bold text-gray-800">Student</p>
-              <p className="text-sm text-gray-500 mt-2">45% of all reports</p>
+              <p className="text-4xl font-bold text-gray-800">{statistics?.mostGenerated || 'N/A'}</p>
+              <p className="text-sm text-gray-500 mt-2">Most generated type</p>
             </div>
           </Card>
         </div>

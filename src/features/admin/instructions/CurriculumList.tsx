@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Card, SearchBar, ExportButtons, Modal } from '@/components/ui';
+import { Card, SearchBar, ExportButtons, Modal, Spinner, ErrorAlert } from '@/components/ui';
 import { Plus, Edit, Trash2, Eye, BookOpen, ChevronDown, ChevronRight } from 'lucide-react';
 import { SubjectDetailsPanel } from './SubjectDetailsPanel';
+import { useInstructionsData } from './useInstructionsData';
+import { instructionsService } from '@/services/api';
 
 export interface Column<T> {
   key: string;
@@ -54,6 +56,7 @@ interface Curriculum {
 }
 
 export function CurriculumList() {
+  const { curriculum, statistics, loading, error } = useInstructionsData();
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCurriculum, setSelectedCurriculum] = useState<Curriculum | null>(null);
@@ -61,157 +64,7 @@ export function CurriculumList() {
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [isSubjectPanelOpen, setIsSubjectPanelOpen] = useState(false);
 
-  const sampleSubjects: Subject[] = [
-    { 
-      id: 1, 
-      code: 'CS101', 
-      name: 'Introduction to Programming', 
-      units: 3, 
-      semester: 1, 
-      yearLevel: 1,
-      type: 'core',
-      description: 'This course introduces students to the fundamental concepts of programming using a high-level language. Topics include problem-solving, algorithm development, data types, control structures, functions, and basic data structures.',
-      prerequisites: [],
-      hours: { lecture: 2, laboratory: 3 },
-      objectives: [
-        'Understand basic programming concepts and problem-solving techniques',
-        'Write, compile, and debug programs in a high-level language',
-        'Apply control structures and functions to solve problems',
-        'Implement basic data structures and algorithms'
-      ],
-      topics: ['Variables', 'Data Types', 'Control Flow', 'Functions', 'Arrays', 'Debugging'],
-      faculty: 'Prof. John Smith',
-      schedule: 'MWF 9:00-10:00 AM',
-      room: 'CS Lab 1',
-      enrolledStudents: 35,
-      maxCapacity: 40,
-      syllabus: {
-        fileName: 'CS101_Syllabus_2024.pdf',
-        fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        uploadedDate: 'Jan 15, 2024',
-        fileSize: '2.4 MB'
-      }
-    },
-    { 
-      id: 2, 
-      code: 'CS102', 
-      name: 'Data Structures', 
-      units: 3, 
-      semester: 2, 
-      yearLevel: 1,
-      type: 'core',
-      description: 'An in-depth study of data structures and their applications. Topics include linked lists, stacks, queues, trees, graphs, and hash tables.',
-      prerequisites: ['CS101'],
-      hours: { lecture: 2, laboratory: 3 },
-      objectives: [
-        'Understand and implement fundamental data structures',
-        'Analyze time and space complexity of algorithms',
-        'Choose appropriate data structures for specific problems',
-        'Apply data structures to solve real-world problems'
-      ],
-      topics: ['Linked Lists', 'Stacks', 'Queues', 'Trees', 'Graphs', 'Hash Tables', 'Sorting'],
-      faculty: 'Prof. Jane Doe',
-      schedule: 'TTH 1:00-2:30 PM',
-      room: 'CS Lab 2',
-      enrolledStudents: 38,
-      maxCapacity: 40,
-      syllabus: {
-        fileName: 'CS102_DataStructures_Syllabus.pdf',
-        fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        uploadedDate: 'Jan 18, 2024',
-        fileSize: '1.8 MB'
-      }
-    },
-    { 
-      id: 3, 
-      code: 'CS201', 
-      name: 'Object-Oriented Programming', 
-      units: 3, 
-      semester: 1, 
-      yearLevel: 2,
-      type: 'major',
-      description: 'This course covers object-oriented programming principles and practices. Students learn to design and implement programs using classes, inheritance, polymorphism, and design patterns.',
-      prerequisites: ['CS102'],
-      corequisites: ['CS202'],
-      hours: { lecture: 2, laboratory: 3 },
-      objectives: [
-        'Master object-oriented programming concepts',
-        'Design and implement class hierarchies',
-        'Apply design patterns to software development',
-        'Develop maintainable and reusable code'
-      ],
-      topics: ['Classes', 'Inheritance', 'Polymorphism', 'Encapsulation', 'Design Patterns', 'UML'],
-      faculty: 'Prof. Robert Johnson',
-      schedule: 'MWF 2:00-3:00 PM',
-      room: 'CS Lab 3',
-      enrolledStudents: 42,
-      maxCapacity: 45,
-      syllabus: {
-        fileName: 'CS201_OOP_Syllabus_2024.pdf',
-        fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        uploadedDate: 'Jan 20, 2024',
-        fileSize: '3.1 MB'
-      }
-    },
-    { 
-      id: 4, 
-      code: 'CS202', 
-      name: 'Database Systems', 
-      units: 3, 
-      semester: 2, 
-      yearLevel: 2,
-      type: 'major',
-      description: 'Introduction to database management systems, including data modeling, SQL, normalization, and transaction management.',
-      prerequisites: ['CS102'],
-      hours: { lecture: 2, laboratory: 3 },
-      objectives: [
-        'Design and implement relational databases',
-        'Write complex SQL queries',
-        'Understand database normalization and optimization',
-        'Manage database transactions and concurrency'
-      ],
-      topics: ['ER Modeling', 'SQL', 'Normalization', 'Indexing', 'Transactions', 'NoSQL'],
-      faculty: 'Prof. Maria Garcia',
-      schedule: 'TTH 10:00-11:30 AM',
-      room: 'CS Lab 1',
-      enrolledStudents: 30,
-      maxCapacity: 40
-    },
-    { 
-      id: 5, 
-      code: 'CS301', 
-      name: 'Software Engineering', 
-      units: 3, 
-      semester: 1, 
-      yearLevel: 3,
-      type: 'major',
-      description: 'Comprehensive study of software development methodologies, project management, and software quality assurance.',
-      prerequisites: ['CS201', 'CS202'],
-      hours: { lecture: 3, laboratory: 0 },
-      objectives: [
-        'Apply software development methodologies',
-        'Manage software projects effectively',
-        'Ensure software quality through testing',
-        'Work collaboratively in development teams'
-      ],
-      topics: ['SDLC', 'Agile', 'Testing', 'Version Control', 'CI/CD', 'Project Management'],
-      faculty: 'Prof. David Lee',
-      schedule: 'MWF 11:00-12:00 PM',
-      room: 'Room 301',
-      enrolledStudents: 28,
-      maxCapacity: 35
-    },
-  ];
-
-  const curriculumData: Curriculum[] = [
-    { id: 1, code: 'BSCS-2024', name: 'BS Computer Science 2024', program: 'BSCS', yearLevel: 4, effectiveYear: '2024', status: 'active', subjects: 45, subjectList: sampleSubjects },
-    { id: 2, code: 'BSIT-2024', name: 'BS Information Technology 2024', program: 'BSIT', yearLevel: 4, effectiveYear: '2024', status: 'active', subjects: 42, subjectList: sampleSubjects.slice(0, 3) },
-    { id: 3, code: 'BSIS-2024', name: 'BS Information Systems 2024', program: 'BSIS', yearLevel: 4, effectiveYear: '2024', status: 'active', subjects: 40, subjectList: sampleSubjects.slice(0, 4) },
-    { id: 4, code: 'BSCS-2023', name: 'BS Computer Science 2023', program: 'BSCS', yearLevel: 4, effectiveYear: '2023', status: 'inactive', subjects: 44, subjectList: sampleSubjects },
-    { id: 5, code: 'ACT-2024', name: 'Associate in Computer Technology 2024', program: 'ACT', yearLevel: 2, effectiveYear: '2024', status: 'active', subjects: 28, subjectList: sampleSubjects.slice(0, 2) },
-  ];
-
-  const filteredData = curriculumData.filter(
+  const filteredData = curriculum.filter(
     (item) =>
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -348,13 +201,51 @@ export function CurriculumList() {
     },
   ];
 
-  const handleExportPDF = () => {
-    console.log('Exporting curriculum to PDF...');
+  const handleExportPDF = async () => {
+    try {
+      const blob = await instructionsService.exportCurriculumToPDF();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `curriculum_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      alert('Failed to export PDF');
+    }
   };
 
-  const handleExportExcel = () => {
-    console.log('Exporting curriculum to Excel...');
+  const handleExportExcel = async () => {
+    try {
+      const blob = await instructionsService.exportCurriculumToExcel();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `curriculum_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Excel export failed:', error);
+      alert('Failed to export Excel');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <ErrorAlert message={error} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -391,14 +282,14 @@ export function CurriculumList() {
         <Card accent>
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-1">Total Curriculum</p>
-            <p className="text-3xl font-bold text-gray-800">{curriculumData.length}</p>
+            <p className="text-3xl font-bold text-gray-800">{statistics?.totalCurriculum || 0}</p>
           </div>
         </Card>
         <Card accent>
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-1">Active</p>
             <p className="text-3xl font-bold text-green-600">
-              {curriculumData.filter(c => c.status === 'active').length}
+              {statistics?.activeCurriculum || 0}
             </p>
           </div>
         </Card>
@@ -406,7 +297,7 @@ export function CurriculumList() {
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-1">Programs</p>
             <p className="text-3xl font-bold text-primary">
-              {new Set(curriculumData.map(c => c.program)).size}
+              {statistics?.totalPrograms || 0}
             </p>
           </div>
         </Card>
@@ -414,7 +305,7 @@ export function CurriculumList() {
           <div className="text-center">
             <p className="text-sm text-gray-600 mb-1">Total Subjects</p>
             <p className="text-3xl font-bold text-gray-800">
-              {curriculumData.reduce((sum, c) => sum + c.subjects, 0)}
+              {statistics?.totalSubjects || 0}
             </p>
           </div>
         </Card>
@@ -514,7 +405,9 @@ export function CurriculumList() {
           
           {filteredData.length === 0 && (
             <div className="text-center py-12 text-gray-500">
-              No curriculum found
+              {curriculum.length === 0 
+                ? 'No curriculum available. Please ensure the backend is running.' 
+                : 'No curriculum found matching your search'}
             </div>
           )}
         </div>
