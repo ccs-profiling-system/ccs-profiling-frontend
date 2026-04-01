@@ -170,7 +170,9 @@
     - **Property 11: Files are rendered with name and link**
     - **Validates: Requirements 6.2**
 
-  - [-] 4.9 Write property test for file list delete removes entry (Property 10)
+  - [x] 4.9 Write property test for file list delete removes entry (Property 10)
+
+
 
 
 
@@ -190,9 +192,17 @@
     - Shows loading state and error alert
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 5.2_
 
-- [ ] 5. Wire up the Research feature entry point
+- [x] 5. Wire up the Research feature entry point
+
+
+
+
+
   - Update `src/features/admin/research/index.tsx` to export and render `ResearchPage`
   - Add `/admin/research` and `/admin/research/:id` routes in `src/app/routes.tsx`
   - _Requirements: 1.1, 2.1, 3.1_
 
-- [ ] 6. Final Checkpoint — Ensure all tests pass, ask the user if questions arise.
+- [-] 6. Final Checkpoint — Ensure all tests pass, ask the user if questions arise.
+
+
+
