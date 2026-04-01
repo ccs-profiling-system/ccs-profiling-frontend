@@ -53,31 +53,64 @@
     - `applyFilters(records, filters)` — applies all active filters in combination
     - _Requirements: 2.2, 2.3, 2.4_
 
-  - [-] 2.5 Write property test for status filter (Property 5)
+  - [x] 2.5 Write property test for status filter (Property 5)
+
+
+
 
 
 
     - **Property 5: Status filter returns only matching records**
     - **Validates: Requirements 2.2**
 
-  - [ ]* 2.6 Write property test for category filter (Property 6)
+  - [x] 2.6 Write property test for category filter (Property 6)
+
+
+
+
+
+
     - **Property 6: Category filter returns only matching records**
     - **Validates: Requirements 2.3**
 
-  - [ ]* 2.7 Write property test for title search (Property 7)
+  - [x] 2.7 Write property test for title search (Property 7)
+
+
+
+
+
+
     - **Property 7: Title search returns only matching records (case-insensitive)**
     - **Validates: Requirements 2.4**
 
-- [ ] 3. Implement custom hook
-  - [ ] 3.1 Create `useResearch.ts` — manages research list state, exposes `fetchResearch`, `fetchResearchById`, `createResearch`, `updateResearch`, `deleteResearch`, loading and error state
+- [x] 3. Implement custom hook
+
+
+
+
+
+  - [x] 3.1 Create `useResearch.ts` — manages research list state, exposes `fetchResearch`, `fetchResearchById`, `createResearch`, `updateResearch`, `deleteResearch`, loading and error state
+
+
     - _Requirements: 1.1, 1.3, 1.4, 2.1_
 
-  - [ ]* 3.2 Write property test for delete removes entry from list (Property 8)
+  - [x] 3.2 Write property test for delete removes entry from list (Property 8)
+
+
+
+
+
+
+
     - **Property 8: Delete removes entry from list**
     - **Validates: Requirements 1.4**
 
-- [ ] 4. Build UI components
-  - [ ] 4.1 Create `ResearchStatusBadge.tsx` — renders a color-coded badge: ongoing (yellow), completed (green), published (blue)
+- [-] 4. Build UI components
+
+
+
+  - [-] 4.1 Create `ResearchStatusBadge.tsx` — renders a color-coded badge: ongoing (yellow), completed (green), published (blue)
+
     - _Requirements: 3.3, 5.2_
 
   - [ ]* 4.2 Write property test for status badge rendering (Property 3)
