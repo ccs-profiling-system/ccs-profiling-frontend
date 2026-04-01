@@ -202,7 +202,8 @@
   - Add `/admin/research` and `/admin/research/:id` routes in `src/app/routes.tsx`
   - _Requirements: 1.1, 2.1, 3.1_
 
-- [-] 6. Final Checkpoint — Ensure all tests pass, ask the user if questions arise.
+- [x] 6. Final Checkpoint — Ensure all tests pass, ask the user if questions arise.
+
 
 
 

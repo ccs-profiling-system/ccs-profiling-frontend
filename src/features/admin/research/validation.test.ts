@@ -406,3 +406,47 @@ describe('Property 11: Files are rendered with name and link', () => {
     );
   });
 });
+
+// Feature: research-module, Property 10: File list delete removes entry
+describe('Property 10: File list delete removes entry', () => {
+  const researchFileArb = fc.record({
+    id: fc.uuid(),
+    name: fc.string({ minLength: 1 }),
+    url: fc.webUrl(),
+  });
+
+  it('after removing a file by id, the resulting list does not contain that id', () => {
+    // Validates: Requirements 6.4
+    fc.assert(
+      fc.property(
+        fc.array(researchFileArb, { minLength: 1, maxLength: 10 }),
+        fc.integer({ min: 0, max: 9 }),
+        (files, indexSeed) => {
+          const index = indexSeed % files.length;
+          const targetId = files[index].id;
+          const result = deleteFileFromList(files, targetId);
+          return result.every((f) => f.id !== targetId);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('after removing a file by id, all other files are preserved', () => {
+    // Validates: Requirements 6.4
+    fc.assert(
+      fc.property(
+        fc.array(researchFileArb, { minLength: 1, maxLength: 10 }),
+        fc.integer({ min: 0, max: 9 }),
+        (files, indexSeed) => {
+          const index = indexSeed % files.length;
+          const targetId = files[index].id;
+          const result = deleteFileFromList(files, targetId);
+          const expected = files.filter((f) => f.id !== targetId);
+          return result.length === expected.length;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
