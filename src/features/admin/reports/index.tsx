@@ -159,27 +159,24 @@ export function Reports() {
     }
   };
 
-  if (loading) {
-    return (
-      <MainLayout title="Reports">
-        <div className="flex items-center justify-center h-64">
-          <Spinner size="lg" />
-        </div>
-      </MainLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <MainLayout title="Reports">
-        <ErrorAlert message={error} />
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout title="Reports">
       <div className="space-y-6">
+        {/* Error Alert */}
+        {error && (
+          <ErrorAlert message={error} />
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center h-64">
+            <Spinner size="lg" />
+          </div>
+        )}
+
+        {/* Main Content */}
+        {!loading && (
+          <>
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -397,6 +394,8 @@ export function Reports() {
             </div>
           </Card>
         </div>
+        </>
+        )}
       </div>
 
       {/* Generate Report Modal */}

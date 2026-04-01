@@ -235,20 +235,23 @@ export function CurriculumList() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return <ErrorAlert message={error} />;
-  }
-
   return (
     <div className="space-y-6">
+      {/* Error Alert */}
+      {error && (
+        <ErrorAlert message={error} />
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center h-64">
+          <Spinner size="lg" />
+        </div>
+      )}
+
+      {/* Main Content */}
+      {!loading && (
+        <>
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -473,6 +476,8 @@ export function CurriculumList() {
           </div>
         )}
       </Modal>
+        </>
+      )}
 
       {/* Subject Details Panel */}
       <SubjectDetailsPanel
