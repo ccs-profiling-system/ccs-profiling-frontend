@@ -6,13 +6,22 @@ import { useReportsData } from './useReportsData';
 import { reportsService } from '@/services/api';
 
 export function Reports() {
-  const { reports, statistics, loading, error } = useReportsData();
+  const { reports, statistics, loading, error, refetch } = useReportsData();
   const [selectedModule, setSelectedModule] = useState('all');
   const [selectedDateRange, setSelectedDateRange] = useState('30days');
   const [filteredReports, setFilteredReports] = useState<any[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
   const [selectedReportType, setSelectedReportType] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [reportForm, setReportForm] = useState({
+    format: 'pdf' as 'pdf' | 'excel' | 'csv',
+    dateRange: 'current-month' as 'current-month' | 'last-month' | 'last-3-months' | 'last-6-months' | 'current-year' | 'custom'
+  });
 
   const reportTypes = [
     { 
@@ -84,21 +93,57 @@ export function Reports() {
 
   const handleGenerateReport = (reportType: string) => {
     setSelectedReportType(reportType);
-    setIsModalOpen(true);
+    setReportForm({
+      format: 'pdf',
+      dateRange: 'current-month'
+    });
+    setIsGenerateModalOpen(true);
+  };
+
+  const handleViewReport = (report: any) => {
+    setSelectedReport(report);
+    setIsViewModalOpen(true);
+  };
+
+  const handleDeleteReport = (report: any) => {
+    setSelectedReport(report);
+    setIsDeleteModalOpen(true);
   };
 
   const handleConfirmGenerate = async () => {
     try {
+      setGenerating(true);
       await reportsService.generateReport({
         type: selectedReportType,
-        format: 'pdf',
-        dateRange: 'current-month'
+        format: reportForm.format,
+        dateRange: reportForm.dateRange
       });
       alert('Report generated successfully!');
-      setIsModalOpen(false);
+      setIsGenerateModalOpen(false);
+      refetch();
     } catch (error) {
       console.error('Failed to generate report:', error);
       alert('Failed to generate report');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedReport) return;
+    
+    try {
+      setDeleting(true);
+      await reportsService.deleteReport(selectedReport.id);
+      alert('Report deleted successfully!');
+      setIsDeleteModalOpen(false);
+      setSelectedReport(null);
+      refetch();
+    } catch (error) {
+      console.error('Failed to delete report:', error);
+      alert('Failed to delete report');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -333,23 +378,42 @@ export function Reports() {
                     key={report.id} 
                     className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 flex-1">
                       <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                         <FileText className="w-5 h-5 text-primary" />
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-800">{report.title}</p>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-800">{report.name || report.title}</p>
                         <p className="text-sm text-gray-500">
                           {new Date(report.timestamp).toLocaleDateString()} • {report.size || 'N/A'}
                         </p>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => handleDownloadReport(report.id)}
-                      className="p-2 hover:bg-primary/10 rounded-lg transition group"
-                    >
-                      <Download className="w-5 h-5 text-gray-600 group-hover:text-primary" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => handleViewReport(report)}
+                        className="p-2 hover:bg-primary/10 rounded-lg transition group"
+                        title="View Details"
+                      >
+                        <FileText className="w-5 h-5 text-gray-600 group-hover:text-primary" />
+                      </button>
+                      <button 
+                        onClick={() => handleDownloadReport(report.id)}
+                        className="p-2 hover:bg-primary/10 rounded-lg transition group"
+                        title="Download"
+                      >
+                        <Download className="w-5 h-5 text-gray-600 group-hover:text-primary" />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteReport(report)}
+                        className="p-2 hover:bg-red-50 rounded-lg transition group"
+                        title="Delete"
+                      >
+                        <svg className="w-5 h-5 text-gray-600 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -358,7 +422,7 @@ export function Reports() {
                 <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">
                   {reports.length === 0 
-                    ? 'No reports available. Please ensure the backend is running.' 
+                    ? 'No reports available.' 
                     : 'No reports found matching your filters'}
                 </p>
               </div>
@@ -400,8 +464,8 @@ export function Reports() {
 
       {/* Generate Report Modal */}
       <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isGenerateModalOpen}
+        onClose={() => setIsGenerateModalOpen(false)}
         title="Generate Report"
         size="md"
       >
@@ -413,44 +477,172 @@ export function Reports() {
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Report Format
+                Report Format <span className="text-red-500">*</span>
               </label>
-              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                <option>PDF</option>
-                <option>Excel (XLSX)</option>
-                <option>CSV</option>
+              <select 
+                value={reportForm.format}
+                onChange={(e) => setReportForm({ ...reportForm, format: e.target.value as any })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="pdf">PDF</option>
+                <option value="excel">Excel (XLSX)</option>
+                <option value="csv">CSV</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date Range
+                Date Range <span className="text-red-500">*</span>
               </label>
-              <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                <option>Current Month</option>
-                <option>Last Month</option>
-                <option>Last 3 Months</option>
-                <option>Last 6 Months</option>
-                <option>Current Year</option>
+              <select 
+                value={reportForm.dateRange}
+                onChange={(e) => setReportForm({ ...reportForm, dateRange: e.target.value as any })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="current-month">Current Month</option>
+                <option value="last-month">Last Month</option>
+                <option value="last-3-months">Last 3 Months</option>
+                <option value="last-6-months">Last 6 Months</option>
+                <option value="current-year">Current Year</option>
               </select>
             </div>
           </div>
 
           <div className="flex gap-3 pt-4">
             <button
-              onClick={() => setIsModalOpen(false)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              onClick={() => setIsGenerateModalOpen(false)}
+              disabled={generating}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirmGenerate}
-              className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition shadow hover:shadow-md"
+              disabled={generating}
+              className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition shadow hover:shadow-md disabled:opacity-50"
             >
-              Generate Report
+              {generating ? 'Generating...' : 'Generate Report'}
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* View Report Modal */}
+      <Modal
+        isOpen={isViewModalOpen}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setSelectedReport(null);
+        }}
+        title="Report Details"
+        size="lg"
+      >
+        {selectedReport && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-600">Report Name</label>
+                <p className="text-gray-900 font-semibold">{selectedReport.name || selectedReport.title}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Type</label>
+                <p className="text-gray-900 capitalize">{selectedReport.type || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Generated Date</label>
+                <p className="text-gray-900">{new Date(selectedReport.timestamp).toLocaleString()}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">File Size</label>
+                <p className="text-gray-900">{selectedReport.size || 'N/A'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Status</label>
+                <p className={`font-semibold ${
+                  selectedReport.status === 'completed' ? 'text-green-600' : 
+                  selectedReport.status === 'processing' ? 'text-yellow-600' : 
+                  'text-red-600'
+                }`}>
+                  {selectedReport.status?.toUpperCase() || 'COMPLETED'}
+                </p>
+              </div>
+              {selectedReport.generatedBy && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Generated By</label>
+                  <p className="text-gray-900">{selectedReport.generatedBy}</p>
+                </div>
+              )}
+            </div>
+            {selectedReport.description && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Description</label>
+                <p className="text-gray-700 mt-1">{selectedReport.description}</p>
+              </div>
+            )}
+            <div className="flex gap-3 pt-4 border-t">
+              <button
+                onClick={() => {
+                  setIsViewModalOpen(false);
+                  setSelectedReport(null);
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  handleDownloadReport(selectedReport.id);
+                  setIsViewModalOpen(false);
+                }}
+                className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Download Report
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedReport(null);
+        }}
+        title="Delete Report"
+        size="md"
+      >
+        {selectedReport && (
+          <div className="space-y-4">
+            <p className="text-gray-700">
+              Are you sure you want to delete <span className="font-semibold">{selectedReport.name || selectedReport.title}</span>?
+            </p>
+            <p className="text-sm text-red-600">
+              This action cannot be undone. The report file will be permanently deleted.
+            </p>
+            <div className="flex gap-3 pt-4 border-t">
+              <button
+                onClick={() => {
+                  setIsDeleteModalOpen(false);
+                  setSelectedReport(null);
+                }}
+                disabled={deleting}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Delete Report'}
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
     </MainLayout>
   );
