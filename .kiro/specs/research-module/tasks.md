@@ -11,32 +11,52 @@
   - Create `src/features/admin/research/peopleService.ts` with: `getPeople` (returns students and faculty)
   - _Requirements: 1.1, 1.3, 1.4, 4.1, 4.2, 6.1, 6.4_
 
-- [-] 2. Implement validation and filter utilities
+- [x] 2. Implement validation and filter utilities
 
 
 
-  - [-] 2.1 Create `src/features/admin/research/validation.ts` with:
+
+
+  - [x] 2.1 Create `src/features/admin/research/validation.ts` with:
+
 
     - `validateResearchForm` — checks required fields: title, abstract, category, status
     - `VALID_RESEARCH_STATUSES` constant array: `['ongoing', 'completed', 'published']`
     - _Requirements: 1.2, 5.1_
 
-  - [ ]* 2.2 Write property test for invalid research payloads (Property 1)
+  - [x] 2.2 Write property test for invalid research payloads (Property 1)
+
+
+
+
+
+
     - **Property 1: Invalid research payloads are rejected client-side**
     - **Validates: Requirements 1.2**
 
-  - [ ]* 2.3 Write property test for research status enum (Property 2)
+  - [x] 2.3 Write property test for research status enum (Property 2)
+
+
+
+
+
+
     - **Property 2: Research status is always a valid enum value**
     - **Validates: Requirements 5.1**
 
-  - [ ] 2.4 Create `src/features/admin/research/filterUtils.ts` with:
+  - [x] 2.4 Create `src/features/admin/research/filterUtils.ts` with:
+
+
     - `filterByStatus(records, status)` — returns records matching status
     - `filterByCategory(records, category)` — returns records matching category
     - `filterByTitle(records, search)` — returns records whose title contains search string (case-insensitive)
     - `applyFilters(records, filters)` — applies all active filters in combination
     - _Requirements: 2.2, 2.3, 2.4_
 
-  - [ ]* 2.5 Write property test for status filter (Property 5)
+  - [-] 2.5 Write property test for status filter (Property 5)
+
+
+
     - **Property 5: Status filter returns only matching records**
     - **Validates: Requirements 2.2**
 
