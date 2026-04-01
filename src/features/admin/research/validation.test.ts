@@ -2,6 +2,7 @@ import { describe, it } from 'vitest';
 import * as fc from 'fast-check';
 import { validateResearchForm, VALID_RESEARCH_STATUSES } from './validation';
 import { filterByStatus, filterByCategory, filterByTitle } from './filterUtils';
+import { renderResearchDetails, renderResearchFiles, deleteFileFromList } from './renderUtils';
 import type { Research, ResearchStatus } from './types';
 
 // Arbitrary for a valid ResearchStatus
@@ -292,6 +293,113 @@ describe('Property 7: Title search returns only matching records (case-insensiti
         (records) => {
           const result = filterByTitle(records, '');
           return result.length === records.length;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: research-module, Property 3: Status badges are visually distinct per status
+import { STATUS_CLASS, STATUS_STYLES } from './ResearchStatusBadge';
+
+describe('Property 3: Status badges are visually distinct per status', () => {
+  const allStatuses: ResearchStatus[] = ['ongoing', 'completed', 'published'];
+
+  it('each status has a unique CSS class', () => {
+    // Validates: Requirements 3.3, 5.2
+    // For any two different statuses, their CSS classes must differ
+    fc.assert(
+      fc.property(
+        fc.constantFrom<ResearchStatus>(...allStatuses),
+        fc.constantFrom<ResearchStatus>(...allStatuses),
+        (a, b) => {
+          if (a === b) return true; // same status — trivially equal, skip
+          return STATUS_CLASS[a] !== STATUS_CLASS[b];
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('each status label contains the status name (case-insensitive)', () => {
+    // Validates: Requirements 3.3, 5.2
+    // For any status, the rendered label should reflect that status
+    fc.assert(
+      fc.property(
+        fc.constantFrom<ResearchStatus>(...allStatuses),
+        (status) => {
+          const label = STATUS_STYLES[status].label.toLowerCase();
+          return label.includes(status.toLowerCase());
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: research-module, Property 4: Research details rendering completeness
+describe('Property 4: Research details rendering completeness', () => {
+  it('rendered details contain title, abstract, category, status, authors, and adviser for any research record', () => {
+    // Validates: Requirements 3.2
+    fc.assert(
+      fc.property(
+        researchArb,
+        (record) => {
+          const details = renderResearchDetails(record);
+          return (
+            details.title === record.title &&
+            details.abstract === record.abstract &&
+            details.category === record.category &&
+            details.status === record.status &&
+            Array.isArray(details.authors) &&
+            details.authors.length === record.authors.length &&
+            details.authors.every((a, i) => a === record.authors[i]) &&
+            details.adviser === record.adviser
+          );
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+
+// Feature: research-module, Property 11: Files are rendered with name and link
+describe('Property 11: Files are rendered with name and link', () => {
+  const researchFileArb = fc.record({
+    id: fc.uuid(),
+    name: fc.string({ minLength: 1 }),
+    url: fc.webUrl(),
+  });
+
+  it('every rendered file entry contains the file name and a non-empty URL', () => {
+    // Validates: Requirements 6.2
+    fc.assert(
+      fc.property(
+        fc.array(researchFileArb, { minLength: 1, maxLength: 10 }),
+        (files) => {
+          const rendered = renderResearchFiles(files);
+          return rendered.every(
+            (rf, i) =>
+              rf.name === files[i].name &&
+              typeof rf.url === 'string' &&
+              rf.url.length > 0 &&
+              rf.url === files[i].url
+          );
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('rendered file list length matches the input file list length', () => {
+    // Validates: Requirements 6.2
+    fc.assert(
+      fc.property(
+        fc.array(researchFileArb, { minLength: 0, maxLength: 10 }),
+        (files) => {
+          const rendered = renderResearchFiles(files);
+          return rendered.length === files.length;
         }
       ),
       { numRuns: 100 }

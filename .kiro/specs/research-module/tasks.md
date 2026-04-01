@@ -105,22 +105,35 @@
     - **Property 8: Delete removes entry from list**
     - **Validates: Requirements 1.4**
 
-- [-] 4. Build UI components
+- [x] 4. Build UI components
 
 
 
-  - [-] 4.1 Create `ResearchStatusBadge.tsx` — renders a color-coded badge: ongoing (yellow), completed (green), published (blue)
+
+
+  - [x] 4.1 Create `ResearchStatusBadge.tsx` — renders a color-coded badge: ongoing (yellow), completed (green), published (blue)
+
 
     - _Requirements: 3.3, 5.2_
 
-  - [ ]* 4.2 Write property test for status badge rendering (Property 3)
+  - [x] 4.2 Write property test for status badge rendering (Property 3)
+
+
+
+
+
+
     - **Property 3: Status badges are visually distinct per status**
     - **Validates: Requirements 3.3, 5.2**
 
-  - [ ] 4.3 Create `MultiSelectDropdown.tsx` — reusable multi-select dropdown accepting `options`, `selectedIds`, `onChange`; renders a trigger button showing selected count and a dropdown list with checkboxes
+  - [x] 4.3 Create `MultiSelectDropdown.tsx` — reusable multi-select dropdown accepting `options`, `selectedIds`, `onChange`; renders a trigger button showing selected count and a dropdown list with checkboxes
+
+
     - _Requirements: 4.1_
 
-  - [ ] 4.4 Create `ResearchFormModal.tsx` — controlled form modal for create and edit
+  - [x] 4.4 Create `ResearchFormModal.tsx` — controlled form modal for create and edit
+
+
     - Fields: title (text), abstract (textarea), category (select), status (select), authors (MultiSelectDropdown), adviser (select), files (file input)
     - Runs `validateResearchForm` on submit; shows per-field errors
     - Calls `useResearch` create or update; shows API error inline; preserves form data on error
@@ -130,24 +143,44 @@
     - **Property 9: Author assignment round-trip**
     - **Validates: Requirements 4.4**
 
-  - [ ] 4.6 Create `ResearchDetailPage.tsx` — details page for a single research record
+  - [x] 4.6 Create `ResearchDetailPage.tsx` — details page for a single research record
+
+
     - Displays title, abstract, category, status badge, authors, adviser, files (with name + link), linked events
     - Edit and Delete action buttons
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 6.2_
 
-  - [ ]* 4.7 Write property test for research details rendering completeness (Property 4)
+  - [x] 4.7 Write property test for research details rendering completeness (Property 4)
+
+
+
+
+
+
     - **Property 4: Research details rendering completeness**
     - **Validates: Requirements 3.2**
 
-  - [ ]* 4.8 Write property test for files rendered with name and link (Property 11)
+  - [x] 4.8 Write property test for files rendered with name and link (Property 11)
+
+
+
+
+
+
     - **Property 11: Files are rendered with name and link**
     - **Validates: Requirements 6.2**
 
-  - [ ]* 4.9 Write property test for file list delete removes entry (Property 10)
+  - [-] 4.9 Write property test for file list delete removes entry (Property 10)
+
+
+
+
     - **Property 10: File list delete removes entry**
     - **Validates: Requirements 6.4**
 
-  - [ ] 4.10 Create `ResearchPage.tsx` — main research list page
+  - [x] 4.10 Create `ResearchPage.tsx` — main research list page
+
+
     - Fetches research on mount via `useResearch.fetchResearch`
     - Renders filter controls: status dropdown, category dropdown, title search input
     - Applies `applyFilters` client-side and renders filtered list with `ResearchStatusBadge` per row
