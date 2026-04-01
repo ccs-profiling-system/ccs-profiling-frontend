@@ -56,13 +56,26 @@ interface Curriculum {
 }
 
 export function CurriculumList() {
-  const { curriculum, statistics, loading, error } = useInstructionsData();
+  const { curriculum, statistics, loading, error, refetch } = useInstructionsData();
   const [searchQuery, setSearchQuery] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedCurriculum, setSelectedCurriculum] = useState<Curriculum | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [isSubjectPanelOpen, setIsSubjectPanelOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    code: '',
+    name: '',
+    program: '',
+    yearLevel: 4,
+    effectiveYear: new Date().getFullYear().toString(),
+    status: 'active' as 'active' | 'inactive',
+    description: ''
+  });
+  const [submitting, setSubmitting] = useState(false);
 
   const filteredData = curriculum.filter(
     (item) =>
@@ -174,8 +187,7 @@ export function CurriculumList() {
           <button 
             onClick={(e) => {
               e.stopPropagation();
-              setSelectedCurriculum(item);
-              setIsModalOpen(true);
+              handleViewCurriculum(item);
             }}
             className="p-2 hover:bg-primary/10 rounded-lg transition"
             title="View"
@@ -183,14 +195,20 @@ export function CurriculumList() {
             <Eye className="w-4 h-4 text-gray-600" />
           </button>
           <button 
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditCurriculum(item);
+            }}
             className="p-2 hover:bg-primary/10 rounded-lg transition"
             title="Edit"
           >
             <Edit className="w-4 h-4 text-gray-600" />
           </button>
           <button 
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteCurriculum(item);
+            }}
             className="p-2 hover:bg-secondary/10 rounded-lg transition"
             title="Delete"
           >
@@ -200,6 +218,97 @@ export function CurriculumList() {
       ),
     },
   ];
+
+  const handleCreateCurriculum = () => {
+    setFormData({
+      code: '',
+      name: '',
+      program: '',
+      yearLevel: 4,
+      effectiveYear: new Date().getFullYear().toString(),
+      status: 'active',
+      description: ''
+    });
+    setIsCreateModalOpen(true);
+  };
+
+  const handleEditCurriculum = (item: Curriculum) => {
+    setSelectedCurriculum(item);
+    setFormData({
+      code: item.code,
+      name: item.name,
+      program: item.program,
+      yearLevel: item.yearLevel,
+      effectiveYear: item.effectiveYear,
+      status: item.status === 'archived' ? 'inactive' : item.status,
+      description: ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteCurriculum = (item: Curriculum) => {
+    setSelectedCurriculum(item);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleSubmitCreate = async () => {
+    try {
+      setSubmitting(true);
+      await instructionsService.createCurriculum(formData);
+      alert('Curriculum created successfully!');
+      setIsCreateModalOpen(false);
+      refetch();
+    } catch (error) {
+      console.error('Failed to create curriculum:', error);
+      alert('Failed to create curriculum');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitEdit = async () => {
+    if (!selectedCurriculum) return;
+    
+    try {
+      setSubmitting(true);
+      await instructionsService.updateCurriculum({
+        id: selectedCurriculum.id,
+        ...formData
+      });
+      alert('Curriculum updated successfully!');
+      setIsEditModalOpen(false);
+      setSelectedCurriculum(null);
+      refetch();
+    } catch (error) {
+      console.error('Failed to update curriculum:', error);
+      alert('Failed to update curriculum');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedCurriculum) return;
+    
+    try {
+      setSubmitting(true);
+      await instructionsService.deleteCurriculum(selectedCurriculum.id);
+      alert('Curriculum deleted successfully!');
+      setIsDeleteModalOpen(false);
+      setSelectedCurriculum(null);
+      refetch();
+    } catch (error) {
+      console.error('Failed to delete curriculum:', error);
+      alert('Failed to delete curriculum');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleViewCurriculum = (item: Curriculum) => {
+    setSelectedCurriculum(item);
+    setIsViewModalOpen(true);
+  };
 
   const handleExportPDF = async () => {
     try {
@@ -258,7 +367,10 @@ export function CurriculumList() {
           <h2 className="text-2xl font-bold text-gray-800">Curriculum Management</h2>
           <p className="text-gray-600 mt-1">Manage curriculum for all programs</p>
         </div>
-        <button className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg transition flex items-center gap-2 shadow-md hover:shadow-lg">
+        <button 
+          onClick={handleCreateCurriculum}
+          className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg transition flex items-center gap-2 shadow-md hover:shadow-lg"
+        >
           <Plus className="w-5 h-5" />
           Add Curriculum
         </button>
@@ -409,7 +521,7 @@ export function CurriculumList() {
           {filteredData.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               {curriculum.length === 0 
-                ? 'No curriculum available. Please ensure the backend is running.' 
+                ? 'No curriculum available.' 
                 : 'No curriculum found matching your search'}
             </div>
           )}
@@ -418,9 +530,9 @@ export function CurriculumList() {
 
       {/* View Modal */}
       <Modal
-        isOpen={isModalOpen}
+        isOpen={isViewModalOpen}
         onClose={() => {
-          setIsModalOpen(false);
+          setIsViewModalOpen(false);
           setSelectedCurriculum(null);
         }}
         title="Curriculum Details"
@@ -464,13 +576,194 @@ export function CurriculumList() {
             </div>
             <div className="flex gap-3 pt-4 border-t">
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => setIsViewModalOpen(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
               >
                 Close
               </button>
-              <button className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition">
+              <button 
+                onClick={() => {
+                  setIsViewModalOpen(false);
+                  handleEditCurriculum(selectedCurriculum);
+                }}
+                className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition"
+              >
                 Edit Curriculum
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Create/Edit Modal */}
+      <Modal
+        isOpen={isCreateModalOpen || isEditModalOpen}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setIsEditModalOpen(false);
+          setSelectedCurriculum(null);
+        }}
+        title={isCreateModalOpen ? 'Create New Curriculum' : 'Edit Curriculum'}
+        size="lg"
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Curriculum Code <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="e.g., BSCS-2024"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Program <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.program}
+                onChange={(e) => setFormData({ ...formData, program: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="e.g., BSCS"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Curriculum Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="e.g., BS Computer Science 2024"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Year Level <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                value={formData.yearLevel}
+                onChange={(e) => setFormData({ ...formData, yearLevel: parseInt(e.target.value) })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                min="1"
+                max="6"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Effective Year <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.effectiveYear}
+                onChange={(e) => setFormData({ ...formData, effectiveYear: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="2024"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              rows={3}
+              placeholder="Optional description..."
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t">
+            <button
+              onClick={() => {
+                setIsCreateModalOpen(false);
+                setIsEditModalOpen(false);
+                setSelectedCurriculum(null);
+              }}
+              disabled={submitting}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={isCreateModalOpen ? handleSubmitCreate : handleSubmitEdit}
+              disabled={submitting || !formData.code || !formData.name || !formData.program}
+              className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? 'Saving...' : isCreateModalOpen ? 'Create Curriculum' : 'Update Curriculum'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedCurriculum(null);
+        }}
+        title="Delete Curriculum"
+        size="md"
+      >
+        {selectedCurriculum && (
+          <div className="space-y-4">
+            <p className="text-gray-700">
+              Are you sure you want to delete <span className="font-semibold">{selectedCurriculum.name}</span>?
+            </p>
+            <p className="text-sm text-red-600">
+              This action cannot be undone. All subjects associated with this curriculum will also be affected.
+            </p>
+            <div className="flex gap-3 pt-4 border-t">
+              <button
+                onClick={() => {
+                  setIsDeleteModalOpen(false);
+                  setSelectedCurriculum(null);
+                }}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={submitting}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition disabled:opacity-50"
+              >
+                {submitting ? 'Deleting...' : 'Delete Curriculum'}
               </button>
             </div>
           </div>
