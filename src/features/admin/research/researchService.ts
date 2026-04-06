@@ -4,29 +4,37 @@ import type { Research, CreateResearchPayload, UpdateResearchPayload } from './t
 const BASE_URL = '/api/research';
 
 export async function getResearch(): Promise<Research[]> {
-  const response = await axios.get<Research[]>(BASE_URL);
-  return response.data;
+  const response = await axios.get<Research[] | { data: Research[] }>(BASE_URL);
+  // Handle both direct array and wrapped response
+  const data = Array.isArray(response.data) ? response.data : response.data.data;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function getResearchById(id: string): Promise<Research> {
-  const response = await axios.get<Research>(`${BASE_URL}/${id}`);
-  return response.data;
+  const response = await axios.get<Research | { data: Research }>(`${BASE_URL}/${id}`);
+  // Handle both direct object and wrapped response
+  const data = 'data' in response.data ? response.data.data : response.data;
+  return data;
 }
 
 export async function createResearch(payload: CreateResearchPayload): Promise<Research> {
   const formData = buildFormData(payload);
-  const response = await axios.post<Research>(BASE_URL, formData, {
+  const response = await axios.post<Research | { data: Research }>(BASE_URL, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return response.data;
+  // Handle both direct object and wrapped response
+  const data = 'data' in response.data ? response.data.data : response.data;
+  return data;
 }
 
 export async function updateResearch(id: string, payload: UpdateResearchPayload): Promise<Research> {
   const formData = buildFormData(payload);
-  const response = await axios.put<Research>(`${BASE_URL}/${id}`, formData, {
+  const response = await axios.put<Research | { data: Research }>(`${BASE_URL}/${id}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return response.data;
+  // Handle both direct object and wrapped response
+  const data = 'data' in response.data ? response.data.data : response.data;
+  return data;
 }
 
 export async function deleteResearch(id: string): Promise<void> {
