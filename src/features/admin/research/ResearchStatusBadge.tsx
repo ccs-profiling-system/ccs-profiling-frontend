@@ -4,24 +4,27 @@ interface ResearchStatusBadgeProps {
   status: ResearchStatus;
 }
 
-export const STATUS_STYLES: Record<ResearchStatus, { bg: string; text: string; label: string }> = {
-  ongoing: { bg: 'background-color: #fef9c3', text: 'color: #854d0e', label: 'Ongoing' },
-  completed: { bg: 'background-color: #dcfce7', text: 'color: #166534', label: 'Completed' },
-  published: { bg: 'background-color: #dbeafe', text: 'color: #1e40af', label: 'Published' },
-};
-
-export const STATUS_CLASS: Record<ResearchStatus, string> = {
-  ongoing: 'badge badge-ongoing',
-  completed: 'badge badge-completed',
-  published: 'badge badge-published',
+const STATUS_CONFIG: Record<ResearchStatus, { className: string; label: string }> = {
+  ongoing: { 
+    className: 'bg-yellow-100 text-yellow-800 border border-yellow-200', 
+    label: 'Ongoing' 
+  },
+  completed: { 
+    className: 'bg-green-100 text-green-800 border border-green-200', 
+    label: 'Completed' 
+  },
+  published: { 
+    className: 'bg-blue-100 text-blue-800 border border-blue-200', 
+    label: 'Published' 
+  },
 };
 
 export function ResearchStatusBadge({ status }: ResearchStatusBadgeProps) {
-  const config = STATUS_STYLES[status];
+  const config = STATUS_CONFIG[status];
+  
   return (
     <span
-      className={STATUS_CLASS[status]}
-      style={{ padding: '2px 10px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 600, display: 'inline-block' }}
+      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${config.className}`}
       data-status={status}
     >
       {config.label}

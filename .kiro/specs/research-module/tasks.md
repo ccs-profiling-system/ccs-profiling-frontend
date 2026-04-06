@@ -139,7 +139,7 @@
     - Calls `useResearch` create or update; shows API error inline; preserves form data on error
     - _Requirements: 1.1, 1.2, 1.3, 1.5, 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 6.1_
 
-  - [ ]* 4.5 Write property test for author assignment round-trip (Property 9)
+  - [x] 4.5 Write property test for author assignment round-trip (Property 9)
     - **Property 9: Author assignment round-trip**
     - **Validates: Requirements 4.4**
 

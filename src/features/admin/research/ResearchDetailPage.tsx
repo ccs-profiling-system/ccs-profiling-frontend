@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MainLayout } from '@/components/layout';
+import { MainLayout, Card } from '@/components/layout';
+import { 
+  ArrowLeft, Edit2, Trash2, Users, UserCheck, FileText, 
+  Calendar, Download, X, AlertCircle 
+} from 'lucide-react';
 import { useResearch } from './useResearch';
 import { ResearchStatusBadge } from './ResearchStatusBadge';
 import { ResearchFormModal } from './ResearchFormModal';
@@ -41,113 +45,261 @@ export function ResearchDetailPage() {
     if (!selectedResearch) return;
     try {
       await researchService.deleteResearchFile(selectedResearch.id, fileId);
-      // Re-fetch to reflect updated file list
       await fetchResearchById(selectedResearch.id);
     } catch (err) {
       setFileDeleteError(err instanceof Error ? err.message : 'Failed to delete file.');
     }
   }
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div role="alert" style={{ color: '#b91c1c' }}>{error}</div>;
-  if (!selectedResearch) return <div>Research record not found.</div>;
+  if (loading) {
+    return (
+      <MainLayout title="Research Details">
+        <Card className="!p-12">
+          <div className="flex flex-col items-center justify-center">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-600">Loading research details...</p>
+          </div>
+        </Card>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout title="Research Details">
+        <Card className="!p-6 border-l-4 border-l-secondary bg-red-50">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-secondary mb-1">Error Loading Research</h3>
+              <p className="text-sm text-gray-700">{error}</p>
+            </div>
+          </div>
+        </Card>
+      </MainLayout>
+    );
+  }
+
+  if (!selectedResearch) {
+    return (
+      <MainLayout title="Research Details">
+        <Card className="!p-12 text-center">
+          <AlertCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Research Not Found</h3>
+          <p className="text-gray-600 mb-6">The research record you're looking for doesn't exist.</p>
+          <button
+            onClick={() => navigate('/admin/research')}
+            className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Research List
+          </button>
+        </Card>
+      </MainLayout>
+    );
+  }
 
   const r = selectedResearch;
 
   return (
-    <MainLayout title="Research Detail">
-    <div style={{ padding: '24px', maxWidth: '800px' }}>
-      <button type="button" onClick={() => navigate('/admin/research')} style={{ marginBottom: '16px' }}>
-        ← Back to list
-      </button>
+    <MainLayout title="Research Details">
+      <div className="space-y-6 max-w-5xl">
+        {/* Header with Back Button */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate('/admin/research')}
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Research List
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setEditOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium transition-colors"
+            >
+              <Edit2 className="w-4 h-4" />
+              Edit
+            </button>
+            <button
+              onClick={handleDelete}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </button>
+          </div>
+        </div>
 
-      <h1 data-field="title">{r.title}</h1>
-
-      <div style={{ marginBottom: '8px' }}>
-        <ResearchStatusBadge status={r.status} />
-      </div>
-
-      <section style={{ marginBottom: '16px' }}>
-        <strong>Abstract</strong>
-        <p data-field="abstract">{r.abstract}</p>
-      </section>
-
-      <section style={{ marginBottom: '16px' }}>
-        <strong>Category</strong>
-        <p data-field="category">{r.category}</p>
-      </section>
-
-      <section style={{ marginBottom: '16px' }}>
-        <strong>Authors</strong>
-        <ul data-field="authors">
-          {r.authors.length > 0
-            ? r.authors.map((a) => <li key={a}>{a}</li>)
-            : <li>No authors assigned.</li>}
-        </ul>
-      </section>
-
-      <section style={{ marginBottom: '16px' }}>
-        <strong>Adviser</strong>
-        <p data-field="adviser">{r.adviser || 'No adviser assigned.'}</p>
-      </section>
-
-      <section style={{ marginBottom: '16px' }}>
-        <strong>Files</strong>
-        {fileDeleteError && (
-          <div role="alert" style={{ color: '#b91c1c', marginBottom: '8px' }}>{fileDeleteError}</div>
+        {/* Delete Error */}
+        {deleteError && (
+          <Card className="!p-4 border-l-4 border-l-secondary bg-red-50">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-gray-700">{deleteError}</p>
+              </div>
+              <button onClick={() => setDeleteError(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </Card>
         )}
-        {r.files.length > 0 ? (
-          <ul data-field="files">
-            {r.files.map((f) => (
-              <li key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <a href={f.url} target="_blank" rel="noopener noreferrer" data-file-name={f.name}>
-                  {f.name}
-                </a>
-                <button
-                  type="button"
-                  onClick={() => handleFileDelete(f.id)}
-                  style={{ fontSize: '0.75rem', color: '#b91c1c' }}
-                >
-                  Remove
+
+        {/* Title and Status */}
+        <Card className="!p-6">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 flex-1">{r.title}</h1>
+            <ResearchStatusBadge status={r.status} />
+          </div>
+          <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+            {r.category}
+          </div>
+        </Card>
+
+        {/* Abstract */}
+        <Card className="!p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            Abstract
+          </h2>
+          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{r.abstract}</p>
+        </Card>
+
+        {/* Authors and Adviser */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Authors */}
+          <Card className="!p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Authors
+            </h2>
+            {r.authors.length > 0 ? (
+              <ul className="space-y-2">
+                {r.authors.map((author, index) => (
+                  <li key={index} className="flex items-center gap-2 text-gray-700">
+                    <div className="w-2 h-2 bg-primary rounded-full"></div>
+                    {author}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 italic">No authors assigned</p>
+            )}
+          </Card>
+
+          {/* Adviser */}
+          <Card className="!p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-primary" />
+              Adviser
+            </h2>
+            {r.adviser ? (
+              <p className="text-gray-700">{r.adviser}</p>
+            ) : (
+              <p className="text-gray-500 italic">No adviser assigned</p>
+            )}
+          </Card>
+        </div>
+
+        {/* Files */}
+        <Card className="!p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            Attached Files
+          </h2>
+          
+          {fileDeleteError && (
+            <div className="mb-4 p-3 border-l-4 border-l-secondary bg-red-50 rounded">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-gray-700">{fileDeleteError}</p>
+                <button onClick={() => setFileDeleteError(null)} className="ml-auto text-gray-400 hover:text-gray-600">
+                  <X className="w-4 h-4" />
                 </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No files uploaded.</p>
+              </div>
+            </div>
+          )}
+
+          {r.files.length > 0 ? (
+            <div className="space-y-2">
+              {r.files.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <FileText className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-900 hover:text-primary font-medium truncate transition-colors"
+                    >
+                      {file.name}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={file.url}
+                      download
+                      className="p-2 text-gray-600 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                      title="Download"
+                    >
+                      <Download className="w-4 h-4" />
+                    </a>
+                    <button
+                      onClick={() => handleFileDelete(file.id)}
+                      className="p-2 text-gray-600 hover:text-secondary hover:bg-red-50 rounded-lg transition-colors"
+                      title="Remove"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 italic">No files uploaded</p>
+          )}
+        </Card>
+
+        {/* Events */}
+        {r.events.length > 0 && (
+          <Card className="!p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              Related Events
+            </h2>
+            <div className="space-y-2">
+              {r.events.map((event) => (
+                <div
+                  key={event.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div>
+                    <p className="font-medium text-gray-900">{event.title}</p>
+                    <p className="text-sm text-gray-600">{new Date(event.date).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
         )}
-      </section>
 
-      {r.events.length > 0 && (
-        <section style={{ marginBottom: '16px' }}>
-          <strong>Events</strong>
-          <ul data-field="events">
-            {r.events.map((ev) => (
-              <li key={ev.id}>{ev.title} — {ev.date}</li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {deleteError && (
-        <div role="alert" style={{ color: '#b91c1c', marginBottom: '8px' }}>{deleteError}</div>
-      )}
-
-      <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-        <button type="button" onClick={() => setEditOpen(true)}>Edit</button>
-        <button type="button" onClick={handleDelete} style={{ color: '#b91c1c' }}>Delete</button>
+        {/* Edit Modal */}
+        {editOpen && (
+          <ResearchFormModal
+            existing={r}
+            people={people}
+            onClose={() => setEditOpen(false)}
+            onCreate={async () => {}}
+            onUpdate={async (id, payload) => {
+              await updateResearch(id, payload);
+            }}
+          />
+        )}
       </div>
-
-      {editOpen && (
-        <ResearchFormModal
-          existing={r}
-          people={people}
-          onClose={() => setEditOpen(false)}
-          onCreate={async () => {}}
-          onUpdate={async (id, payload) => { await updateResearch(id, payload); }}
-        />
-      )}
-    </div>
     </MainLayout>
   );
 }
