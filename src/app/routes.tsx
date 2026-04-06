@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AdminDashboard } from '@/features/admin/dashboard';
+import { Reports } from '@/features/admin/reports';
+import { Instructions } from '@/features/admin/instructions';
 import { Login } from '@/features/auth/Login';
 import { ResearchPage, ResearchDetailPage } from '@/features/admin/research';
 
