@@ -63,130 +63,52 @@ export interface RecentActivity {
 }
 
 class DashboardService {
-  /**
-   * Get dashboard statistics
-   */
-  async getDashboardStats(): Promise<DashboardData> {
+  async getDashboardMetrics(): Promise<any> {
     try {
-      const response = await api.get<DashboardData>('/dashboard/stats');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get enrollment trend data
-   */
-  async getEnrollmentTrend(months: number = 6): Promise<EnrollmentData[]> {
-    try {
-      const response = await api.get<EnrollmentData[]>('/dashboard/enrollment-trend', {
-        params: { months },
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching enrollment trend:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get program distribution data
-   */
-  async getProgramDistribution(): Promise<ProgramDistribution[]> {
-    try {
-      const response = await api.get<ProgramDistribution[]>('/dashboard/program-distribution');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching program distribution:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get priority alerts
-   */
-  async getPriorityAlerts(limit: number = 10): Promise<PriorityAlert[]> {
-    try {
-      const response = await api.get<{ data: PriorityAlert[] }>('/dashboard/alerts', {
-        params: { limit },
-      });
+      const response = await api.get('/v1/admin/dashboard');
       return response.data.data;
     } catch (error) {
-      console.error('Error fetching priority alerts:', error);
+      console.error('Error fetching dashboard metrics:', error);
       throw error;
     }
   }
 
-  /**
-   * Get upcoming events
-   */
-  async getUpcomingEvents(limit: number = 10): Promise<UpcomingEvent[]> {
+  async getStudentStats(): Promise<any> {
     try {
-      const response = await api.get<{ data: UpcomingEvent[] }>('/dashboard/upcoming-events', {
-        params: { limit },
-      });
+      const response = await api.get('/v1/admin/dashboard/students');
       return response.data.data;
     } catch (error) {
-      console.error('Error fetching upcoming events:', error);
+      console.error('Error fetching student stats:', error);
       throw error;
     }
   }
 
-  /**
-   * Get recent activity
-   */
-  async getRecentActivity(limit: number = 10): Promise<RecentActivity[]> {
+  async getFacultyStats(): Promise<any> {
     try {
-      const response = await api.get<{ data: RecentActivity[] }>('/dashboard/recent-activity', {
-        params: { limit },
-      });
+      const response = await api.get('/v1/admin/dashboard/faculty');
       return response.data.data;
     } catch (error) {
-      console.error('Error fetching recent activity:', error);
+      console.error('Error fetching faculty stats:', error);
       throw error;
     }
   }
 
-  /**
-   * Dismiss an alert
-   */
-  async dismissAlert(alertId: string): Promise<void> {
+  async getEnrollmentStats(): Promise<any> {
     try {
-      await api.post(`/dashboard/alerts/${alertId}/dismiss`);
+      const response = await api.get('/v1/admin/dashboard/enrollments');
+      return response.data.data;
     } catch (error) {
-      console.error('Error dismissing alert:', error);
+      console.error('Error fetching enrollment stats:', error);
       throw error;
     }
   }
 
-  /**
-   * Mark event as acknowledged
-   */
-  async acknowledgeEvent(eventId: string): Promise<void> {
+  async getEventStats(): Promise<any> {
     try {
-      await api.post(`/dashboard/events/${eventId}/acknowledge`);
+      const response = await api.get('/v1/admin/dashboard/events');
+      return response.data.data;
     } catch (error) {
-      console.error('Error acknowledging event:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get quick stats
-   */
-  async getQuickStats(): Promise<{
-    onlineUsers: number;
-    completedTasks: number;
-    totalTasks: number;
-    pendingItems: number;
-  }> {
-    try {
-      const response = await api.get('/dashboard/quick-stats');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching quick stats:', error);
+      console.error('Error fetching event stats:', error);
       throw error;
     }
   }
