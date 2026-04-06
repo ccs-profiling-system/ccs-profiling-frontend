@@ -6,6 +6,7 @@ import { getRooms } from './roomsService';
 import { CalendarView } from './CalendarView';
 import { ScheduleFormModal } from './ScheduleFormModal';
 import { VALID_CALENDAR_VIEWS } from './validation';
+import { MainLayout } from '@/components/layout';
 
 // ---------------------------------------------------------------------------
 // Date range helpers
@@ -144,23 +145,24 @@ export function SchedulingPage() {
   }, [fetchSchedules, dateRange]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">Class Scheduling</h1>
-              <p className="text-sm text-slate-600 mt-1">Manage class and exam schedules</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  showFilters || hasActiveFilters
-                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                    : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
-                }`}
+    <MainLayout title="Class Scheduling">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
+        <div className="max-w-7xl mx-auto p-6 space-y-6">
+          {/* Header */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">Class Scheduling</h1>
+                <p className="text-sm text-slate-600 mt-1">Manage class and exam schedules</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    showFilters || hasActiveFilters
+                      ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                      : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200'
+                  }`}
               >
                 <span className="inline-flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -363,5 +365,6 @@ export function SchedulingPage() {
         )}
       </div>
     </div>
+    </MainLayout>
   );
 }
