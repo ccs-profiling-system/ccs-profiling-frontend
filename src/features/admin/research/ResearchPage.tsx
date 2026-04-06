@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { MainLayout } from '@/components/layout';
 import { useResearch } from './useResearch';
 import { ResearchStatusBadge } from './ResearchStatusBadge';
 import { ResearchFormModal } from './ResearchFormModal';
@@ -12,6 +13,12 @@ export function ResearchPage() {
   const navigate = useNavigate();
   const { research, loading, error, fetchResearch, createResearch, updateResearch, deleteResearch } = useResearch();
 
+  // Debug: Log research to see what it actually is
+  console.log('ResearchPage - research:', research, 'type:', typeof research, 'isArray:', Array.isArray(research));
+
+  // Ensure research is always an array
+  const safeResearch = Array.isArray(research) ? research : [];
+
   const [filters, setFilters] = useState<ResearchFilters>({ status: '', category: '', titleSearch: '' });
   const [people, setPeople] = useState<Person[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
@@ -22,10 +29,10 @@ export function ResearchPage() {
     getPeople().then(setPeople).catch(() => {});
   }, [fetchResearch]);
 
-  const filtered = applyFilters(research, filters);
+  const filtered = applyFilters(safeResearch, filters);
 
   // Derive unique categories from loaded research for the filter dropdown
-  const categories = Array.from(new Set(research.map((r) => r.category))).filter(Boolean);
+  const categories = Array.from(new Set(safeResearch.map((r) => r.category))).filter(Boolean);
 
   function setFilter<K extends keyof ResearchFilters>(key: K, value: ResearchFilters[K]) {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -37,6 +44,7 @@ export function ResearchPage() {
   }
 
   return (
+    <MainLayout title="Research">
     <div style={{ padding: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
         <h1 style={{ margin: 0 }}>Research</h1>
@@ -151,6 +159,7 @@ export function ResearchPage() {
         />
       )}
     </div>
+    </MainLayout>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { MainLayout } from '@/components/layout';
 import { useResearch } from './useResearch';
 import { ResearchStatusBadge } from './ResearchStatusBadge';
 import { ResearchFormModal } from './ResearchFormModal';
@@ -54,6 +55,7 @@ export function ResearchDetailPage() {
   const r = selectedResearch;
 
   return (
+    <MainLayout title="Research Detail">
     <div style={{ padding: '24px', maxWidth: '800px' }}>
       <button type="button" onClick={() => navigate('/admin/research')} style={{ marginBottom: '16px' }}>
         ← Back to list
@@ -146,5 +148,6 @@ export function ResearchDetailPage() {
         />
       )}
     </div>
+    </MainLayout>
   );
 }

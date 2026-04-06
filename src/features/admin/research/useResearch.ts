@@ -31,7 +31,37 @@ export function useResearch(): UseResearchReturn {
       const data = await researchService.getResearch();
       setResearch(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch research records.');
+      console.error('Failed to fetch research:', err);
+      setError('Failed to connect to server. Using mock data.');
+      // Use mock data as fallback
+      setResearch([
+        {
+          id: '1',
+          title: 'AI in Education',
+          abstract: 'Research on artificial intelligence applications in educational systems',
+          category: 'Computer Science',
+          status: 'ongoing',
+          authors: [],
+          adviser: '',
+          files: [],
+          events: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: '2',
+          title: 'Cybersecurity Framework',
+          abstract: 'Development of security protocols for academic institutions',
+          category: 'Information Security',
+          status: 'completed',
+          authors: [],
+          adviser: '',
+          files: [],
+          events: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -101,8 +131,11 @@ export function useResearch(): UseResearchReturn {
 
   const clearError = useCallback(() => setError(null), []);
 
+  // Safety check: ensure research is always an array
+  const safeResearch = Array.isArray(research) ? research : [];
+
   return {
-    research,
+    research: safeResearch,
     selectedResearch,
     loading,
     error,

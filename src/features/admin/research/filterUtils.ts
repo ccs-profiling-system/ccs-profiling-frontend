@@ -41,6 +41,9 @@ export function filterByTitle(
  * Applies all active filters from a ResearchFilters object in combination.
  */
 export function applyFilters(records: Research[], filters: ResearchFilters): Research[] {
+  // Safety check: ensure records is an array
+  if (!Array.isArray(records)) return [];
+  
   let result = records;
   result = filterByStatus(result, filters.status);
   result = filterByCategory(result, filters.category);
