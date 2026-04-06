@@ -3,136 +3,127 @@ import type {
   Report,
   ReportStatistics,
   ReportFilters,
-  GenerateReportRequest,
-  GenerateReportResponse,
   ReportsResponse,
-  ReportStatisticsResponse,
-  ExportRequest,
 } from '@/types/reports';
 
 class ReportsService {
-  /**
-   * Get all reports with optional filters
-   */
+  async generateStudentProfileReport(studentId: string): Promise<Blob> {
+    try {
+      const response = await api.post(
+        '/v1/admin/reports/student-profile',
+        { student_id: studentId },
+        { responseType: 'blob' }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error generating student profile report:', error);
+      throw error;
+    }
+  }
+
+  async generateFacultyProfileReport(facultyId: string): Promise<Blob> {
+    try {
+      const response = await api.post(
+        '/v1/admin/reports/faculty-profile',
+        { faculty_id: facultyId },
+        { responseType: 'blob' }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error generating faculty profile report:', error);
+      throw error;
+    }
+  }
+
+  async generateEnrollmentReport(params: {
+    semester?: string;
+    academic_year?: string;
+    program?: string;
+  }): Promise<Blob> {
+    try {
+      const response = await api.post(
+        '/v1/admin/reports/enrollments',
+        params,
+        { responseType: 'blob' }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error generating enrollment report:', error);
+      throw error;
+    }
+  }
+
+  async generateAnalyticsReport(params: {
+    report_type: 'gpa' | 'skills' | 'violations' | 'research' | 'enrollments';
+    start_date?: string;
+    end_date?: string;
+  }): Promise<Blob> {
+    try {
+      const response = await api.post(
+        '/v1/admin/reports/analytics',
+        params,
+        { responseType: 'blob' }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error generating analytics report:', error);
+      throw error;
+    }
+  }
+
   async getReports(filters?: ReportFilters, page = 1, pageSize = 20): Promise<ReportsResponse> {
-    try {
-      const response = await api.get<ReportsResponse>('/reports', {
-        params: { ...filters, page, pageSize },
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching reports:', error);
-      throw error;
-    }
+    console.warn('⚠️ getReports: Backend endpoint not implemented. Returning mock data.');
+    
+    // Return mock data
+    return {
+      success: true,
+      data: [],
+      total: 0,
+      page,
+      pageSize,
+    };
   }
 
-  /**
-   * Get report statistics
-   */
   async getReportStatistics(): Promise<ReportStatistics> {
-    try {
-      const response = await api.get<ReportStatisticsResponse>('/reports/statistics');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching report statistics:', error);
-      throw error;
-    }
+    console.warn('⚠️ getReportStatistics: Backend endpoint not implemented. Returning mock data.');
+    
+    return {
+      totalReports: 0,
+      reportsThisMonth: 0,
+      mostGenerated: 'N/A',
+      monthlyGrowth: 0,
+      totalSize: '0 MB',
+    };
   }
 
-  /**
-   * Generate a new report
-   */
-  async generateReport(request: GenerateReportRequest): Promise<GenerateReportResponse> {
-    try {
-      const response = await api.post<GenerateReportResponse>('/reports/generate', request);
-      return response.data;
-    } catch (error) {
-      console.error('Error generating report:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Download a specific report
-   */
   async downloadReport(reportId: string): Promise<Blob> {
-    try {
-      const response = await api.get(`/reports/${reportId}/download`, {
-        responseType: 'blob',
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error downloading report:', error);
-      throw error;
-    }
+    console.warn('⚠️ downloadReport: Backend endpoint not implemented.');
+    throw new Error('Report download not available. Backend generates reports on-demand only.');
   }
 
-  /**
-   * Delete a report
-   */
   async deleteReport(reportId: string): Promise<void> {
-    try {
-      await api.delete(`/reports/${reportId}`);
-    } catch (error) {
-      console.error('Error deleting report:', error);
-      throw error;
-    }
+    console.warn('⚠️ deleteReport: Backend endpoint not implemented.');
+    throw new Error('Report deletion not available. Backend generates reports on-demand only.');
   }
 
-  /**
-   * Export reports to PDF
-   */
-  async exportToPDF(request: ExportRequest): Promise<Blob> {
-    try {
-      const response = await api.post('/reports/export/pdf', request, {
-        responseType: 'blob',
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error exporting to PDF:', error);
-      throw error;
-    }
+  async exportToPDF(request: any): Promise<Blob> {
+    console.warn('⚠️ exportToPDF: Backend endpoint not implemented.');
+    throw new Error('Export to PDF not available. Use specific report generation methods instead.');
   }
 
-  /**
-   * Export reports to Excel
-   */
-  async exportToExcel(request: ExportRequest): Promise<Blob> {
-    try {
-      const response = await api.post('/reports/export/excel', request, {
-        responseType: 'blob',
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error exporting to Excel:', error);
-      throw error;
-    }
+  async exportToExcel(request: any): Promise<Blob> {
+    console.warn('⚠️ exportToExcel: Backend endpoint not implemented.');
+    throw new Error('Export to Excel not available. Use specific report generation methods instead.');
   }
 
-  /**
-   * Get report by ID
-   */
   async getReportById(reportId: string): Promise<Report> {
-    try {
-      const response = await api.get<{ success: boolean; data: Report }>(`/reports/${reportId}`);
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching report:', error);
-      throw error;
-    }
+    console.warn('⚠️ getReportById: Backend endpoint not implemented.');
+    throw new Error('Report retrieval not available. Backend generates reports on-demand only.');
   }
 
-  /**
-   * Get report types/categories
-   */
   async getReportTypes(): Promise<string[]> {
-    try {
-      const response = await api.get<{ success: boolean; data: string[] }>('/reports/types');
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching report types:', error);
-      throw error;
-    }
+    console.warn('⚠️ getReportTypes: Backend endpoint not implemented.');
+    return ['student-profile', 'faculty-profile', 'enrollments', 'analytics'];
   }
 }
 
