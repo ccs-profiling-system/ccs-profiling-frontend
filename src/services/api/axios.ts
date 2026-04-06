@@ -3,7 +3,7 @@ import axios from 'axios';
 // Create Axios instance with default config
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
-  timeout: 10000,
+  timeout: 2000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -34,9 +34,8 @@ api.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 401:
-          // Unauthorized - clear token and redirect to login
+          // Unauthorized - clear token but don't force redirect
           localStorage.removeItem('auth_token');
-          window.location.href = '/login';
           break;
         case 403:
           console.error('Access forbidden');

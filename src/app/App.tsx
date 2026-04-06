@@ -1,17 +1,14 @@
 import { AppProviders } from './providers';
 import { AppRoutes } from './routes';
+import { Suspense } from 'react';
+import { LoadingFallback } from './LoadingFallback';
 
 function App() {
   return (
     <AppProviders>
-      {/* Tailwind CSS Test - Custom Colors */}
-      <div className="hidden">
-        <button className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
-          Primary Button
-        </button>
-        <span className="text-secondary">Secondary Text</span>
-      </div>
-      <AppRoutes />
+      <Suspense fallback={<LoadingFallback />}>
+        <AppRoutes />
+      </Suspense>
     </AppProviders>
   );
 }

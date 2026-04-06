@@ -1,4 +1,8 @@
 import { NavLink } from 'react-router-dom';
+import {
+  LayoutDashboard, GraduationCap, Users, Calendar,
+  FlaskConical, FileText, BookOpen, ClipboardList
+} from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -7,9 +11,14 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navLinks = [
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/reports', label: 'Reports' },
-    { to: '/instructions', label: 'Instructions' },
+    { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/admin/students', label: 'Students', icon: GraduationCap },
+    { to: '/admin/faculty', label: 'Faculty', icon: Users },
+    { to: '/admin/events', label: 'Events', icon: Calendar },
+    { to: '/admin/research', label: 'Research', icon: FlaskConical },
+    { to: '/admin/scheduling', label: 'Scheduling', icon: ClipboardList },
+    { to: '/admin/reports', label: 'Reports', icon: FileText },
+    { to: '/admin/instructions', label: 'Instructions', icon: BookOpen },
   ];
 
   return (
@@ -49,6 +58,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     `sidebar-nav-item ${isActive ? 'sidebar-nav-item-active' : ''}`
                   }
                 >
+                  <link.icon className="w-4 h-4 flex-shrink-0" />
                   {link.label}
                 </NavLink>
               </li>

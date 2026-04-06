@@ -245,7 +245,9 @@
 
   /* Sidebar Navigation with Curved Active State */
   .sidebar-nav-item {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
     padding: 0.875rem 1.5rem;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.9);
