@@ -14,7 +14,6 @@ import { useStudentsData } from './useStudentsData';
 import { StudentForm } from './StudentForm';
 import { StudentProfile } from './StudentProfile';
 import studentsService from '@/services/api/studentsService';
-import analyticsService from '@/services/api/analyticsService';
 import type { Student } from '@/types/students';
 import type { Column } from '@/components/ui/Table';
 
@@ -42,9 +41,12 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        const [statsData, skillsData] = await Promise.all([
+        const [statsData, allSkills] = await Promise.all([
           studentsService.getStudentStats(),
-          analyticsService.getSkillDistribution().catch(() => null),
+          studentsService.getAllSkills().catch((err) => {
+            console.warn('Failed to fetch skills:', err);
+            return [];
+          }),
         ]);
 
         // Extract programs from stats
@@ -52,12 +54,15 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
           setAvailablePrograms(Object.keys(statsData.students_by_program).sort());
         }
 
-        // Extract skills from analytics
-        if (skillsData?.top_skills) {
-          setAvailableSkills(skillsData.top_skills.map(s => s.skill_name).sort());
+        // Extract unique skill names from all skills
+        if (allSkills && allSkills.length > 0) {
+          const uniqueSkillNames = Array.from(
+            new Set(allSkills.map(skill => skill.skillName).filter(Boolean))
+          ).sort();
+          setAvailableSkills(uniqueSkillNames);
         }
       } catch (err) {
-        // Silently fail - dropdowns will be empty
+        console.error('Error fetching filter options:', err);
       }
     };
 

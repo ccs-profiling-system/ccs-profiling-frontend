@@ -308,6 +308,22 @@ class StudentsService {
     );
   }
 
+  async getAllSkills(): Promise<StudentSkill[]> {
+    return handleRequest(() =>
+      api.get<StudentSkill[] | ApiResponse<StudentSkill[]>>('/v1/admin/skills', {
+        params: { limit: 1000 } // Get a large number to capture all unique skills
+      })
+        .then((r) => {
+          const data = unwrap(r.data);
+          if (Array.isArray(data)) {
+            return data.map(mapSkill);
+          }
+          // Handle paginated response
+          return ((data as any).data || []).map(mapSkill);
+        })
+    );
+  }
+
   async addStudentSkill(studentId: string, data: { skill_name: string; proficiency_level?: string; years_of_experience?: number }): Promise<StudentSkill> {
     console.log('[StudentsService] addStudentSkill called:', { studentId, data });
     return handleRequest(() =>
