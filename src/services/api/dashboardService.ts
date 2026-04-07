@@ -79,7 +79,7 @@ class DashboardService {
         totalStudents: metrics.students.total_students || 0,
         totalFaculty: metrics.faculty.total_faculty || 0,
         activeEvents: metrics.events.upcoming_events || 0,
-        researchProjects: 0, // Will be populated from research endpoint if available
+        researchProjects: metrics.research?.total_research || 0,
         activeStudentsToday: metrics.students.active_students || 0,
         eventsThisWeek: metrics.events.upcoming_events || 0,
       };
@@ -162,46 +162,36 @@ class DashboardService {
   }
 
   async getRecentActivity(limit: number = 10): Promise<RecentActivity[]> {
-    // Mock data - replace with actual API call when backend endpoint is available
-    const mockActivities: RecentActivity[] = [
-      {
-        id: '1',
-        type: 'student',
-        title: 'New Student',
-        description: 'John Doe enrolled in Computer Science',
-        timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
-      },
-      {
-        id: '2',
-        type: 'event',
-        title: 'Event Created',
-        description: 'Research Symposium scheduled for April 5',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
-      },
-      {
-        id: '3',
-        type: 'research',
-        title: 'Research Published',
-        description: 'AI in Education paper published',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), // 3 hours ago
-      },
-      {
-        id: '4',
-        type: 'faculty',
-        title: 'Faculty Update',
-        description: 'Dr. Smith updated profile information',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
-      },
-      {
-        id: '5',
-        type: 'report',
-        title: 'Report Generated',
-        description: 'Monthly enrollment report completed',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-      },
-    ];
+    try {
+      const response = await api.get(`/v1/admin/dashboard/recent-activity?limit=${limit}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching recent activity:', error);
+      // Return empty array on error
+      return [];
+    }
+  }
 
-    return mockActivities.slice(0, limit);
+  async getPriorityAlerts(limit: number = 5): Promise<PriorityAlert[]> {
+    try {
+      const response = await api.get(`/v1/admin/dashboard/priority-alerts?limit=${limit}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching priority alerts:', error);
+      // Return empty array on error
+      return [];
+    }
+  }
+
+  async getUpcomingEvents(limit: number = 5): Promise<UpcomingEvent[]> {
+    try {
+      const response = await api.get(`/v1/admin/dashboard/upcoming-events?limit=${limit}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching upcoming events:', error);
+      // Return empty array on error
+      return [];
+    }
   }
 }
 
