@@ -8,6 +8,7 @@ import { ScheduleFormModal } from './ScheduleFormModal';
 import { VALID_CALENDAR_VIEWS } from './validation';
 import { MainLayout, Card } from '@/components/layout';
 import { Calendar, Plus, Filter, X } from 'lucide-react';
+import { SchedulingAside } from './SchedulingAside';
 
 // ---------------------------------------------------------------------------
 // Date range helpers
@@ -182,7 +183,8 @@ export function SchedulingPage() {
 
   return (
     <MainLayout title="Class Scheduling">
-      <div className="space-y-6">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6">
+      <div className="xl:col-span-8 space-y-6">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -468,6 +470,12 @@ export function SchedulingPage() {
           />
         )}
       </div>
+
+      {/* Aside */}
+      <div className="xl:col-span-4">
+        <SchedulingAside schedules={schedules} loading={loading} />
+      </div>
+    </div>
     </MainLayout>
   );
 }

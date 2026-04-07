@@ -11,14 +11,14 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navLinks = [
-    { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/admin/students', label: 'Students', icon: GraduationCap },
-    { to: '/admin/faculty', label: 'Faculty', icon: Users },
-    { to: '/admin/events', label: 'Events', icon: Calendar },
-    { to: '/admin/research', label: 'Research', icon: FlaskConical },
-    { to: '/admin/scheduling', label: 'Scheduling', icon: ClipboardList },
-    { to: '/admin/reports', label: 'Reports', icon: FileText },
-    { to: '/admin/instructions', label: 'Instructions', icon: BookOpen },
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/students', label: 'Students', icon: GraduationCap },
+    { to: '/faculty', label: 'Faculty', icon: Users },
+    { to: '/events', label: 'Events', icon: Calendar },
+    { to: '/research', label: 'Research', icon: FlaskConical },
+    { to: '/scheduling', label: 'Scheduling', icon: ClipboardList },
+    { to: '/reports', label: 'Reports', icon: FileText },
+    { to: '/instructions', label: 'Instructions', icon: BookOpen },
   ];
 
   return (
