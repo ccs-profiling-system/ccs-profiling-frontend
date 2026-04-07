@@ -132,9 +132,16 @@ class StudentsService {
       if (filters?.search) backendFilters.search = filters.search;
       if (filters?.skill) backendFilters.skill = filters.skill;
       
+      console.log('Frontend filters:', filters);
+      console.log('Backend filters being sent:', backendFilters);
+      console.log('Request params:', { ...backendFilters, page, limit });
+      
       const response = await api.get<ApiResponse<Student[]>>('/admin/students', {
         params: { ...backendFilters, page, limit },
       });
+      
+      console.log('Students response:', response.data);
+      
       return {
         ...response.data,
         data: (response.data.data ?? []).map(mapStudent),
