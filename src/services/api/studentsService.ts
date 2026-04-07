@@ -310,7 +310,7 @@ class StudentsService {
 
   async getAllSkills(): Promise<StudentSkill[]> {
     try {
-      const response = await api.get<ApiResponse<StudentSkill[]>>('/v1/admin/skills', {
+      const response = await api.get<ApiResponse<StudentSkill[]>>('/admin/skills', {
         params: { limit: 1000 }
       });
       
