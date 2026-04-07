@@ -314,7 +314,7 @@ function ViolationsTab({ studentId }: { studentId: string }) {
 }
 
 // ── Skills Tab ─────────────────────────────────────────────────────────────────
-function SkillsTab({ studentId }: { studentId: string }) {
+function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdded?: () => void }) {
   const [skills, setSkills] = useState<StudentSkill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -341,6 +341,8 @@ function SkillsTab({ studentId }: { studentId: string }) {
         proficiency_level: 'beginner',
       });
       load();
+      // Notify parent to refresh skills dropdown
+      onSkillAdded?.();
     } catch (e: unknown) {
       console.error('[SkillsTab] Error adding skill:', e);
       setError(e instanceof Error ? e.message : 'Failed to add skill');
@@ -450,7 +452,7 @@ function AffiliationsTab({ studentId }: { studentId: string }) {
 }
 
 // ── Main StudentProfile ────────────────────────────────────────────────────────
-export function StudentProfile({ student, onEdit, onDelete, onClose }: StudentProfileProps) {
+export function StudentProfile({ student, onEdit, onDelete, onClose, onSkillAdded }: StudentProfileProps & { onSkillAdded?: () => void }) {
   const statusVariant = student.status === 'active' ? 'success'
     : student.status === 'graduated' ? 'info'
     : student.status === 'dropped' ? 'warning'
@@ -462,7 +464,7 @@ export function StudentProfile({ student, onEdit, onDelete, onClose }: StudentPr
     { key: 'enrollments', label: 'Enrollments', content: <EnrollmentsTab studentId={student.id} /> },
     { key: 'activities', label: 'Activities', content: <ActivitiesTab /> },
     { key: 'violations', label: 'Violations', content: <ViolationsTab studentId={student.id} /> },
-    { key: 'skills', label: 'Skills', content: <SkillsTab studentId={student.id} /> },
+    { key: 'skills', label: 'Skills', content: <SkillsTab studentId={student.id} onSkillAdded={onSkillAdded} /> },
     { key: 'affiliations', label: 'Affiliations', content: <AffiliationsTab studentId={student.id} /> },
   ];
 

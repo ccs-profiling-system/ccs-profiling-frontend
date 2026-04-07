@@ -40,44 +40,44 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
 
   // Fetch available programs and skills for dropdowns
   useEffect(() => {
-    const fetchFilterOptions = async () => {
-      setSkillsLoading(true);
-      
-      try {
-        const [statsData, allSkills] = await Promise.all([
-          studentsService.getStudentStats(),
-          studentsService.getAllSkills().catch((err) => {
-            console.error('Failed to fetch skills:', err);
-            return [];
-          }),
-        ]);
-
-        // Extract programs from stats
-        if (statsData?.students_by_program) {
-          const programs = Object.keys(statsData.students_by_program).sort();
-          setAvailablePrograms(programs);
-        }
-
-        // Extract unique skill names from all skills
-        if (allSkills && allSkills.length > 0) {
-          const skillNames = allSkills.map(skill => skill.skillName);
-          
-          const uniqueSkillNames = Array.from(
-            new Set(skillNames.filter(Boolean))
-          ).sort();
-          setAvailableSkills(uniqueSkillNames);
-        } else {
-          setAvailableSkills([]);
-        }
-      } catch (err) {
-        console.error('Error fetching filter options:', err);
-      } finally {
-        setSkillsLoading(false);
-      }
-    };
-
     fetchFilterOptions();
   }, []);
+
+  const fetchFilterOptions = async () => {
+    setSkillsLoading(true);
+    
+    try {
+      const [statsData, allSkills] = await Promise.all([
+        studentsService.getStudentStats(),
+        studentsService.getAllSkills().catch((err) => {
+          console.error('Failed to fetch skills:', err);
+          return [];
+        }),
+      ]);
+
+      // Extract programs from stats
+      if (statsData?.students_by_program) {
+        const programs = Object.keys(statsData.students_by_program).sort();
+        setAvailablePrograms(programs);
+      }
+
+      // Extract unique skill names from all skills
+      if (allSkills && allSkills.length > 0) {
+        const skillNames = allSkills.map(skill => skill.skillName);
+        
+        const uniqueSkillNames = Array.from(
+          new Set(skillNames.filter(Boolean))
+        ).sort();
+        setAvailableSkills(uniqueSkillNames);
+      } else {
+        setAvailableSkills([]);
+      }
+    } catch (err) {
+      console.error('Error fetching filter options:', err);
+    } finally {
+      setSkillsLoading(false);
+    }
+  };
 
   const filteredStudents = useMemo(() => {
     if (!search) return students;
@@ -488,6 +488,7 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
             onEdit={() => { setEditStudent(selectedStudent); setIsFormOpen(true); }}
             onDelete={() => setDeleteTarget(selectedStudent)}
             onClose={() => setSelectedStudent(null)}
+            onSkillAdded={fetchFilterOptions}
           />
         )}
       </SlidePanel>
