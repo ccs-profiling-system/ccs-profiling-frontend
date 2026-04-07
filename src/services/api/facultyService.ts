@@ -147,6 +147,21 @@ class FacultyService {
     );
   }
 
+  async getFacultyStats(): Promise<{
+    total_faculty: number;
+    active_faculty: number;
+    inactive_faculty: number;
+    faculty_by_department: Record<string, number>;
+    faculty_by_position: Record<string, number>;
+    faculty_by_status: Record<string, number>;
+    recent_additions: number;
+    generated_at: string;
+  }> {
+    return handleRequest(() =>
+      api.get('/admin/faculty/stats').then((r) => unwrap(r.data))
+    );
+  }
+
   async exportFacultyToPDF(): Promise<Blob> {
     const response = await api.get('/admin/faculty/export/pdf', { responseType: 'blob' });
     return response.data as Blob;

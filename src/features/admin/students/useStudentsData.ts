@@ -30,11 +30,21 @@ export function useStudentsData(): UseStudentsDataReturn {
       setError(null);
       const [studentsResponse, statsData] = await Promise.all([
         studentsService.getStudents(filters, page, 20),
-        studentsService.getStudentStatistics().catch(() => null),
+        studentsService.getStudentStats().catch(() => null),
       ]);
       setStudents(studentsResponse.data ?? []);
       setTotal(studentsResponse.meta?.total ?? studentsResponse.total ?? 0);
-      setStats(statsData);
+      
+      // Map new stats format to old format for compatibility
+      if (statsData) {
+        setStats({
+          totalStudents: statsData.total_students,
+          activeStudents: statsData.active_students,
+          inactiveStudents: statsData.inactive_students,
+          graduatedStudents: statsData.graduated_students,
+          droppedStudents: 0, // Not in new stats, keep for compatibility
+        });
+      }
     } catch (err: unknown) {
       setError('Failed to connect to server. Showing sample data.');
       // Mock fallback — mirrors the confirmed POST /students fields
