@@ -79,7 +79,7 @@ export interface StudentFilters {
   yearLevel?: number | string;
   status?: Student['status'];
   search?: string;
-  skill?: string;
+  skill?: string | string[]; // Support both single and multiple skills
 }
 
 export interface CreateStudentRequest {

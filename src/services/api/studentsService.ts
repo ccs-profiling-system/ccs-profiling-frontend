@@ -129,7 +129,13 @@ class StudentsService {
       if (filters?.yearLevel) backendFilters.year_level = filters.yearLevel;
       if (filters?.status) backendFilters.status = filters.status;
       if (filters?.search) backendFilters.search = filters.search;
-      if (filters?.skill) backendFilters.skill = filters.skill;
+      
+      // Handle skill filter - if array, send as comma-separated string
+      if (filters?.skill) {
+        backendFilters.skill = Array.isArray(filters.skill) 
+          ? filters.skill.join(',') 
+          : filters.skill;
+      }
       
       const response = await api.get<ApiResponse<Student[]>>('/admin/students', {
         params: { ...backendFilters, page, limit },

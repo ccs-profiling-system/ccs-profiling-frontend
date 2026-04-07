@@ -9,6 +9,7 @@ import { SlidePanel } from '@/components/ui/SlidePanel';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Card } from '@/components/ui/Card';
+import { MultiSelect } from '@/components/ui/MultiSelect';
 import { GraduationCap, UserPlus, Filter } from 'lucide-react';
 import { useStudentsData } from './useStudentsData';
 import { StudentForm } from './StudentForm';
@@ -350,35 +351,22 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Skill {skillsLoading && <span className="text-xs text-gray-400">(loading...)</span>}
-                    </label>
-                    <select
-                      value={filters.skill ?? ''}
-                      onChange={(e) => setFilters({ ...filters, skill: e.target.value || undefined })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    <MultiSelect
+                      label={`Skills ${skillsLoading ? '(loading...)' : ''}`}
+                      options={availableSkills}
+                      selected={Array.isArray(filters.skill) ? filters.skill : filters.skill ? [filters.skill] : []}
+                      onChange={(selected) => setFilters({ ...filters, skill: selected.length > 0 ? selected : undefined })}
+                      placeholder="Select skills..."
                       disabled={skillsLoading}
-                    >
-                      <option value="">All Skills</option>
-                      {!skillsLoading && availableSkills.length === 0 && (
-                        <option disabled>No skills found in database</option>
-                      )}
-                      {availableSkills.map((skill) => (
-                        <option key={skill} value={skill}>
-                          {skill}
-                        </option>
-                      ))}
-                    </select>
-                    {!skillsLoading && availableSkills.length > 0 && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {availableSkills.length} skill(s) available
-                      </p>
-                    )}
-                    {!skillsLoading && availableSkills.length === 0 && (
-                      <p className="text-xs text-red-500 mt-1">
-                        No skills in database. Add skills to students first.
-                      </p>
-                    )}
+                      helperText={
+                        !skillsLoading && availableSkills.length > 0
+                          ? `${availableSkills.length} skill(s) available`
+                          : !skillsLoading && availableSkills.length === 0
+                          ? 'No skills in database. Add skills to students first.'
+                          : undefined
+                      }
+                      emptyMessage="No skills found in database"
+                    />
                   </div>
 
                   <div className="md:col-span-2 lg:col-span-4">
