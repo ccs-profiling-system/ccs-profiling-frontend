@@ -1,10 +1,10 @@
 import { MainLayout } from '@/components/layout';
-import { CurriculumList } from './CurriculumList';
+import { InstructionsList } from './InstructionsList';
 
 export function Instructions() {
   return (
     <MainLayout title="Instructions">
-      <CurriculumList />
+      <InstructionsList />
     </MainLayout>
   );
 }

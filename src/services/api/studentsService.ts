@@ -1,62 +1,182 @@
+import axios from 'axios';
 import api from './axios';
+import type {
+  Student,
+  AcademicRecord,
+  SubjectEnrollment,
+  StudentActivity,
+  Violation,
+  StudentSkill,
+  StudentAffiliation,
+  StudentFilters,
+  CreateStudentRequest,
+  UpdateStudentRequest,
+  StudentStatistics,
+} from '@/types/students';
 
-export interface Student {
-  id: string;
-  student_id: string;
-  first_name: string;
-  middle_name?: string;
-  last_name: string;
-  email: string;
-  program?: string;
-  year_level?: number;
-  status?: string;
-  gpa?: number;
-  created_at: string;
-  updated_at: string;
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  total?: number;
+  message?: string;
 }
 
-export interface StudentsResponse {
-  success: boolean;
-  data: Student[];
-  total: number;
-  page: number;
-  pageSize: number;
+// Handles both wrapped { success, data } and unwrapped direct responses
+function unwrap<T>(raw: T | ApiResponse<T>): T {
+  if (raw !== null && typeof raw === 'object' && 'data' in (raw as object)) {
+    return (raw as ApiResponse<T>).data;
+  }
+  return raw as T;
+}
+
+async function handleRequest<T>(fn: () => Promise<T | ApiResponse<T>>): Promise<T> {
+  try {
+    return unwrap(await fn());
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const msg = (error.response?.data as { message?: string })?.message ?? 'Network error — please check your connection';
+      throw new Error(msg);
+    }
+    throw error;
+  }
 }
 
 class StudentsService {
-  async getStudents(params?: {
-    page?: number;
-    pageSize?: number;
-    search?: string;
-    program?: string;
-    year_level?: number;
-    status?: string;
-  }): Promise<StudentsResponse> {
+  async getStudents(
+    filters?: StudentFilters,
+    page: number = 1,
+    limit: number = 20
+  ): Promise<ApiResponse<Student[]>> {
     try {
-      const queryParams = new URLSearchParams();
-      if (params?.page) queryParams.append('page', params.page.toString());
-      if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
-      if (params?.search) queryParams.append('search', params.search);
-      if (params?.program) queryParams.append('program', params.program);
-      if (params?.year_level) queryParams.append('year_level', params.year_level.toString());
-      if (params?.status) queryParams.append('status', params.status);
-
-      const response = await api.get(`/v1/admin/students?${queryParams.toString()}`);
+      const response = await api.get<ApiResponse<Student[]>>('/admin/students', {
+        params: { ...filters, page, limit },
+      });
       return response.data;
-    } catch (error) {
-      console.error('Error fetching students:', error);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const msg = (error.response?.data as { message?: string })?.message ?? 'Network error — please check your connection';
+        throw new Error(msg);
+      }
       throw error;
     }
   }
 
-  async getStudent(id: string): Promise<Student> {
+  async getStudentById(id: string): Promise<Student> {
+    return handleRequest(() =>
+      api.get<Student | ApiResponse<Student>>(`/admin/students/${id}`).then((r) => r.data)
+    );
+  }
+
+  async createStudent(data: CreateStudentRequest): Promise<Student> {
+    return handleRequest(() =>
+      api.post<Student | ApiResponse<Student>>('/admin/students', data).then((r) => r.data)
+    );
+  }
+
+  async updateStudent(data: UpdateStudentRequest): Promise<Student> {
+    return handleRequest(() =>
+      api.put<Student | ApiResponse<Student>>(`/admin/students/${data.id}`, data).then((r) => r.data)
+    );
+  }
+
+  async deleteStudent(id: string): Promise<void> {
     try {
-      const response = await api.get(`/v1/admin/students/${id}`);
-      return response.data.data;
-    } catch (error) {
-      console.error('Error fetching student:', error);
+      await api.delete(`/admin/students/${id}`);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const msg = (error.response?.data as { message?: string })?.message ?? 'Network error — please check your connection';
+        throw new Error(msg);
+      }
       throw error;
     }
+  }
+
+  async getStudentStatistics(): Promise<StudentStatistics> {
+    return handleRequest(() =>
+      api.get<StudentStatistics | ApiResponse<StudentStatistics>>('/admin/students/statistics').then((r) => r.data)
+    );
+  }
+
+  async exportStudentsToPDF(): Promise<Blob> {
+    const response = await api.get('/admin/students/export/pdf', { responseType: 'blob' });
+    return response.data as Blob;
+  }
+
+  async exportStudentsToExcel(): Promise<Blob> {
+    const response = await api.get('/admin/students/export/excel', { responseType: 'blob' });
+    return response.data as Blob;
+  }
+
+  async getStudentAcademicHistory(studentId: string): Promise<AcademicRecord[]> {
+    return handleRequest(() =>
+      api.get<AcademicRecord[] | ApiResponse<AcademicRecord[]>>(`/admin/students/${studentId}/academic-history`).then((r) => r.data)
+    );
+  }
+
+  async getStudentEnrollments(studentId: string): Promise<SubjectEnrollment[]> {
+    return handleRequest(() =>
+      api.get<SubjectEnrollment[] | ApiResponse<SubjectEnrollment[]>>(`/admin/students/${studentId}/enrollments`).then((r) => r.data)
+    );
+  }
+
+  async getStudentActivities(studentId: string): Promise<StudentActivity[]> {
+    return handleRequest(() =>
+      api.get<StudentActivity[] | ApiResponse<StudentActivity[]>>(`/admin/students/${studentId}/activities`).then((r) => r.data)
+    );
+  }
+
+  async getStudentViolations(studentId: string): Promise<Violation[]> {
+    return handleRequest(() =>
+      api.get<Violation[] | ApiResponse<Violation[]>>(`/admin/students/${studentId}/violations`).then((r) => r.data)
+    );
+  }
+
+  async addStudentViolation(studentId: string, data: Omit<Violation, 'id'>): Promise<Violation> {
+    return handleRequest(() =>
+      api.post<Violation | ApiResponse<Violation>>(`/admin/students/${studentId}/violations`, data).then((r) => r.data)
+    );
+  }
+
+  async updateStudentViolation(studentId: string, violationId: string, data: Partial<Omit<Violation, 'id'>>): Promise<Violation> {
+    return handleRequest(() =>
+      api.put<Violation | ApiResponse<Violation>>(`/admin/students/${studentId}/violations/${violationId}`, data).then((r) => r.data)
+    );
+  }
+
+  async deleteStudentViolation(studentId: string, violationId: string): Promise<void> {
+    try {
+      await api.delete(`/admin/students/${studentId}/violations/${violationId}`);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const msg = (error.response?.data as { message?: string })?.message ?? 'Network error — please check your connection';
+        throw new Error(msg);
+      }
+      throw error;
+    }
+  }
+
+  async getStudentSkills(studentId: string): Promise<StudentSkill[]> {
+    return handleRequest(() =>
+      api.get<StudentSkill[] | ApiResponse<StudentSkill[]>>(`/admin/students/${studentId}/skills`).then((r) => r.data)
+    );
+  }
+
+  async updateStudentSkills(studentId: string, skills: StudentSkill[]): Promise<StudentSkill[]> {
+    return handleRequest(() =>
+      api.put<StudentSkill[] | ApiResponse<StudentSkill[]>>(`/admin/students/${studentId}/skills`, { skills }).then((r) => r.data)
+    );
+  }
+
+  async getStudentAffiliations(studentId: string): Promise<StudentAffiliation[]> {
+    return handleRequest(() =>
+      api.get<StudentAffiliation[] | ApiResponse<StudentAffiliation[]>>(`/admin/students/${studentId}/affiliations`).then((r) => r.data)
+    );
+  }
+
+  async updateStudentAffiliations(studentId: string, affiliations: StudentAffiliation[]): Promise<StudentAffiliation[]> {
+    return handleRequest(() =>
+      api.put<StudentAffiliation[] | ApiResponse<StudentAffiliation[]>>(`/admin/students/${studentId}/affiliations`, { affiliations }).then((r) => r.data)
+    );
   }
 }
 
