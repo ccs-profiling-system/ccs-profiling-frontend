@@ -42,19 +42,19 @@ export function useInstructionsData(): UseInstructionsDataReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const calculateStatistics = (data: Instruction[]): InstructionStatistics => {
-    const totalInstructions = data.length;
-    const uniqueYears = new Set(data.map(i => i.curriculum_year)).size;
-    const totalCredits = data.reduce((sum, i) => sum + i.credits, 0);
-    const averageCredits = totalInstructions > 0 ? totalCredits / totalInstructions : 0;
+  // const calculateStatistics = (data: Instruction[]): InstructionStatistics => {
+  //   const totalInstructions = data.length;
+  //   const uniqueYears = new Set(data.map(i => i.curriculum_year)).size;
+  //   const totalCredits = data.reduce((sum, i) => sum + i.credits, 0);
+  //   const averageCredits = totalInstructions > 0 ? totalCredits / totalInstructions : 0;
 
-    return {
-      totalInstructions,
-      uniqueYears,
-      totalCredits,
-      averageCredits: Math.round(averageCredits * 10) / 10,
-    };
-  };
+  //   return {
+  //     totalInstructions,
+  //     uniqueYears,
+  //     totalCredits,
+  //     averageCredits: Math.round(averageCredits * 10) / 10,
+  //   };
+  // };
 
   const fetchInstructionsData = useCallback(async (filters?: InstructionFilters) => {
     try {

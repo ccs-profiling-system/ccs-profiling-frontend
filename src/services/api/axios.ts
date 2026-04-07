@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { callLogout } from './authCallbacks';
 
 // Development mode bypass
 const DEV_MODE = import.meta.env.DEV;
