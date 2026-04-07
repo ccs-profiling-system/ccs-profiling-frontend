@@ -36,10 +36,14 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
   // Available filter options from backend data
   const [availablePrograms, setAvailablePrograms] = useState<string[]>([]);
   const [availableSkills, setAvailableSkills] = useState<string[]>([]);
+  const [skillsLoading, setSkillsLoading] = useState(true);
 
   // Fetch available programs and skills for dropdowns
   useEffect(() => {
     const fetchFilterOptions = async () => {
+      console.log('=== Starting to fetch filter options ===');
+      setSkillsLoading(true);
+      
       try {
         const [statsData, allSkills] = await Promise.all([
           studentsService.getStudentStats(),
@@ -51,25 +55,39 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
 
         console.log('Stats data:', statsData);
         console.log('All skills data:', allSkills);
+        console.log('All skills length:', allSkills?.length);
 
         // Extract programs from stats
         if (statsData?.students_by_program) {
-          setAvailablePrograms(Object.keys(statsData.students_by_program).sort());
+          const programs = Object.keys(statsData.students_by_program).sort();
+          console.log('Setting available programs:', programs);
+          setAvailablePrograms(programs);
         }
 
         // Extract unique skill names from all skills
         if (allSkills && allSkills.length > 0) {
           console.log('Processing skills:', allSkills);
+          const skillNames = allSkills.map(skill => {
+            console.log('Skill object:', skill, 'skillName:', skill.skillName);
+            return skill.skillName;
+          });
+          console.log('Extracted skill names:', skillNames);
+          
           const uniqueSkillNames = Array.from(
-            new Set(allSkills.map(skill => skill.skillName).filter(Boolean))
+            new Set(skillNames.filter(Boolean))
           ).sort();
-          console.log('Unique skill names:', uniqueSkillNames);
+          console.log('Unique skill names to set:', uniqueSkillNames);
           setAvailableSkills(uniqueSkillNames);
+          console.log('Available skills state updated');
         } else {
-          console.warn('No skills data received');
+          console.warn('No skills data received or empty array');
+          setAvailableSkills([]);
         }
       } catch (err) {
         console.error('Error fetching filter options:', err);
+      } finally {
+        setSkillsLoading(false);
+        console.log('=== Finished fetching filter options ===');
       }
     };
 
@@ -348,20 +366,34 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Skill
+                      Skill {skillsLoading && <span className="text-xs text-gray-400">(loading...)</span>}
                     </label>
                     <select
                       value={filters.skill ?? ''}
                       onChange={(e) => setFilters({ ...filters, skill: e.target.value || undefined })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      disabled={skillsLoading}
                     >
                       <option value="">All Skills</option>
+                      {!skillsLoading && availableSkills.length === 0 && (
+                        <option disabled>No skills found in database</option>
+                      )}
                       {availableSkills.map((skill) => (
                         <option key={skill} value={skill}>
                           {skill}
                         </option>
                       ))}
                     </select>
+                    {!skillsLoading && availableSkills.length > 0 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {availableSkills.length} skill(s) available
+                      </p>
+                    )}
+                    {!skillsLoading && availableSkills.length === 0 && (
+                      <p className="text-xs text-red-500 mt-1">
+                        No skills in database. Add skills to students first.
+                      </p>
+                    )}
                   </div>
 
                   <div className="md:col-span-2 lg:col-span-4">
