@@ -1,28 +1,20 @@
 import { useEffect, useState } from 'react';
 import { MainLayout, Card } from '@/components/layout';
-import { Plus, Filter, X, AlertCircle, Calendar } from 'lucide-react';
-import type { Event, EventStatus, CreateEventPayload } from './types';
-import { useEvents, filterEventsByStatus } from './useEvents';
-import { EventStatusBadge } from './EventStatusBadge';
+import { Plus, X, AlertCircle, Calendar } from 'lucide-react';
+import type { Event, CreateEventPayload } from './types';
+import { useEvents } from './useEvents';
 import { EventFormModal } from './EventFormModal';
-import { ParticipantAssignModal } from './ParticipantAssignModal';
-import { FileAttachmentPanel } from './FileAttachmentPanel';
 import { EventsAside } from './EventsAside';
-
-type FilterValue = EventStatus | 'all';
 
 type ActiveModal =
   | { kind: 'create' }
   | { kind: 'edit'; event: Event }
-  | { kind: 'participants'; event: Event }
-  | { kind: 'attachments'; event: Event }
   | null;
 
 export function EventsPage() {
   const { events, loading, error, fetchEvents, createEvent, updateEvent, deleteEvent } =
     useEvents();
 
-  const [filter, setFilter] = useState<FilterValue>('all');
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [formApiError, setFormApiError] = useState<string | null>(null);
@@ -31,7 +23,7 @@ export function EventsPage() {
     fetchEvents();
   }, [fetchEvents]);
 
-  const displayed = Array.isArray(events) ? filterEventsByStatus(events, filter) : [];
+  const displayed = Array.isArray(events) ? events : [];
 
   async function handleSave(payload: CreateEventPayload) {
     setFormApiError(null);
@@ -106,21 +98,9 @@ export function EventsPage() {
         {/* Filter Section */}
         <Card className="!p-4">
           <div className="flex items-center gap-3">
-            <Filter className="w-5 h-5 text-gray-600" />
-            <label htmlFor="status-filter" className="text-sm font-medium text-gray-700">
-              Filter by status:
-            </label>
-            <select
-              id="status-filter"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value as FilterValue)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
-            >
-              <option value="all">All Events</option>
-              <option value="upcoming">Upcoming</option>
-              <option value="ongoing">Ongoing</option>
-              <option value="completed">Completed</option>
-            </select>
+            <span className="text-sm font-medium text-gray-700">
+              Total Events: <span className="font-semibold text-gray-900">{displayed.length}</span>
+            </span>
           </div>
         </Card>
 
@@ -177,16 +157,13 @@ export function EventsPage() {
                       Title
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Type
+                      Description
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Venue
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Status
+                      Location
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Actions
@@ -197,14 +174,11 @@ export function EventsPage() {
                   {displayed.map((event) => (
                     <tr key={event.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 font-medium text-gray-900">{event.title}</td>
-                      <td className="px-6 py-4 capitalize text-gray-600">{event.type}</td>
+                      <td className="px-6 py-4 text-gray-600 max-w-xs truncate">{event.description}</td>
                       <td className="px-6 py-4 text-gray-600 whitespace-nowrap">
-                        {formatDate(event.date)}
+                        {new Date(event.date).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 text-gray-600">{event.venue}</td>
-                      <td className="px-6 py-4">
-                        <EventStatusBadge status={event.status} />
-                      </td>
+                      <td className="px-6 py-4 text-gray-600">{event.location}</td>
                       <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-2">
                           <button
@@ -214,22 +188,6 @@ export function EventsPage() {
                             title="Edit"
                           >
                             ✎
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setActiveModal({ kind: 'participants', event })}
-                            className="p-2 text-gray-600 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                            title="Participants"
-                          >
-                            👥
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setActiveModal({ kind: 'attachments', event })}
-                            className="p-2 text-gray-600 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                            title="Attachments"
-                          >
-                            📎
                           </button>
                           {deleteConfirmId === event.id ? (
                             <>

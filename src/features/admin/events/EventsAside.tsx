@@ -18,19 +18,12 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-  });
-}
-
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
+    year: 'numeric',
   });
 }
 
 function isUpcoming(iso: string) {
-  const d = new Date(iso);
+  const d = new Date(iso + 'T00:00:00');
   const now = new Date();
   const in7Days = new Date(now);
   in7Days.setDate(now.getDate() + 7);
@@ -48,10 +41,9 @@ export function EventsAside({ events, loading }: EventsAsideProps) {
   );
 
   const stats = useMemo(() => {
-    const upcoming = events.filter((e) => e.status === 'upcoming').length;
-    const ongoing = events.filter((e) => e.status === 'ongoing').length;
-    const completed = events.filter((e) => e.status === 'completed').length;
-    return { upcoming, ongoing, completed };
+    return {
+      total: events.length,
+    };
   }, [events]);
 
   if (loading) {
@@ -99,21 +91,10 @@ export function EventsAside({ events, loading }: EventsAsideProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{event.title}</p>
                     <p className="text-xs text-gray-600 mt-0.5">
-                      {formatDate(event.date)} · {formatTime(event.date)}
+                      {formatDate(event.date)}
                     </p>
-                    <p className="text-xs text-gray-500">{event.venue}</p>
+                    <p className="text-xs text-gray-500">{event.location}</p>
                   </div>
-                  <span
-                    className={`text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0 ${
-                      event.status === 'upcoming'
-                        ? 'bg-blue-100 text-blue-700'
-                        : event.status === 'ongoing'
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-green-100 text-green-700'
-                    }`}
-                  >
-                    {event.status}
-                  </span>
                 </div>
               </div>
             ))}
@@ -131,26 +112,10 @@ export function EventsAside({ events, loading }: EventsAsideProps) {
         <div className="space-y-2">
           <div className="flex items-center justify-between p-2 bg-white rounded-lg">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-blue-600" />
-              <span className="text-sm text-gray-700">Upcoming</span>
+              <Calendar className="w-4 h-4 text-blue-600" />
+              <span className="text-sm text-gray-700">Total Events</span>
             </div>
-            <span className="font-semibold text-gray-900">{stats.upcoming}</span>
-          </div>
-
-          <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-orange-600" />
-              <span className="text-sm text-gray-700">Ongoing</span>
-            </div>
-            <span className="font-semibold text-gray-900">{stats.ongoing}</span>
-          </div>
-
-          <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-sm text-gray-700">Completed</span>
-            </div>
-            <span className="font-semibold text-gray-900">{stats.completed}</span>
+            <span className="font-semibold text-gray-900">{stats.total}</span>
           </div>
         </div>
       </Card>

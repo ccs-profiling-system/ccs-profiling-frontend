@@ -1,16 +1,16 @@
 import axios from 'axios';
 import type { Event, CreateEventPayload, UpdateEventPayload } from './types';
 
-const BASE_URL = '/api/events';
+const BASE_URL = '/events';
 
 // Mock data for development
 const mockEvents: Event[] = [
   {
     id: '1',
-    title: 'Faculty Meeting',
+    title: 'Tech Conference',
     type: 'meeting',
-    date: new Date(2026, 3, 8, 14, 0).toISOString(),
-    venue: 'Conference Room A',
+    date: '2026-04-15',
+    venue: 'Main Hall',
     status: 'upcoming',
     participants: [],
     attachments: [],
@@ -19,10 +19,10 @@ const mockEvents: Event[] = [
   },
   {
     id: '2',
-    title: 'Research Symposium',
-    type: 'conference',
-    date: new Date(2026, 3, 15, 9, 0).toISOString(),
-    venue: 'Main Hall',
+    title: 'Faculty Meeting',
+    type: 'meeting',
+    date: '2026-04-08',
+    venue: 'Conference Room A',
     status: 'upcoming',
     participants: [],
     attachments: [],
@@ -50,6 +50,7 @@ export async function createEvent(payload: CreateEventPayload): Promise<Event> {
     const newEvent: Event = {
       id: Date.now().toString(),
       ...payload,
+      status: payload.status || 'upcoming',
       participants: [],
       attachments: [],
       createdAt: new Date().toISOString(),
