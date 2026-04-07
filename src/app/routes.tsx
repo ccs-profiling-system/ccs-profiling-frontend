@@ -10,10 +10,13 @@ export function AppRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/admin/research/:id" element={<ResearchDetailPage />} />
-        <Route path="/admin/research" element={<ResearchPage />} />
-        <Route path="/admin/*" element={<AdminDashboard />} />
-        <Route path="/" element={<Navigate to="/admin" replace />} />
+        <Route path="/research/:id" element={<ResearchDetailPage />} />
+        <Route path="/research" element={<ResearchPage />} />
+        <Route path="/reports" element={<Reports />} />
+        <Route path="/instructions" element={<Instructions />} />
+        <Route path="/dashboard" element={<AdminDashboard />} />
+        <Route path="/scheduling" element={<div className="p-6"><h1 className="text-2xl font-bold">Scheduling - Coming Soon</h1></div>} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );
