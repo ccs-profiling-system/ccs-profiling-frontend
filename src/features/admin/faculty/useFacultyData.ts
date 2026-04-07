@@ -30,10 +30,10 @@ export function useFacultyData(): UseFacultyDataReturn {
       setError(null);
       const [facultyResponse, statsData] = await Promise.all([
         facultyService.getFaculty(filters, page, 20),
-        facultyService.getFacultyStatistics(),
+        facultyService.getFacultyStatistics().catch(() => null),
       ]);
       setFaculty(facultyResponse.data ?? []);
-      setTotal(facultyResponse.total ?? 0);
+      setTotal(facultyResponse.meta?.total ?? facultyResponse.total ?? 0);
       setStats(statsData);
     } catch (err: unknown) {
       setError('Failed to connect to server. Showing sample data.');
