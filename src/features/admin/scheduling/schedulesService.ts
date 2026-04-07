@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { Schedule, CreateSchedulePayload, UpdateSchedulePayload } from './types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/schedules';
+const BASE_URL = '/scheduling';
 
 // Mock data for development when API is not available
 const mockSchedules: Schedule[] = [
