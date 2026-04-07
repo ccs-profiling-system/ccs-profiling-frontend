@@ -30,10 +30,10 @@ export function useStudentsData(): UseStudentsDataReturn {
       setError(null);
       const [studentsResponse, statsData] = await Promise.all([
         studentsService.getStudents(filters, page, 20),
-        studentsService.getStudentStatistics(),
+        studentsService.getStudentStatistics().catch(() => null),
       ]);
       setStudents(studentsResponse.data ?? []);
-      setTotal(studentsResponse.total ?? 0);
+      setTotal(studentsResponse.meta?.total ?? studentsResponse.total ?? 0);
       setStats(statsData);
     } catch (err: unknown) {
       setError('Failed to connect to server. Showing sample data.');
