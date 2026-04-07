@@ -1,0 +1,74 @@
+import { useState, useEffect, useCallback } from 'react';
+import facultyService from '@/services/api/facultyService';
+import type { Faculty, FacultyFilters, FacultyStatistics } from '@/types/faculty';
+
+interface UseFacultyDataReturn {
+  faculty: Faculty[];
+  stats: FacultyStatistics | null;
+  total: number;
+  loading: boolean;
+  error: string | null;
+  page: number;
+  setPage: (page: number) => void;
+  filters: FacultyFilters;
+  setFilters: (filters: FacultyFilters) => void;
+  refetch: () => Promise<void>;
+}
+
+export function useFacultyData(): UseFacultyDataReturn {
+  const [faculty, setFaculty] = useState<Faculty[]>([]);
+  const [stats, setStats] = useState<FacultyStatistics | null>(null);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<FacultyFilters>({});
+
+  const fetchData = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [facultyResponse, statsData] = await Promise.all([
+        facultyService.getFaculty(filters, page, 20),
+        facultyService.getFacultyStatistics(),
+      ]);
+      setFaculty(facultyResponse.data ?? []);
+      setTotal(facultyResponse.total ?? 0);
+      setStats(statsData);
+    } catch (err: unknown) {
+      setError('Failed to connect to server. Showing sample data.');
+      // Mock fallback — mirrors the confirmed POST /faculty fields
+      setFaculty([
+        { id: '1', facultyId: 'FAC-001', firstName: 'Dr. Jose', lastName: 'Reyes', department: 'Computer Science', position: 'Professor', specialization: 'Machine Learning', status: 'active' },
+        { id: '2', facultyId: 'FAC-002', firstName: 'Prof. Maria', lastName: 'Cruz', department: 'Information Technology', position: 'Associate Professor', specialization: 'Web Development', status: 'active' },
+        { id: '3', facultyId: 'FAC-003', firstName: 'Dr. Ramon', lastName: 'Santos', department: 'Computer Science', position: 'Instructor', specialization: 'Database Systems', status: 'on-leave' },
+      ]);
+      setTotal(3);
+      setStats({ totalFaculty: 3, activeFaculty: 2, inactiveFaculty: 0, onLeaveFaculty: 1 });
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, page]);
+
+  const handleSetFilters = useCallback((newFilters: FacultyFilters): void => {
+    setPage(1);
+    setFilters(newFilters);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return {
+    faculty,
+    stats,
+    total,
+    loading,
+    error,
+    page,
+    setPage,
+    filters,
+    setFilters: handleSetFilters,
+    refetch: fetchData,
+  };
+}

@@ -189,7 +189,7 @@ export function AdminDashboard() {
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-primary" /> Upcoming Events
               </h3>
-              <button onClick={() => navigate('/events')} className="text-sm text-primary hover:text-primary-dark font-medium">
+              <button onClick={() => navigate('/admin/events')} className="text-sm text-primary hover:text-primary-dark font-medium">
                 View All
               </button>
             </div>
