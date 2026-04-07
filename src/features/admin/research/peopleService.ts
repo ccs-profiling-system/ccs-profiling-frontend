@@ -4,8 +4,8 @@ import type { Person } from './types';
 export async function getPeople(): Promise<Person[]> {
   try {
     const [studentsRes, facultyRes] = await Promise.all([
-      axios.get<Person[]>('/api/students'),
-      axios.get<Person[]>('/api/faculty'),
+      axios.get<Person[]>('/students'),
+      axios.get<Person[]>('/faculty'),
     ]);
 
     const students: Person[] = studentsRes.data.map((p) => ({ ...p, role: 'student' as const }));

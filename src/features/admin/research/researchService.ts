@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { Research, CreateResearchPayload, UpdateResearchPayload } from './types';
 
-const BASE_URL = '/api/research';
+const BASE_URL = '/research';
 
 export async function getResearch(): Promise<Research[]> {
   const response = await axios.get<Research[] | { data: Research[] }>(BASE_URL);
