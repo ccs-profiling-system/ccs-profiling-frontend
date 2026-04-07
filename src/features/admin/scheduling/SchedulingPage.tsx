@@ -118,12 +118,30 @@ export function SchedulingPage() {
 
   // Fetch schedules whenever the date range changes
   useEffect(() => {
-    fetchSchedules({ start: dateRange.start, end: dateRange.end });
-  }, [dateRange, fetchSchedules]);
+    // Wrap in try-catch to prevent crashes
+    const loadSchedules = async () => {
+      try {
+        await fetchSchedules({ start: dateRange.start, end: dateRange.end });
+      } catch (err) {
+        console.error('Failed to load schedules:', err);
+      }
+    };
+    loadSchedules();
+  }, [dateRange.start, dateRange.end, fetchSchedules]);
 
   // Load rooms once
   useEffect(() => {
-    getRooms().then(setRooms).catch(() => {/* non-critical */});
+    const loadRooms = async () => {
+      try {
+        const roomsData = await getRooms();
+        setRooms(roomsData);
+      } catch (err) {
+        console.error('Failed to load rooms:', err);
+        // Set empty array on error
+        setRooms([]);
+      }
+    };
+    loadRooms();
   }, []);
 
   const handleViewModeChange = useCallback((mode: CalendarViewMode) => {
