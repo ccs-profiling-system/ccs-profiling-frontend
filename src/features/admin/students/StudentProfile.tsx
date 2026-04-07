@@ -5,7 +5,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { ErrorAlert } from '@/components/ui/ErrorAlert';
 import { Modal } from '@/components/ui/Modal';
 import studentsService from '@/services/api/studentsService';
-import type { Student, AcademicRecord, SubjectEnrollment, StudentActivity, Violation, StudentSkill, StudentAffiliation } from '@/types/students';
+import type { Student, AcademicRecord, SubjectEnrollment, Violation, StudentSkill, StudentAffiliation } from '@/types/students';
 import type { Tag } from '@/components/ui/TagInput';
 
 interface StudentProfileProps {
@@ -102,30 +102,13 @@ function EnrollmentsTab({ studentId }: { studentId: string }) {
 }
 
 // ── Activities Tab ─────────────────────────────────────────────────────────────
-function ActivitiesTab({ studentId }: { studentId: string }) {
-  const [activities, setActivities] = useState<StudentActivity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    studentsService.getStudentActivities(studentId)
-      .then(setActivities)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Failed to load'))
-      .finally(() => setLoading(false));
-  }, [studentId]);
-
-  if (loading) return <Spinner size="sm" />;
-  if (error) return <ErrorAlert message={error} />;
-  if (activities.length === 0) return <p className="text-gray-500 text-sm">No activities recorded.</p>;
-
+function ActivitiesTab() {
+  // Note: The activities endpoint doesn't exist in the backend yet
+  // This would need to query events where the student is a participant
   return (
-    <div className="space-y-2">
-      {activities.map((act) => (
-        <div key={act.eventId} className="p-3 bg-gray-50 rounded-lg">
-          <p className="font-medium text-sm text-gray-800">{act.eventName}</p>
-          <p className="text-xs text-gray-500">{act.type} · {act.participationDate}{act.role ? ` · ${act.role}` : ''}</p>
-        </div>
-      ))}
+    <div className="text-center py-8">
+      <p className="text-gray-500 text-sm">Activities tracking is not yet implemented.</p>
+      <p className="text-gray-400 text-xs mt-2">This feature will show events and activities where the student participated.</p>
     </div>
   );
 }
@@ -140,7 +123,13 @@ function ViolationsTab({ studentId }: { studentId: string }) {
   const [deleteTarget, setDeleteTarget] = useState<Violation | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [vForm, setVForm] = useState({ date: '', type: '', description: '', actionTaken: '', recordedBy: '' });
+  const [vForm, setVForm] = useState({ 
+    violation_type: '', 
+    description: '', 
+    violation_date: '', 
+    resolution_status: 'pending' as 'pending' | 'resolved' | 'dismissed',
+    resolution_notes: '' 
+  });
 
   const load = useCallback((): void => {
     setLoading(true);
@@ -153,14 +142,20 @@ function ViolationsTab({ studentId }: { studentId: string }) {
   useEffect(() => { load(); }, [load]);
 
   const openAdd = (): void => {
-    setVForm({ date: '', type: '', description: '', actionTaken: '', recordedBy: '' });
+    setVForm({ violation_type: '', description: '', violation_date: '', resolution_status: 'pending', resolution_notes: '' });
     setFormError(null);
     setIsAddOpen(true);
   };
 
   const openEdit = (v: Violation): void => {
     setEditTarget(v);
-    setVForm({ date: v.date, type: v.type, description: v.description, actionTaken: v.actionTaken, recordedBy: v.recordedBy });
+    setVForm({ 
+      violation_type: v.violation_type, 
+      description: v.description, 
+      violation_date: v.violation_date, 
+      resolution_status: v.resolution_status ?? 'pending',
+      resolution_notes: v.resolution_notes ?? '' 
+    });
     setFormError(null);
   };
 
@@ -169,7 +164,7 @@ function ViolationsTab({ studentId }: { studentId: string }) {
     setFormError(null);
     try {
       if (editTarget) {
-        await studentsService.updateStudentViolation(studentId, editTarget.id, vForm);
+        await studentsService.updateStudentViolation(editTarget.id, vForm);
         setEditTarget(null);
       } else {
         await studentsService.addStudentViolation(studentId, vForm);
@@ -187,7 +182,7 @@ function ViolationsTab({ studentId }: { studentId: string }) {
     if (!deleteTarget) return;
     setSaving(true);
     try {
-      await studentsService.deleteStudentViolation(studentId, deleteTarget.id);
+      await studentsService.deleteStudentViolation(deleteTarget.id);
       setDeleteTarget(null);
       load();
     } catch (e: unknown) {
@@ -197,7 +192,19 @@ function ViolationsTab({ studentId }: { studentId: string }) {
     }
   };
 
-  const vSet = (field: keyof typeof vForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const handleResolve = async (violationId: string): Promise<void> => {
+    setSaving(true);
+    try {
+      await studentsService.resolveStudentViolation(violationId);
+      load();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to resolve');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const vSet = (field: keyof typeof vForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setVForm((prev) => ({ ...prev, [field]: e.target.value }));
 
   const ViolationForm = () => (
@@ -205,24 +212,28 @@ function ViolationsTab({ studentId }: { studentId: string }) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-          <input type="date" value={vForm.date} onChange={vSet('date')} required />
+          <input type="date" value={vForm.violation_date} onChange={vSet('violation_date')} required className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-          <input type="text" value={vForm.type} onChange={vSet('type')} placeholder="e.g. Academic" required />
+          <input type="text" value={vForm.violation_type} onChange={vSet('violation_type')} placeholder="e.g. Academic" required className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
         </div>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-        <textarea value={vForm.description} onChange={vSet('description')} rows={2} placeholder="Describe the violation" required className="w-full" />
+        <textarea value={vForm.description} onChange={vSet('description')} rows={2} placeholder="Describe the violation" required className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Action Taken</label>
-        <input type="text" value={vForm.actionTaken} onChange={vSet('actionTaken')} placeholder="e.g. Warning issued" required />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select value={vForm.resolution_status} onChange={vSet('resolution_status')} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+          <option value="pending">Pending</option>
+          <option value="resolved">Resolved</option>
+          <option value="dismissed">Dismissed</option>
+        </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Recorded By</label>
-        <input type="text" value={vForm.recordedBy} onChange={vSet('recordedBy')} placeholder="Name of recorder" required />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Resolution Notes</label>
+        <textarea value={vForm.resolution_notes} onChange={vSet('resolution_notes')} rows={2} placeholder="Optional notes" className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
       </div>
       {formError && <p className="text-red-600 text-sm">{formError}</p>}
       <div className="flex gap-3 pt-2">
@@ -252,11 +263,23 @@ function ViolationsTab({ studentId }: { studentId: string }) {
             <div key={v.id} className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
-                  <p className="font-medium text-sm text-gray-800">{v.type} — {v.date}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm text-gray-800">{v.violation_type} — {v.violation_date}</p>
+                    <span className={`px-2 py-0.5 text-xs rounded-full ${
+                      v.resolution_status === 'resolved' ? 'bg-green-100 text-green-700' :
+                      v.resolution_status === 'dismissed' ? 'bg-gray-100 text-gray-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {v.resolution_status ?? 'pending'}
+                    </span>
+                  </div>
                   <p className="text-sm text-gray-600 mt-1">{v.description}</p>
-                  <p className="text-xs text-gray-500 mt-1">Action: {v.actionTaken} · By: {v.recordedBy}</p>
+                  {v.resolution_notes && <p className="text-xs text-gray-500 mt-1">Notes: {v.resolution_notes}</p>}
                 </div>
                 <div className="flex gap-1">
+                  {v.resolution_status === 'pending' && (
+                    <button type="button" onClick={() => handleResolve(v.id)} disabled={saving} className="p-1.5 hover:bg-green-50 rounded text-gray-500 hover:text-green-600 transition text-xs">Resolve</button>
+                  )}
                   <button type="button" onClick={() => openEdit(v)} className="p-1.5 hover:bg-primary/10 rounded text-gray-500 hover:text-primary transition text-xs">Edit</button>
                   <button type="button" onClick={() => setDeleteTarget(v)} className="p-1.5 hover:bg-red-50 rounded text-gray-500 hover:text-red-600 transition text-xs">Delete</button>
                 </div>
@@ -297,36 +320,46 @@ function SkillsTab({ studentId }: { studentId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback((): void => {
+    setLoading(true);
     studentsService.getStudentSkills(studentId)
       .then(setSkills)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, [studentId]);
 
-  const tags: Tag[] = skills.map((s) => ({ name: s.skillName, category: s.category }));
+  useEffect(() => { load(); }, [load]);
+
+  const tags: Tag[] = skills.map((s) => ({ id: s.id, name: s.skillName, category: s.category }));
 
   const handleAdd = async (tag: Tag): Promise<void> => {
-    const updated: StudentSkill[] = [...skills, { skillName: tag.name, category: (tag.category ?? 'other') as StudentSkill['category'] }];
     setSaving(true);
+    setError(null);
     try {
-      const saved = await studentsService.updateStudentSkills(studentId, updated);
-      setSkills(saved);
+      console.log('[SkillsTab] Adding skill:', tag);
+      await studentsService.addStudentSkill(studentId, {
+        skill_name: tag.name,
+        proficiency_level: 'beginner',
+      });
+      console.log('[SkillsTab] Skill added successfully');
+      load();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to save');
+      console.error('[SkillsTab] Error adding skill:', e);
+      setError(e instanceof Error ? e.message : 'Failed to add skill');
     } finally {
       setSaving(false);
     }
   };
 
   const handleRemove = async (tag: Tag): Promise<void> => {
-    const updated = skills.filter((s) => !(s.skillName === tag.name && s.category === tag.category));
+    if (!tag.id) return;
     setSaving(true);
+    setError(null);
     try {
-      const saved = await studentsService.updateStudentSkills(studentId, updated);
-      setSkills(saved);
+      await studentsService.deleteStudentSkill(tag.id);
+      load();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to save');
+      setError(e instanceof Error ? e.message : 'Failed to remove skill');
     } finally {
       setSaving(false);
     }
@@ -357,36 +390,44 @@ function AffiliationsTab({ studentId }: { studentId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback((): void => {
+    setLoading(true);
     studentsService.getStudentAffiliations(studentId)
       .then(setAffiliations)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, [studentId]);
 
-  const tags: Tag[] = affiliations.map((a) => ({ name: a.organizationName, category: a.type }));
+  useEffect(() => { load(); }, [load]);
+
+  const tags: Tag[] = affiliations.map((a) => ({ id: a.id, name: a.organizationName, category: a.type }));
 
   const handleAdd = async (tag: Tag): Promise<void> => {
-    const updated: StudentAffiliation[] = [...affiliations, { organizationName: tag.name, type: (tag.category ?? 'other') as StudentAffiliation['type'] }];
     setSaving(true);
+    setError(null);
     try {
-      const saved = await studentsService.updateStudentAffiliations(studentId, updated);
-      setAffiliations(saved);
+      const today = new Date().toISOString().split('T')[0];
+      await studentsService.addStudentAffiliation(studentId, {
+        organization_name: tag.name,
+        start_date: today,
+      });
+      load();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to save');
+      setError(e instanceof Error ? e.message : 'Failed to add affiliation');
     } finally {
       setSaving(false);
     }
   };
 
   const handleRemove = async (tag: Tag): Promise<void> => {
-    const updated = affiliations.filter((a) => !(a.organizationName === tag.name && a.type === tag.category));
+    if (!tag.id) return;
     setSaving(true);
+    setError(null);
     try {
-      const saved = await studentsService.updateStudentAffiliations(studentId, updated);
-      setAffiliations(saved);
+      await studentsService.deleteStudentAffiliation(tag.id);
+      load();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to save');
+      setError(e instanceof Error ? e.message : 'Failed to remove affiliation');
     } finally {
       setSaving(false);
     }
@@ -421,7 +462,7 @@ export function StudentProfile({ student, onEdit, onDelete, onClose }: StudentPr
     { key: 'personal', label: 'Personal Info', content: <PersonalInfoTab student={student} /> },
     { key: 'academic', label: 'Academic History', content: <AcademicHistoryTab studentId={student.id} /> },
     { key: 'enrollments', label: 'Enrollments', content: <EnrollmentsTab studentId={student.id} /> },
-    { key: 'activities', label: 'Activities', content: <ActivitiesTab studentId={student.id} /> },
+    { key: 'activities', label: 'Activities', content: <ActivitiesTab /> },
     { key: 'violations', label: 'Violations', content: <ViolationsTab studentId={student.id} /> },
     { key: 'skills', label: 'Skills', content: <SkillsTab studentId={student.id} /> },
     { key: 'affiliations', label: 'Affiliations', content: <AffiliationsTab studentId={student.id} /> },

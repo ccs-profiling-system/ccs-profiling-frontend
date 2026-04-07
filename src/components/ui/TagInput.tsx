@@ -2,6 +2,7 @@ import { useState, KeyboardEvent } from 'react';
 import { X } from 'lucide-react';
 
 export interface Tag {
+  id?: string;
   name: string;
   category?: string;
 }

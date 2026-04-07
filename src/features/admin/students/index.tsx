@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Spinner } from '@/components/ui/Spinner';
 import { ErrorAlert } from '@/components/ui/ErrorAlert';
@@ -8,7 +8,8 @@ import { ExportButtons } from '@/components/ui/ExportButtons';
 import { SlidePanel } from '@/components/ui/SlidePanel';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
-import { GraduationCap, UserPlus } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
+import { GraduationCap, UserPlus, Filter } from 'lucide-react';
 import { useStudentsData } from './useStudentsData';
 import { StudentForm } from './StudentForm';
 import { StudentProfile } from './StudentProfile';
@@ -24,12 +25,33 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
   const { students, stats, loading, error, filters, setFilters, refetch } = useStudentsData();
 
   const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(initialOpenAdd);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
+
+  // Local state for text inputs (debounced)
+  const [programInput, setProgramInput] = useState('');
+  const [skillInput, setSkillInput] = useState('');
+
+  // Debounce program input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters({ ...filters, program: programInput || undefined });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [programInput]);
+
+  // Debounce skill input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters({ ...filters, skill: skillInput || undefined });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [skillInput]);
 
   const filteredStudents = useMemo(() => {
     if (!search) return students;
@@ -218,53 +240,172 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
             </div>
 
             {/* Filters */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap gap-4 items-end">
-              <div className="flex-1 min-w-[200px]">
+            <Card>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Filters</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    {Object.values(filters).filter(v => v !== undefined && v !== '').length > 0 
+                      ? `${Object.values(filters).filter(v => v !== undefined && v !== '').length} filter(s) active`
+                      : 'No filters applied'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  <Filter className="w-4 h-4" />
+                  {showFilters ? 'Hide' : 'Show'} Filters
+                </button>
+              </div>
+
+              {/* Search Bar - Always Visible */}
+              <div className="mb-4">
                 <SearchBar
                   placeholder="Search by name, ID, or email…"
                   onChange={setSearch}
                   value={search}
                 />
               </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Program</label>
-                <input
-                  type="text"
-                  value={filters.program ?? ''}
-                  onChange={(e) => setFilters({ ...filters, program: e.target.value || undefined })}
-                  placeholder="e.g. BSCS"
-                  className="w-32"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Year Level</label>
-                <select
-                  value={filters.yearLevel ?? ''}
-                  onChange={(e) => setFilters({ ...filters, yearLevel: e.target.value || undefined })}
-                  className="w-32"
-                >
-                  <option value="">All Years</option>
-                  <option value="1">1st Year</option>
-                  <option value="2">2nd Year</option>
-                  <option value="3">3rd Year</option>
-                  <option value="4">4th Year</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Status</label>
-                <select
-                  value={filters.status ?? ''}
-                  onChange={(e) => setFilters({ ...filters, status: (e.target.value as Student['status']) || undefined })}
-                  className="w-32"
-                >
-                  <option value="">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="graduated">Graduated</option>
-                  <option value="dropped">Dropped</option>
-                </select>
-              </div>
-            </div>
+
+              {/* Advanced Filters - Collapsible */}
+              {showFilters && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Program
+                    </label>
+                    <input
+                      type="text"
+                      value={programInput}
+                      onChange={(e) => setProgramInput(e.target.value)}
+                      placeholder="e.g. BSCS, BSIT"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Year Level
+                    </label>
+                    <select
+                      value={filters.yearLevel ?? ''}
+                      onChange={(e) => setFilters({ ...filters, yearLevel: e.target.value || undefined })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">All Years</option>
+                      <option value="1">1st Year</option>
+                      <option value="2">2nd Year</option>
+                      <option value="3">3rd Year</option>
+                      <option value="4">4th Year</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={filters.status ?? ''}
+                      onChange={(e) => setFilters({ ...filters, status: (e.target.value as Student['status']) || undefined })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                      <option value="graduated">Graduated</option>
+                      <option value="dropped">Dropped</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Skill
+                    </label>
+                    <input
+                      type="text"
+                      value={skillInput}
+                      onChange={(e) => setSkillInput(e.target.value)}
+                      placeholder="e.g. Basketball, Programming"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 lg:col-span-4">
+                    <button
+                      onClick={() => {
+                        setFilters({});
+                        setSearch('');
+                        setProgramInput('');
+                        setSkillInput('');
+                      }}
+                      className="w-full md:w-auto px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                    >
+                      Reset All Filters
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Active Filters Summary */}
+              {(filters.program || filters.yearLevel || filters.status || filters.skill) && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <span className="text-sm font-medium text-gray-700">Active filters:</span>
+                    {filters.program && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                        Program: {filters.program}
+                        <button
+                          onClick={() => {
+                            setFilters({ ...filters, program: undefined });
+                            setProgramInput('');
+                          }}
+                          className="hover:text-blue-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {filters.yearLevel && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
+                        Year: {filters.yearLevel}
+                        <button
+                          onClick={() => setFilters({ ...filters, yearLevel: undefined })}
+                          className="hover:text-green-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {filters.status && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+                        Status: {filters.status}
+                        <button
+                          onClick={() => setFilters({ ...filters, status: undefined })}
+                          className="hover:text-purple-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                    {filters.skill && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs">
+                        Skill: {filters.skill}
+                        <button
+                          onClick={() => {
+                            setFilters({ ...filters, skill: undefined });
+                            setSkillInput('');
+                          }}
+                          className="hover:text-orange-900"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </Card>
 
             {/* Table */}
             <Table<Student>

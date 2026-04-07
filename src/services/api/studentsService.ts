@@ -42,18 +42,23 @@ function mapStudent(s: any): Student {
 
 function mapSkill(s: any): StudentSkill {
   return {
+    id: s.id,
     skillName: s.skillName ?? s.skill_name,
     category: s.category ?? 'other',
     proficiencyLevel: s.proficiencyLevel ?? s.proficiency_level,
+    yearsOfExperience: s.yearsOfExperience ?? s.years_of_experience,
   };
 }
 
 function mapAffiliation(a: any): StudentAffiliation {
   return {
+    id: a.id,
     organizationName: a.organizationName ?? a.organization_name,
     type: a.type ?? 'other',
     role: a.role,
     joinDate: a.joinDate ?? a.start_date,
+    endDate: a.endDate ?? a.end_date,
+    isActive: a.isActive ?? a.is_active,
   };
 }
 
@@ -205,6 +210,39 @@ class StudentsService {
     );
   }
 
+  async addStudentAcademicHistory(studentId: string, data: { instruction_id: string; academic_year: string; semester: string; grade: number }): Promise<AcademicRecord> {
+    return handleRequest(() =>
+      api.post<AcademicRecord | ApiResponse<AcademicRecord>>(`/admin/students/${studentId}/academic-history`, data)
+        .then((r) => mapAcademicRecord(unwrap(r.data)))
+    );
+  }
+
+  async updateStudentAcademicHistory(historyId: string, data: { instruction_id?: string; academic_year?: string; semester?: string; grade?: number }): Promise<AcademicRecord> {
+    return handleRequest(() =>
+      api.put<AcademicRecord | ApiResponse<AcademicRecord>>(`/admin/academic-history/${historyId}`, data)
+        .then((r) => mapAcademicRecord(unwrap(r.data)))
+    );
+  }
+
+  async deleteStudentAcademicHistory(historyId: string): Promise<void> {
+    try {
+      await api.delete(`/admin/academic-history/${historyId}`);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const msg = (error.response?.data as { message?: string })?.message ?? 'Network error — please check your connection';
+        throw new Error(msg);
+      }
+      throw error;
+    }
+  }
+
+  async getStudentGPA(studentId: string): Promise<{ gpa: number; total_credits: number }> {
+    return handleRequest(() =>
+      api.get<{ gpa: number; total_credits: number } | ApiResponse<{ gpa: number; total_credits: number }>>(`/admin/students/${studentId}/gpa`)
+        .then((r) => unwrap(r.data) as { gpa: number; total_credits: number })
+    );
+  }
+
   async getStudentEnrollments(studentId: string): Promise<SubjectEnrollment[]> {
     return handleRequest(() =>
       api.get<SubjectEnrollment[] | ApiResponse<SubjectEnrollment[]>>(`/admin/students/${studentId}/enrollments`)
@@ -230,15 +268,15 @@ class StudentsService {
     );
   }
 
-  async updateStudentViolation(studentId: string, violationId: string, data: Partial<Omit<Violation, 'id'>>): Promise<Violation> {
+  async updateStudentViolation(violationId: string, data: { violation_type?: string; description?: string; violation_date?: string; resolution_status?: string; resolution_notes?: string }): Promise<Violation> {
     return handleRequest(() =>
-      api.put<Violation | ApiResponse<Violation>>(`/admin/students/${studentId}/violations/${violationId}`, data).then((r) => r.data)
+      api.put<Violation | ApiResponse<Violation>>(`/admin/violations/${violationId}`, data).then((r) => unwrap(r.data) as Violation)
     );
   }
 
-  async deleteStudentViolation(studentId: string, violationId: string): Promise<void> {
+  async deleteStudentViolation(violationId: string): Promise<void> {
     try {
-      await api.delete(`/admin/students/${studentId}/violations/${violationId}`);
+      await api.delete(`/admin/violations/${violationId}`);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         const msg = (error.response?.data as { message?: string })?.message ?? 'Network error — please check your connection';
@@ -248,6 +286,13 @@ class StudentsService {
     }
   }
 
+  async resolveStudentViolation(violationId: string, resolutionNotes?: string): Promise<Violation> {
+    return handleRequest(() =>
+      api.patch<Violation | ApiResponse<Violation>>(`/admin/violations/${violationId}/resolve`, { resolution_notes: resolutionNotes })
+        .then((r) => unwrap(r.data) as Violation)
+    );
+  }
+
   async getStudentSkills(studentId: string): Promise<StudentSkill[]> {
     return handleRequest(() =>
       api.get<StudentSkill[] | ApiResponse<StudentSkill[]>>(`/admin/students/${studentId}/skills`)
@@ -255,11 +300,34 @@ class StudentsService {
     );
   }
 
-  async updateStudentSkills(studentId: string, skills: StudentSkill[]): Promise<StudentSkill[]> {
+  async addStudentSkill(studentId: string, data: { skill_name: string; proficiency_level?: string; years_of_experience?: number }): Promise<StudentSkill> {
+    console.log('[StudentsService] addStudentSkill called:', { studentId, data });
     return handleRequest(() =>
-      api.put<StudentSkill[] | ApiResponse<StudentSkill[]>>(`/admin/students/${studentId}/skills`, { skills })
-        .then((r) => (unwrap(r.data) as any[]).map(mapSkill))
+      api.post<StudentSkill | ApiResponse<StudentSkill>>(`/admin/students/${studentId}/skills`, data)
+        .then((r) => {
+          console.log('[StudentsService] addStudentSkill response:', r.data);
+          return mapSkill(unwrap(r.data));
+        })
     );
+  }
+
+  async updateStudentSkill(skillId: string, data: { skill_name?: string; proficiency_level?: string; years_of_experience?: number }): Promise<StudentSkill> {
+    return handleRequest(() =>
+      api.put<StudentSkill | ApiResponse<StudentSkill>>(`/admin/skills/${skillId}`, data)
+        .then((r) => mapSkill(unwrap(r.data)))
+    );
+  }
+
+  async deleteStudentSkill(skillId: string): Promise<void> {
+    try {
+      await api.delete(`/admin/skills/${skillId}`);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const msg = (error.response?.data as { message?: string })?.message ?? 'Network error — please check your connection';
+        throw new Error(msg);
+      }
+      throw error;
+    }
   }
 
   async getStudentAffiliations(studentId: string): Promise<StudentAffiliation[]> {
@@ -269,10 +337,36 @@ class StudentsService {
     );
   }
 
-  async updateStudentAffiliations(studentId: string, affiliations: StudentAffiliation[]): Promise<StudentAffiliation[]> {
+  async addStudentAffiliation(studentId: string, data: { organization_name: string; role?: string; start_date: string; end_date?: string }): Promise<StudentAffiliation> {
     return handleRequest(() =>
-      api.put<StudentAffiliation[] | ApiResponse<StudentAffiliation[]>>(`/admin/students/${studentId}/affiliations`, { affiliations })
-        .then((r) => (unwrap(r.data) as any[]).map(mapAffiliation))
+      api.post<StudentAffiliation | ApiResponse<StudentAffiliation>>(`/admin/students/${studentId}/affiliations`, data)
+        .then((r) => mapAffiliation(unwrap(r.data)))
+    );
+  }
+
+  async updateStudentAffiliation(affiliationId: string, data: { organization_name?: string; role?: string; start_date?: string; end_date?: string; is_active?: boolean }): Promise<StudentAffiliation> {
+    return handleRequest(() =>
+      api.put<StudentAffiliation | ApiResponse<StudentAffiliation>>(`/admin/affiliations/${affiliationId}`, data)
+        .then((r) => mapAffiliation(unwrap(r.data)))
+    );
+  }
+
+  async deleteStudentAffiliation(affiliationId: string): Promise<void> {
+    try {
+      await api.delete(`/admin/affiliations/${affiliationId}`);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const msg = (error.response?.data as { message?: string })?.message ?? 'Network error — please check your connection';
+        throw new Error(msg);
+      }
+      throw error;
+    }
+  }
+
+  async endStudentAffiliation(affiliationId: string, endDate: string): Promise<StudentAffiliation> {
+    return handleRequest(() =>
+      api.patch<StudentAffiliation | ApiResponse<StudentAffiliation>>(`/admin/affiliations/${affiliationId}/end`, { end_date: endDate })
+        .then((r) => mapAffiliation(unwrap(r.data)))
     );
   }
 }

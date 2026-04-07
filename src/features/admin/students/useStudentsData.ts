@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import studentsService from '@/services/api/studentsService';
 import type { Student, StudentFilters, StudentStatistics } from '@/types/students';
 
@@ -23,6 +23,7 @@ export function useStudentsData(): UseStudentsDataReturn {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<StudentFilters>({});
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchData = useCallback(async (): Promise<void> => {
     try {
@@ -67,9 +68,34 @@ export function useStudentsData(): UseStudentsDataReturn {
     setFilters(newFilters);
   }, []);
 
+  // Cleanup debounce timer on unmount
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Debounced fetch when filters change
+  useEffect(() => {
+    // Clear existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Set new timer for debounced fetch
+    debounceTimerRef.current = setTimeout(() => {
+      fetchData();
+    }, 500); // 500ms debounce for filter changes
+
+    // Cleanup function
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [filters, page]);
 
   return {
     students,
