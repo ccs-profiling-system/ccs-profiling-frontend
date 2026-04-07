@@ -3,8 +3,8 @@ import { MainLayout, Card, Modal } from '@/components/layout';
 import { Calendar, Users, TrendingUp, Filter, FileText, CheckCircle } from 'lucide-react';
 import { Spinner, ErrorAlert, Table } from '@/components/ui';
 import { studentsService, facultyService, researchService, eventsService, reportsService } from '@/services/api';
-import type { Student } from '@/services/api/studentsService';
-import type { Faculty } from '@/services/api/facultyService';
+import type { Student } from '@/types/students';
+import type { Faculty } from '@/types/faculty';
 import type { Research } from '@/services/api/researchService';
 import type { Event } from '@/services/api/eventsService';
 
@@ -87,31 +87,48 @@ export function Reports() {
       setError(null);
       setSelectedItems(new Set());
 
-      const params = {
-        page: currentPage,
-        pageSize: pageSize,
-        search: filters.search || undefined,
-        status: filters.status !== 'all' ? filters.status : undefined,
-      };
-
       let response;
       switch (activeTab) {
-        case 'students':
-          response = await studentsService.getStudents(params);
+        case 'students': {
+          const studentFilters = {
+            search: filters.search || undefined,
+            status: filters.status !== 'all' ? filters.status as Student['status'] : undefined,
+          };
+          response = await studentsService.getStudents(studentFilters, currentPage, pageSize);
           break;
-        case 'faculty':
-          response = await facultyService.getFaculty(params);
+        }
+        case 'faculty': {
+          const facultyFilters = {
+            search: filters.search || undefined,
+            status: filters.status !== 'all' ? filters.status as Faculty['status'] : undefined,
+          };
+          response = await facultyService.getFaculty(facultyFilters, currentPage, pageSize);
           break;
-        case 'research':
-          response = await researchService.getResearch(params);
+        }
+        case 'research': {
+          const researchParams = {
+            page: currentPage,
+            pageSize: pageSize,
+            search: filters.search || undefined,
+            status: filters.status !== 'all' ? filters.status : undefined,
+          };
+          response = await researchService.getResearch(researchParams);
           break;
-        case 'events':
-          response = await eventsService.getEvents(params);
+        }
+        case 'events': {
+          const eventsParams = {
+            page: currentPage,
+            pageSize: pageSize,
+            search: filters.search || undefined,
+            status: filters.status !== 'all' ? filters.status : undefined,
+          };
+          response = await eventsService.getEvents(eventsParams);
           break;
+        }
       }
 
       setData(response.data);
-      setTotalItems(response.total);
+      setTotalItems(response.total ?? 0);
     } catch (err) {
       console.error('Failed to fetch data:', err);
       setError('Failed to load data. Please ensure the backend is running.');
@@ -208,14 +225,14 @@ export function Reports() {
             key: 'student_id',
             header: 'Student ID',
             render: (row: Student) => (
-              <span className="font-medium text-gray-900">{row.student_id}</span>
+              <span className="font-medium text-gray-900">{row.studentId}</span>
             )
           },
           {
             key: 'name',
             header: 'Name',
             render: (row: Student) => (
-              <span>{`${row.first_name} ${row.middle_name || ''} ${row.last_name}`.trim()}</span>
+              <span>{`${row.firstName} ${row.lastName}`.trim()}</span>
             )
           },
           {
@@ -233,12 +250,15 @@ export function Reports() {
           {
             key: 'year_level',
             header: 'Year',
-            render: (row: Student) => row.year_level || 'N/A'
+            render: (row: Student) => row.yearLevel || 'N/A'
           },
           {
             key: 'gpa',
             header: 'GPA',
-            render: (row: Student) => row.gpa?.toFixed(2) || 'N/A'
+            render: () => {
+              // GPA is not in the Student type, so we'll show N/A
+              return 'N/A';
+            }
           },
           {
             key: 'status',
@@ -278,14 +298,14 @@ export function Reports() {
             key: 'faculty_id',
             header: 'Faculty ID',
             render: (row: Faculty) => (
-              <span className="font-medium text-gray-900">{row.faculty_id}</span>
+              <span className="font-medium text-gray-900">{row.facultyId}</span>
             )
           },
           {
             key: 'name',
             header: 'Name',
             render: (row: Faculty) => (
-              <span>{`${row.first_name} ${row.middle_name || ''} ${row.last_name}`.trim()}</span>
+              <span>{`${row.firstName} ${row.lastName}`.trim()}</span>
             )
           },
           {

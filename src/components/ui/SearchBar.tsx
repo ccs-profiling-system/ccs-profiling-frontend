@@ -37,7 +37,7 @@ export function SearchBar({
   const [isOpen, setIsOpen] = useState(false);
   const isControlled = controlledValue !== undefined;
   const value = isControlled ? controlledValue : internalValue;
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside

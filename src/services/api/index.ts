@@ -15,6 +15,8 @@ export type {
 export { default as authService } from './authService';
 export { default as studentsService } from './studentsService';
 export { default as facultyService } from './facultyService';
+export { default as researchService } from './researchService';
+export { default as eventsService } from './eventsService';
 export type { Report, ReportStatistics, ReportFilters, GenerateReportRequest } from '@/types/reports';
 export type { Curriculum, Subject, CurriculumStatistics, CurriculumFilters } from '@/types/instructions';
 export type { AuthUser, LoginRequest, LoginResponse } from '@/types/auth';
