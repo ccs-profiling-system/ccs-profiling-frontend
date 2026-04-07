@@ -2,14 +2,25 @@
 
 export interface Report {
   id: string;
-  name: string;
-  type: 'students' | 'faculty' | 'research' | 'events' | 'custom';
-  date: string;
-  size: string;
-  module: string;
-  timestamp: string;
-  fileUrl?: string;
+  report_type: string;
+  report_name: string;
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  format: string;
   status: 'completed' | 'processing' | 'failed';
+  generated_by: string;
+  parameters?: string;
+  created_at: string;
+  updated_at: string;
+  // Computed properties for UI compatibility
+  name?: string;
+  type?: string;
+  date?: string;
+  size?: string;
+  module?: string;
+  timestamp?: string;
+  fileUrl?: string;
   generatedBy?: string;
   description?: string;
 }
@@ -40,7 +51,7 @@ export interface ReportFilters {
 
 export interface GenerateReportRequest {
   type: string;
-  format: 'pdf' | 'excel' | 'csv';
+  format: 'pdf' | 'excel';
   dateRange: 'current-month' | 'last-month' | 'last-3-months' | 'last-6-months' | 'current-year' | 'custom';
   startDate?: string;
   endDate?: string;

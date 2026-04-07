@@ -72,57 +72,183 @@ class ReportsService {
   }
 
   async getReports(filters?: ReportFilters, page = 1, pageSize = 20): Promise<ReportsResponse> {
-    console.warn('⚠️ getReports: Backend endpoint not implemented. Returning mock data.');
-    
-    // Return mock data
-    return {
-      success: true,
-      data: [],
-      total: 0,
-      page,
-      pageSize,
-    };
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters?.module && filters.module !== 'all') {
+        params.append('report_type', filters.module);
+      }
+      if (filters?.status && filters.status !== 'all') {
+        params.append('status', filters.status);
+      }
+      if (filters?.startDate) {
+        params.append('start_date', filters.startDate);
+      }
+      if (filters?.endDate) {
+        params.append('end_date', filters.endDate);
+      }
+      params.append('page', page.toString());
+      params.append('pageSize', pageSize.toString());
+
+      const response = await api.get(`/v1/admin/reports?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      throw error;
+    }
   }
 
   async getReportStatistics(): Promise<ReportStatistics> {
-    console.warn('⚠️ getReportStatistics: Backend endpoint not implemented. Returning mock data.');
-    
-    return {
-      totalReports: 0,
-      reportsThisMonth: 0,
-      mostGenerated: 'N/A',
-      monthlyGrowth: 0,
-      totalSize: '0 MB',
-    };
+    try {
+      const response = await api.get('/v1/admin/reports/statistics');
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching report statistics:', error);
+      throw error;
+    }
   }
 
   async downloadReport(reportId: string): Promise<Blob> {
-    console.warn('⚠️ downloadReport: Backend endpoint not implemented.');
-    throw new Error('Report download not available. Backend generates reports on-demand only.');
+    try {
+      const response = await api.get(
+        `/v1/admin/reports/${reportId}/download`,
+        { responseType: 'blob' }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      throw error;
+    }
   }
 
   async deleteReport(reportId: string): Promise<void> {
-    console.warn('⚠️ deleteReport: Backend endpoint not implemented.');
-    throw new Error('Report deletion not available. Backend generates reports on-demand only.');
+    try {
+      await api.delete(`/v1/admin/reports/${reportId}`);
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      throw error;
+    }
   }
 
-  async exportToPDF(request: any): Promise<Blob> {
-    console.warn('⚠️ exportToPDF: Backend endpoint not implemented.');
-    throw new Error('Export to PDF not available. Use specific report generation methods instead.');
+  async generateReport(params: {
+    type: string;
+    format: 'pdf' | 'excel';
+    dateRange: string;
+  }): Promise<void> {
+    try {
+      // Map the report type to the appropriate backend endpoint
+      let blob: Blob;
+      
+      switch (params.type) {
+        case 'students':
+          // Generate analytics report for students
+          blob = await this.generateAnalyticsReport({
+            report_type: 'gpa',
+            start_date: this.getDateRangeStart(params.dateRange),
+            end_date: new Date().toISOString().split('T')[0],
+          });
+          break;
+        case 'faculty':
+          // Generate analytics report for faculty
+          blob = await this.generateAnalyticsReport({
+            report_type: 'research',
+            start_date: this.getDateRangeStart(params.dateRange),
+            end_date: new Date().toISOString().split('T')[0],
+          });
+          break;
+        case 'research':
+          blob = await this.generateAnalyticsReport({
+            report_type: 'research',
+            start_date: this.getDateRangeStart(params.dateRange),
+            end_date: new Date().toISOString().split('T')[0],
+          });
+          break;
+        case 'events':
+          blob = await this.generateAnalyticsReport({
+            report_type: 'enrollments',
+            start_date: this.getDateRangeStart(params.dateRange),
+            end_date: new Date().toISOString().split('T')[0],
+          });
+          break;
+        default:
+          // Custom report - generate analytics
+          blob = await this.generateAnalyticsReport({
+            report_type: 'gpa',
+            start_date: this.getDateRangeStart(params.dateRange),
+            end_date: new Date().toISOString().split('T')[0],
+          });
+      }
+
+      // Auto-download the generated report
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${params.type}_report_${new Date().toISOString().split('T')[0]}.${params.format === 'excel' ? 'xlsx' : 'pdf'}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      throw error;
+    }
   }
 
-  async exportToExcel(request: any): Promise<Blob> {
-    console.warn('⚠️ exportToExcel: Backend endpoint not implemented.');
-    throw new Error('Export to Excel not available. Use specific report generation methods instead.');
+  private getDateRangeStart(dateRange: string): string {
+    const now = new Date();
+    let startDate = new Date(now);
+
+    switch (dateRange) {
+      case 'current-month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'last-month':
+        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        break;
+      case 'last-3-months':
+        startDate.setMonth(now.getMonth() - 3);
+        break;
+      case 'last-6-months':
+        startDate.setMonth(now.getMonth() - 6);
+        break;
+      case 'current-year':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      default:
+        startDate.setMonth(now.getMonth() - 1);
+    }
+
+    return startDate.toISOString().split('T')[0];
+  }
+
+  async exportToPDF(): Promise<Blob> {
+    // Generate a general analytics report as PDF
+    return this.generateAnalyticsReport({
+      report_type: 'gpa',
+      start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      end_date: new Date().toISOString().split('T')[0],
+    });
+  }
+
+  async exportToExcel(): Promise<Blob> {
+    // Generate enrollment report as Excel
+    return this.generateEnrollmentReport({
+      semester: 'current',
+      academic_year: new Date().getFullYear().toString(),
+    });
   }
 
   async getReportById(reportId: string): Promise<Report> {
-    console.warn('⚠️ getReportById: Backend endpoint not implemented.');
-    throw new Error('Report retrieval not available. Backend generates reports on-demand only.');
+    try {
+      const response = await api.get(`/v1/admin/reports/${reportId}`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching report by ID:', error);
+      throw error;
+    }
   }
 
   async getReportTypes(): Promise<string[]> {
-    console.warn('⚠️ getReportTypes: Backend endpoint not implemented.');
     return ['student-profile', 'faculty-profile', 'enrollments', 'analytics'];
   }
 }

@@ -33,7 +33,17 @@ export function useReportsData(): UseReportsDataReturn {
         reportsService.getReportStatistics(),
       ]);
 
-      setReports(reportsData.data);
+      // Map backend data to UI format
+      const mappedReports = reportsData.data.map((report: any) => ({
+        ...report,
+        name: report.report_name,
+        type: report.report_type,
+        timestamp: report.created_at,
+        size: `${(report.file_size / 1024).toFixed(2)} KB`,
+        module: report.report_type,
+      }));
+
+      setReports(mappedReports);
       setStatistics(statsData);
     } catch (err) {
       console.error('Failed to fetch reports data:', err);
