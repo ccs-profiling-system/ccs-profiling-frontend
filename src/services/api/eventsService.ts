@@ -39,7 +39,7 @@ class EventsService {
       if (params?.event_type) queryParams.append('event_type', params.event_type);
       if (params?.status) queryParams.append('status', params.status);
 
-      const response = await api.get(`/v1/admin/events?${queryParams.toString()}`);
+      const response = await api.get(`/events?${queryParams.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -49,7 +49,7 @@ class EventsService {
 
   async getEventById(id: string): Promise<Event> {
     try {
-      const response = await api.get(`/v1/admin/events/${id}`);
+      const response = await api.get(`/events/${id}`);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching event:', error);
