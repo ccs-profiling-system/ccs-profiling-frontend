@@ -128,7 +128,7 @@ export function SearchBar({
 
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
-      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" style={{ zIndex: 1 }} />
       <input
         type="text"
         value={value}
@@ -136,7 +136,8 @@ export function SearchBar({
         onKeyDown={handleKeyDown}
         onFocus={() => value && showResults && setIsOpen(true)}
         placeholder={placeholder}
-        className="w-full pl-12 pr-12 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+        style={{ paddingLeft: '2.5rem' }}
+        className="w-full pr-12 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
       />
       {value && (
         <button
