@@ -11,28 +11,13 @@ import {
   AlertTriangle,
   CheckCircle,
   ClipboardList,
-  Users,
-  TrendingUp,
 } from 'lucide-react';
 import dashboardService, { type PriorityAlert, type UpcomingEvent } from '@/services/api/dashboardService';
-
-interface QuickStats {
-  onlineUsers: number;
-  completedTasks: number;
-  totalTasks: number;
-  pendingItems: number;
-}
 
 export function DashboardAside() {
   const navigate = useNavigate();
   const [alerts, setAlerts] = useState<PriorityAlert[]>([]);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
-  const [quickStats, setQuickStats] = useState<QuickStats>({
-    onlineUsers: 0,
-    completedTasks: 0,
-    totalTasks: 0,
-    pendingItems: 0,
-  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,26 +27,18 @@ export function DashboardAside() {
   const fetchAsideData = async () => {
     try {
       setLoading(true);
-      const [alertsData, eventsData, statsData] = await Promise.all([
+      const [alertsData, eventsData] = await Promise.all([
         dashboardService.getPriorityAlerts(3),
         dashboardService.getUpcomingEvents(4),
-        dashboardService.getQuickStats(),
       ]);
       
       setAlerts(alertsData);
       setEvents(eventsData);
-      setQuickStats(statsData);
     } catch (error) {
       console.error('Error fetching aside data:', error);
       // Keep empty arrays - no fallback data
       setAlerts([]);
       setEvents([]);
-      setQuickStats({
-        onlineUsers: 0,
-        completedTasks: 0,
-        totalTasks: 0,
-        pendingItems: 0,
-      });
     } finally {
       setLoading(false);
     }
@@ -287,42 +264,6 @@ export function DashboardAside() {
           View All Events
           <ArrowRight className="w-4 h-4" />
         </button>
-      </Card>
-
-      {/* Quick Stats */}
-      <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
-        <div className="flex items-center gap-2 mb-3">
-          <TrendingUp className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-gray-900">Quick Stats</h3>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-blue-600" />
-              <span className="text-sm text-gray-700">Online Now</span>
-            </div>
-            <span className="font-semibold text-gray-900">{quickStats.onlineUsers}</span>
-          </div>
-
-          <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-sm text-gray-700">Tasks Done</span>
-            </div>
-            <span className="font-semibold text-gray-900">
-              {quickStats.completedTasks}/{quickStats.totalTasks}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-orange-600" />
-              <span className="text-sm text-gray-700">Pending</span>
-            </div>
-            <span className="font-semibold text-gray-900">{quickStats.pendingItems}</span>
-          </div>
-        </div>
       </Card>
     </aside>
   );

@@ -1,4 +1,9 @@
 import axios from 'axios';
+import { callLogout } from './authCallbacks';
+
+// Development mode bypass
+const DEV_MODE = import.meta.env.DEV;
+const BYPASS_AUTH = import.meta.env.VITE_BYPASS_AUTH === 'true';
 
 // Create Axios instance with default config
 const api = axios.create({
@@ -16,6 +21,9 @@ api.interceptors.request.use(
     const token = localStorage.getItem('auth_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else if (DEV_MODE && BYPASS_AUTH) {
+      // Development bypass - use a mock token
+      config.headers.Authorization = 'Bearer dev-bypass-token';
     }
     return config;
   },
@@ -35,8 +43,13 @@ api.interceptors.response.use(
       switch (error.response.status) {
         case 401:
           // Unauthorized - clear token and redirect to login
-          localStorage.removeItem('auth_token');
-          window.location.href = '/login';
+          // Skip redirect in development bypass mode
+          if (!(DEV_MODE && BYPASS_AUTH)) {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/login';
+          } else {
+            console.warn('401 Unauthorized (bypassed in dev mode)');
+          }
           break;
         case 403:
           console.error('Access forbidden');
