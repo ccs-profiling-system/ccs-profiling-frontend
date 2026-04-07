@@ -1,6 +1,6 @@
 import { Search, Menu, LogOut, ChevronDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import { SearchBar } from '../ui/SearchBar';
+import { SearchModal } from '../search/SearchModal';
 import { useAuth } from '@/context/AuthContext';
 
 interface NavbarProps {
@@ -20,10 +20,11 @@ function getInitials(name: string): string {
 export function Navbar({ title = 'Dashboard', onMenuClick }: NavbarProps) {
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleSearch = (_query: string): void => {
-    // Search functionality placeholder
+  const handleSearch = (): void => {
+    setSearchOpen(true);
   };
 
   // Close dropdown when clicking outside
@@ -35,6 +36,18 @@ export function Navbar({ title = 'Dashboard', onMenuClick }: NavbarProps) {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Keyboard shortcut for search (Cmd+K / Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const initials = user ? getInitials(user.name ?? user.email) : 'A';
@@ -60,11 +73,16 @@ export function Navbar({ title = 'Dashboard', onMenuClick }: NavbarProps) {
 
           {/* Search Input - Hidden on small screens */}
           <div className="hidden md:flex flex-1 max-w-md">
-            <SearchBar
-              placeholder="Search..."
-              onSearch={handleSearch}
-              className="w-full"
-            />
+            <button
+              onClick={handleSearch}
+              className="w-full flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
+            >
+              <Search className="w-5 h-5 text-gray-400" />
+              <span className="text-gray-500">Search...</span>
+              <kbd className="ml-auto px-2 py-1 text-xs text-gray-400 bg-white border border-gray-200 rounded">
+                ⌘K
+              </kbd>
+            </button>
           </div>
 
           {/* Right Section — User Info + Dropdown */}
@@ -72,6 +90,7 @@ export function Navbar({ title = 'Dashboard', onMenuClick }: NavbarProps) {
             {/* Mobile Search Icon */}
             <button
               type="button"
+              onClick={handleSearch}
               className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Search className="w-5 h-5 text-gray-600" />
@@ -121,6 +140,9 @@ export function Navbar({ title = 'Dashboard', onMenuClick }: NavbarProps) {
           </div>
         </div>
       </div>
+
+      {/* Search Modal */}
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }
