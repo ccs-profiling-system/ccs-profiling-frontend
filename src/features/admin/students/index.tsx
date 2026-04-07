@@ -44,10 +44,13 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
         const [statsData, allSkills] = await Promise.all([
           studentsService.getStudentStats(),
           studentsService.getAllSkills().catch((err) => {
-            console.warn('Failed to fetch skills:', err);
+            console.error('Failed to fetch skills:', err);
             return [];
           }),
         ]);
+
+        console.log('Stats data:', statsData);
+        console.log('All skills data:', allSkills);
 
         // Extract programs from stats
         if (statsData?.students_by_program) {
@@ -56,10 +59,14 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
 
         // Extract unique skill names from all skills
         if (allSkills && allSkills.length > 0) {
+          console.log('Processing skills:', allSkills);
           const uniqueSkillNames = Array.from(
             new Set(allSkills.map(skill => skill.skillName).filter(Boolean))
           ).sort();
+          console.log('Unique skill names:', uniqueSkillNames);
           setAvailableSkills(uniqueSkillNames);
+        } else {
+          console.warn('No skills data received');
         }
       } catch (err) {
         console.error('Error fetching filter options:', err);

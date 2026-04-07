@@ -309,19 +309,31 @@ class StudentsService {
   }
 
   async getAllSkills(): Promise<StudentSkill[]> {
-    return handleRequest(() =>
-      api.get<StudentSkill[] | ApiResponse<StudentSkill[]>>('/v1/admin/skills', {
-        params: { limit: 1000 } // Get a large number to capture all unique skills
-      })
-        .then((r) => {
-          const data = unwrap(r.data);
-          if (Array.isArray(data)) {
-            return data.map(mapSkill);
-          }
-          // Handle paginated response
-          return ((data as any).data || []).map(mapSkill);
-        })
-    );
+    try {
+      const response = await api.get<ApiResponse<StudentSkill[]>>('/v1/admin/skills', {
+        params: { limit: 1000 }
+      });
+      
+      console.log('Raw skills API response:', response.data);
+      
+      // The response structure is { success: true, data: [...], meta: {...} }
+      const responseData = response.data;
+      
+      if (responseData.success && responseData.data) {
+        const mapped = responseData.data.map(mapSkill);
+        console.log('Mapped skills:', mapped);
+        return mapped;
+      }
+      
+      return [];
+    } catch (error: unknown) {
+      console.error('Error fetching all skills:', error);
+      if (axios.isAxiosError(error)) {
+        const msg = (error.response?.data as { message?: string })?.message ?? 'Network error';
+        throw new Error(msg);
+      }
+      throw error;
+    }
   }
 
   async addStudentSkill(studentId: string, data: { skill_name: string; proficiency_level?: string; years_of_experience?: number }): Promise<StudentSkill> {
