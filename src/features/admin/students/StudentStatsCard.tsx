@@ -1,5 +1,5 @@
 import { Card, Spinner } from '@/components/layout';
-import { Users, UserCheck, UserX, GraduationCap, TrendingUp } from 'lucide-react';
+import { Users, UserCheck, GraduationCap, TrendingUp } from 'lucide-react';
 import { useStudentStats } from '@/hooks/useStudentStats';
 
 export function StudentStatsCard() {
