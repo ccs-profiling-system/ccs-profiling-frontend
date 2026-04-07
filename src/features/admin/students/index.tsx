@@ -41,7 +41,6 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
   // Fetch available programs and skills for dropdowns
   useEffect(() => {
     const fetchFilterOptions = async () => {
-      console.log('=== Starting to fetch filter options ===');
       setSkillsLoading(true);
       
       try {
@@ -53,41 +52,27 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
           }),
         ]);
 
-        console.log('Stats data:', statsData);
-        console.log('All skills data:', allSkills);
-        console.log('All skills length:', allSkills?.length);
-
         // Extract programs from stats
         if (statsData?.students_by_program) {
           const programs = Object.keys(statsData.students_by_program).sort();
-          console.log('Setting available programs:', programs);
           setAvailablePrograms(programs);
         }
 
         // Extract unique skill names from all skills
         if (allSkills && allSkills.length > 0) {
-          console.log('Processing skills:', allSkills);
-          const skillNames = allSkills.map(skill => {
-            console.log('Skill object:', skill, 'skillName:', skill.skillName);
-            return skill.skillName;
-          });
-          console.log('Extracted skill names:', skillNames);
+          const skillNames = allSkills.map(skill => skill.skillName);
           
           const uniqueSkillNames = Array.from(
             new Set(skillNames.filter(Boolean))
           ).sort();
-          console.log('Unique skill names to set:', uniqueSkillNames);
           setAvailableSkills(uniqueSkillNames);
-          console.log('Available skills state updated');
         } else {
-          console.warn('No skills data received or empty array');
           setAvailableSkills([]);
         }
       } catch (err) {
         console.error('Error fetching filter options:', err);
       } finally {
         setSkillsLoading(false);
-        console.log('=== Finished fetching filter options ===');
       }
     };
 

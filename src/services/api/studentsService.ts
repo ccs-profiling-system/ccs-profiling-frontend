@@ -131,15 +131,9 @@ class StudentsService {
       if (filters?.search) backendFilters.search = filters.search;
       if (filters?.skill) backendFilters.skill = filters.skill;
       
-      console.log('Frontend filters:', filters);
-      console.log('Backend filters being sent:', backendFilters);
-      console.log('Request params:', { ...backendFilters, page, limit });
-      
       const response = await api.get<ApiResponse<Student[]>>('/admin/students', {
         params: { ...backendFilters, page, limit },
       });
-      
-      console.log('Students response:', response.data);
       
       return {
         ...response.data,
@@ -320,14 +314,11 @@ class StudentsService {
         params: { limit: 1000 }
       });
       
-      console.log('Raw skills API response:', response.data);
-      
       // The response structure is { success: true, data: [...], meta: {...} }
       const responseData = response.data;
       
       if (responseData.success && responseData.data) {
         const mapped = responseData.data.map(mapSkill);
-        console.log('Mapped skills:', mapped);
         return mapped;
       }
       
@@ -343,11 +334,9 @@ class StudentsService {
   }
 
   async addStudentSkill(studentId: string, data: { skill_name: string; proficiency_level?: string; years_of_experience?: number }): Promise<StudentSkill> {
-    console.log('[StudentsService] addStudentSkill called:', { studentId, data });
     return handleRequest(() =>
       api.post<StudentSkill | ApiResponse<StudentSkill>>(`/admin/students/${studentId}/skills`, data)
         .then((r) => {
-          console.log('[StudentsService] addStudentSkill response:', r.data);
           return mapSkill(unwrap(r.data));
         })
     );

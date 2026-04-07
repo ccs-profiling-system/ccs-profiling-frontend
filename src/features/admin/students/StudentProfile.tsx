@@ -336,12 +336,10 @@ function SkillsTab({ studentId }: { studentId: string }) {
     setSaving(true);
     setError(null);
     try {
-      console.log('[SkillsTab] Adding skill:', tag);
       await studentsService.addStudentSkill(studentId, {
         skill_name: tag.name,
         proficiency_level: 'beginner',
       });
-      console.log('[SkillsTab] Skill added successfully');
       load();
     } catch (e: unknown) {
       console.error('[SkillsTab] Error adding skill:', e);
