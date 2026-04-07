@@ -45,9 +45,6 @@ api.interceptors.response.use(
           // Skip redirect in development bypass mode
           if (!(DEV_MODE && BYPASS_AUTH)) {
             localStorage.removeItem('auth_token');
-            window.location.href = '/login';
-          } else {
-            console.warn('401 Unauthorized (bypassed in dev mode)');
           }
           break;
         case 403:

@@ -26,7 +26,10 @@ export function Login() {
     try {
       const response = await authService.login({ email, password });
       login(response);
-      navigate('/admin/dashboard', { replace: true });
+      // Use setTimeout to ensure state update completes before navigation
+      setTimeout(() => {
+        navigate('/admin/dashboard', { replace: true });
+      }, 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     } finally {
