@@ -1,3 +1,10 @@
+import { MainLayout } from '@/components/layout';
+import { InstructionsList } from './InstructionsList';
+
 export function Instructions() {
-  return <div>Instructions Management</div>;
+  return (
+    <MainLayout title="Instructions">
+      <InstructionsList />
+    </MainLayout>
+  );
 }
