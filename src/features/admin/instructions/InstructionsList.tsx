@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Card, SearchBar, Modal, Spinner, ErrorAlert } from '@/components/ui';
+import { Card, SearchBar, Modal, Spinner, ErrorAlert, Pagination } from '@/components/ui';
 import { Plus, Edit, Trash2, BookOpen } from 'lucide-react';
 import { useInstructionsData } from './useInstructionsData';
 import instructionsService, { type Instruction, type CreateInstructionRequest } from '@/services/api/instructionsService';
 
 export function InstructionsList() {
-  const { instructions, statistics, loading, error, refetch } = useInstructionsData();
+  const { instructions, statistics, pagination, loading, error, refetch, applyFilters } = useInstructionsData();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterYear, setFilterYear] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -24,14 +26,55 @@ export function InstructionsList() {
   // Get unique years for filter
   const uniqueYears = ['all', ...Array.from(new Set(instructions.map(i => i.curriculum_year)))];
 
-  // Filter instructions
-  const filteredInstructions = instructions.filter((item) => {
-    const matchesSearch =
-      item.subject_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.subject_name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesYear = filterYear === 'all' || item.curriculum_year === filterYear;
-    return matchesSearch && matchesYear;
-  });
+  // Apply filters with pagination
+  const handleFiltersChange = (newPage?: number, newLimit?: number) => {
+    const filters = {
+      search: searchQuery || undefined,
+      curriculum_year: filterYear !== 'all' ? filterYear : undefined,
+      page: newPage || currentPage,
+      limit: newLimit || itemsPerPage,
+    };
+    applyFilters(filters);
+  };
+
+  // Handle search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+    const filters = {
+      search: query || undefined,
+      curriculum_year: filterYear !== 'all' ? filterYear : undefined,
+      page: 1,
+      limit: itemsPerPage,
+    };
+    applyFilters(filters);
+  };
+
+  // Handle year filter
+  const handleYearFilter = (year: string) => {
+    setFilterYear(year);
+    setCurrentPage(1);
+    const filters = {
+      search: searchQuery || undefined,
+      curriculum_year: year !== 'all' ? year : undefined,
+      page: 1,
+      limit: itemsPerPage,
+    };
+    applyFilters(filters);
+  };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    handleFiltersChange(page, itemsPerPage);
+  };
+
+  // Handle items per page change
+  const handleItemsPerPageChange = (limit: number) => {
+    setItemsPerPage(limit);
+    setCurrentPage(1);
+    handleFiltersChange(1, limit);
+  };
 
   const handleCreate = () => {
     setFormData({
@@ -147,7 +190,7 @@ export function InstructionsList() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <SearchBar
                 placeholder="Search by code or name..."
-                onChange={setSearchQuery}
+                onChange={handleSearch}
                 value={searchQuery}
                 className="w-full sm:max-w-md"
               />
@@ -155,7 +198,7 @@ export function InstructionsList() {
                 <label className="text-sm font-medium text-gray-700">Year:</label>
                 <select
                   value={filterYear}
-                  onChange={(e) => setFilterYear(e.target.value)}
+                  onChange={(e) => handleYearFilter(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   {uniqueYears.map((year) => (
@@ -199,8 +242,8 @@ export function InstructionsList() {
           {/* Instructions List */}
           <Card>
             <div className="space-y-3">
-              {filteredInstructions.length > 0 ? (
-                filteredInstructions.map((instruction) => (
+              {instructions.length > 0 ? (
+                instructions.map((instruction) => (
                   <div
                     key={instruction.id}
                     className="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition border border-gray-200"
@@ -249,13 +292,26 @@ export function InstructionsList() {
                 <div className="text-center py-12 text-gray-500">
                   <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <p>
-                    {instructions.length === 0
+                    {pagination.total === 0
                       ? 'No instructions available. Click "Add Instruction" to create one.'
                       : 'No instructions found matching your filters.'}
                   </p>
                 </div>
               )}
             </div>
+
+            {/* Pagination */}
+            {pagination.total > 0 && (
+              <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.total}
+                itemsPerPage={pagination.limit}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
+                showItemsPerPage={true}
+              />
+            )}
           </Card>
         </>
       )}

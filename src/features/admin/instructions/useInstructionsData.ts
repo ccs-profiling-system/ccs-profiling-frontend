@@ -8,9 +8,17 @@ export interface InstructionStatistics {
   averageCredits: number;
 }
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface UseInstructionsDataReturn {
   instructions: Instruction[];
   statistics: InstructionStatistics;
+  pagination: PaginationMeta;
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -24,6 +32,12 @@ export function useInstructionsData(): UseInstructionsDataReturn {
     uniqueYears: 0,
     totalCredits: 0,
     averageCredits: 0,
+  });
+  const [pagination, setPagination] = useState<PaginationMeta>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,13 +64,29 @@ export function useInstructionsData(): UseInstructionsDataReturn {
       const response = await instructionsService.listInstructions(filters);
 
       setInstructions(response.data);
-      setStatistics(calculateStatistics(response.data));
+      setPagination(response.meta);
+      
+      // Calculate statistics based on total count from backend
+      setStatistics({
+        totalInstructions: response.meta.total,
+        uniqueYears: new Set(response.data.map(i => i.curriculum_year)).size,
+        totalCredits: response.data.reduce((sum, i) => sum + i.credits, 0),
+        averageCredits: response.data.length > 0 
+          ? Math.round((response.data.reduce((sum, i) => sum + i.credits, 0) / response.data.length) * 10) / 10
+          : 0,
+      });
     } catch (err) {
       console.error('Failed to fetch instructions data:', err);
       setError('Failed to connect to the server. Please ensure the backend is running.');
 
       // Clear data on error
       setInstructions([]);
+      setPagination({
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 0,
+      });
       setStatistics({
         totalInstructions: 0,
         uniqueYears: 0,
@@ -79,6 +109,7 @@ export function useInstructionsData(): UseInstructionsDataReturn {
   return {
     instructions,
     statistics,
+    pagination,
     loading,
     error,
     refetch: fetchInstructionsData,
