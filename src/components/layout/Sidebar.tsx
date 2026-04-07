@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, FileText, BookOpen,
+  LayoutDashboard, GraduationCap, Users, FileText, BookOpen,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -11,6 +11,7 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navLinks = [
     { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/admin/students', label: 'Students', icon: GraduationCap },
     { to: '/admin/faculty', label: 'Faculty', icon: Users },
     { to: '/admin/reports', label: 'Reports', icon: FileText },
     { to: '/admin/instructions', label: 'Instructions', icon: BookOpen },
