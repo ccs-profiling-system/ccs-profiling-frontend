@@ -4,6 +4,7 @@ import { Reports } from '@/features/admin/reports';
 import { Instructions } from '@/features/admin/instructions';
 import { Login } from '@/features/auth/Login';
 import { Faculty } from '@/features/admin/faculty';
+import { Students } from '@/features/admin/students';
 import { useAuth } from '@/context/AuthContext';
 
 function AuthGuard() {
@@ -21,6 +22,8 @@ export function AppRoutes() {
           <Route path="/admin/reports" element={<Reports />} />
           <Route path="/admin/instructions" element={<Instructions />} />
           <Route path="/admin/faculty" element={<Faculty />} />
+          <Route path="/admin/students" element={<Students />} />
+          <Route path="/admin/students/add" element={<Students initialOpenAdd />} />
           {/* collaborators add routes here — one per line */}
         </Route>
         <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
