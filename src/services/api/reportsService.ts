@@ -134,48 +134,66 @@ class ReportsService {
     type: string;
     format: 'pdf' | 'excel';
     dateRange: string;
+    filters?: Record<string, any>;
+    selectedIds?: string[];
   }): Promise<void> {
     try {
       // Map the report type to the appropriate backend endpoint
       let blob: Blob;
       
+      // Prepare parameters with filters
+      const reportParams: any = {
+        start_date: this.getDateRangeStart(params.dateRange),
+        end_date: new Date().toISOString().split('T')[0],
+      };
+
+      // Add filters if provided
+      if (params.filters) {
+        if (params.filters.search) {
+          reportParams.search = params.filters.search;
+        }
+        if (params.filters.status) {
+          reportParams.status = params.filters.status;
+        }
+      }
+
+      // Add selected IDs if provided
+      if (params.selectedIds && params.selectedIds.length > 0) {
+        reportParams.ids = params.selectedIds;
+      }
+      
       switch (params.type) {
         case 'students':
-          // Generate analytics report for students
+          // Generate analytics report for students with filters
           blob = await this.generateAnalyticsReport({
             report_type: 'gpa',
-            start_date: this.getDateRangeStart(params.dateRange),
-            end_date: new Date().toISOString().split('T')[0],
+            ...reportParams
           });
           break;
         case 'faculty':
-          // Generate analytics report for faculty
+          // Generate analytics report for faculty with filters
           blob = await this.generateAnalyticsReport({
             report_type: 'research',
-            start_date: this.getDateRangeStart(params.dateRange),
-            end_date: new Date().toISOString().split('T')[0],
+            ...reportParams
           });
           break;
         case 'research':
           blob = await this.generateAnalyticsReport({
             report_type: 'research',
-            start_date: this.getDateRangeStart(params.dateRange),
-            end_date: new Date().toISOString().split('T')[0],
+            ...reportParams
           });
           break;
         case 'events':
           blob = await this.generateAnalyticsReport({
             report_type: 'enrollments',
-            start_date: this.getDateRangeStart(params.dateRange),
-            end_date: new Date().toISOString().split('T')[0],
+            ...reportParams
           });
           break;
         default:
           // Custom report - generate analytics
           blob = await this.generateAnalyticsReport({
             report_type: 'gpa',
-            start_date: this.getDateRangeStart(params.dateRange),
-            end_date: new Date().toISOString().split('T')[0],
+            ...reportParams
           });
       }
 
@@ -183,7 +201,12 @@ class ReportsService {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${params.type}_report_${new Date().toISOString().split('T')[0]}.${params.format === 'excel' ? 'xlsx' : 'pdf'}`;
+      
+      // Create filename with filters info
+      const filterSuffix = params.filters?.search ? '_filtered' : '';
+      const selectionSuffix = params.selectedIds ? '_selected' : '';
+      link.download = `${params.type}_report${filterSuffix}${selectionSuffix}_${new Date().toISOString().split('T')[0]}.${params.format === 'excel' ? 'xlsx' : 'pdf'}`;
+      
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

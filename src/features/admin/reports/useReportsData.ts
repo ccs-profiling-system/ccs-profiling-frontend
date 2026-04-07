@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import reportsService from '@/services/api/reportsService';
 import type { Report, ReportStatistics, ReportFilters } from '@/types/reports';
 
@@ -20,7 +20,7 @@ export function useReportsData(): UseReportsDataReturn {
     monthlyGrowth: 0,
     totalSize: '0 MB',
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchReportsData = useCallback(async (filters?: ReportFilters) => {
@@ -67,8 +67,8 @@ export function useReportsData(): UseReportsDataReturn {
     await fetchReportsData(filters);
   }, [fetchReportsData]);
 
-  useEffect(() => {
-    fetchReportsData();
+  const refetch = useCallback(async () => {
+    await fetchReportsData();
   }, [fetchReportsData]);
 
   return {
@@ -76,7 +76,7 @@ export function useReportsData(): UseReportsDataReturn {
     statistics,
     loading,
     error,
-    refetch: fetchReportsData,
+    refetch,
     applyFilters,
   };
 }

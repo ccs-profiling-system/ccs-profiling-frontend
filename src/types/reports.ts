@@ -56,6 +56,7 @@ export interface GenerateReportRequest {
   startDate?: string;
   endDate?: string;
   filters?: Record<string, any>;
+  selectedIds?: string[];
 }
 
 export interface GenerateReportResponse {
