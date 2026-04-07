@@ -128,7 +128,7 @@ export function SearchBar({
 
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
       <input
         type="text"
         value={value}
@@ -136,12 +136,12 @@ export function SearchBar({
         onKeyDown={handleKeyDown}
         onFocus={() => value && showResults && setIsOpen(true)}
         placeholder={placeholder}
-        className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+        className="w-full pl-12 pr-12 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
       />
       {value && (
         <button
           onClick={handleClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition z-10"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
           aria-label="Clear search"
         >
           <X className="w-5 h-5" />
