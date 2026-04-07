@@ -138,11 +138,11 @@ class ReportsService {
     selectedIds?: string[];
   }): Promise<void> {
     try {
-      // Map the report type to the appropriate backend endpoint
       let blob: Blob;
+      let fileName: string;
       
-      // Prepare parameters with filters
-      const reportParams: any = {
+      // Prepare base parameters
+      const baseParams: any = {
         start_date: this.getDateRangeStart(params.dateRange),
         end_date: new Date().toISOString().split('T')[0],
       };
@@ -150,62 +150,86 @@ class ReportsService {
       // Add filters if provided
       if (params.filters) {
         if (params.filters.search) {
-          reportParams.search = params.filters.search;
+          baseParams.search = params.filters.search;
         }
-        if (params.filters.status) {
-          reportParams.status = params.filters.status;
+        if (params.filters.status && params.filters.status !== 'all') {
+          baseParams.status = params.filters.status;
         }
       }
 
       // Add selected IDs if provided
       if (params.selectedIds && params.selectedIds.length > 0) {
-        reportParams.ids = params.selectedIds;
+        baseParams.ids = params.selectedIds.join(',');
       }
       
+      // Generate report based on module type
       switch (params.type) {
         case 'students':
-          // Generate analytics report for students with filters
+          // For students, use analytics report with GPA type
           blob = await this.generateAnalyticsReport({
             report_type: 'gpa',
-            ...reportParams
+            ...baseParams
           });
+          fileName = `students_report_${new Date().toISOString().split('T')[0]}.${params.format === 'excel' ? 'xlsx' : 'pdf'}`;
           break;
+          
         case 'faculty':
-          // Generate analytics report for faculty with filters
-          blob = await this.generateAnalyticsReport({
-            report_type: 'research',
-            ...reportParams
-          });
+          // For faculty, we could use enrollment report or create a custom endpoint
+          // For now, using enrollments as a placeholder
+          if (params.format === 'excel') {
+            blob = await this.generateEnrollmentReport({
+              ...baseParams
+            });
+            fileName = `faculty_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+          } else {
+            blob = await this.generateAnalyticsReport({
+              report_type: 'research',
+              ...baseParams
+            });
+            fileName = `faculty_report_${new Date().toISOString().split('T')[0]}.pdf`;
+          }
           break;
+          
         case 'research':
+          // For research, use analytics report with research type
           blob = await this.generateAnalyticsReport({
             report_type: 'research',
-            ...reportParams
+            ...baseParams
           });
+          fileName = `research_report_${new Date().toISOString().split('T')[0]}.${params.format === 'excel' ? 'xlsx' : 'pdf'}`;
           break;
+          
         case 'events':
-          blob = await this.generateAnalyticsReport({
-            report_type: 'enrollments',
-            ...reportParams
-          });
+          // For events, use enrollments report as a placeholder
+          // Ideally, there should be a dedicated events report endpoint
+          if (params.format === 'excel') {
+            blob = await this.generateEnrollmentReport({
+              ...baseParams
+            });
+            fileName = `events_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+          } else {
+            blob = await this.generateAnalyticsReport({
+              report_type: 'enrollments',
+              ...baseParams
+            });
+            fileName = `events_report_${new Date().toISOString().split('T')[0]}.pdf`;
+          }
           break;
+          
         default:
-          // Custom report - generate analytics
-          blob = await this.generateAnalyticsReport({
-            report_type: 'gpa',
-            ...reportParams
-          });
+          throw new Error(`Unknown report type: ${params.type}`);
       }
+
+      // Add filter/selection indicators to filename
+      const filterSuffix = params.filters?.search || (params.filters?.status && params.filters.status !== 'all') ? '_filtered' : '';
+      const selectionSuffix = params.selectedIds && params.selectedIds.length > 0 ? '_selected' : '';
+      fileName = fileName.replace('.', `${filterSuffix}${selectionSuffix}.`);
 
       // Auto-download the generated report
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      
-      // Create filename with filters info
-      const filterSuffix = params.filters?.search ? '_filtered' : '';
-      const selectionSuffix = params.selectedIds ? '_selected' : '';
-      link.download = `${params.type}_report${filterSuffix}${selectionSuffix}_${new Date().toISOString().split('T')[0]}.${params.format === 'excel' ? 'xlsx' : 'pdf'}`;
+      link.download = fileName;
       
       document.body.appendChild(link);
       link.click();
