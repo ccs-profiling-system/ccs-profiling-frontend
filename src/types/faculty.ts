@@ -51,7 +51,6 @@ export interface FacultyFilters {
 }
 
 export interface CreateFacultyRequest {
-  facultyId: string;
   firstName: string;
   lastName: string;
   department: string;

@@ -11,7 +11,6 @@ interface StudentFormProps {
 }
 
 interface FormState {
-  studentId: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -22,7 +21,6 @@ interface FormState {
 }
 
 const DEFAULT_FORM: FormState = {
-  studentId: '',
   firstName: '',
   lastName: '',
   email: '',
@@ -43,7 +41,6 @@ export function StudentForm({ isOpen, onClose, onSuccess, student }: StudentForm
   useEffect(() => {
     if (student) {
       setForm({
-        studentId: student.studentId,
         firstName: student.firstName,
         lastName: student.lastName,
         email: student.email,
@@ -70,7 +67,6 @@ export function StudentForm({ isOpen, onClose, onSuccess, student }: StudentForm
     setSubmitting(true);
     try {
       const payload: CreateStudentRequest = {
-        studentId: form.studentId,
         firstName: form.firstName,
         lastName: form.lastName,
         email: form.email,
@@ -107,18 +103,6 @@ export function StudentForm({ isOpen, onClose, onSuccess, student }: StudentForm
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Student ID <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.studentId}
-              onChange={set('studentId')}
-              placeholder="e.g. 2021-00001"
-              required
-            />
-          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Email <span className="text-red-500">*</span>

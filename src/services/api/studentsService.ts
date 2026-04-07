@@ -87,7 +87,6 @@ function mapEnrollment(e: any): SubjectEnrollment {
 // Converts camelCase frontend fields to snake_case for backend
 function toSnakeCase(data: CreateStudentRequest | UpdateStudentRequest): any {
   return {
-    student_id: (data as CreateStudentRequest).studentId,
     first_name: (data as CreateStudentRequest).firstName,
     last_name: (data as CreateStudentRequest).lastName,
     email: (data as CreateStudentRequest).email,

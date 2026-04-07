@@ -11,7 +11,6 @@ interface FacultyFormProps {
 }
 
 interface FormState {
-  facultyId: string;
   firstName: string;
   lastName: string;
   department: string;
@@ -23,7 +22,6 @@ interface FormState {
 }
 
 const DEFAULT_FORM: FormState = {
-  facultyId: '',
   firstName: '',
   lastName: '',
   department: '',
@@ -44,7 +42,6 @@ export function FacultyForm({ isOpen, onClose, onSuccess, faculty }: FacultyForm
   useEffect(() => {
     if (faculty) {
       setForm({
-        facultyId: faculty.facultyId,
         firstName: faculty.firstName,
         lastName: faculty.lastName,
         department: faculty.department,
@@ -72,7 +69,6 @@ export function FacultyForm({ isOpen, onClose, onSuccess, faculty }: FacultyForm
     setSubmitting(true);
     try {
       const payload: CreateFacultyRequest = {
-        facultyId: form.facultyId,
         firstName: form.firstName,
         lastName: form.lastName,
         department: form.department,
@@ -109,18 +105,6 @@ export function FacultyForm({ isOpen, onClose, onSuccess, faculty }: FacultyForm
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Faculty ID <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.facultyId}
-              onChange={set('facultyId')}
-              placeholder="e.g. FAC-001"
-              required
-            />
-          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Email

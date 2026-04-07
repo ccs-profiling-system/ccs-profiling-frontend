@@ -83,7 +83,6 @@ export interface StudentFilters {
 }
 
 export interface CreateStudentRequest {
-  studentId: string;
   firstName: string;
   lastName: string;
   email: string;

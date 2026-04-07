@@ -65,7 +65,6 @@ function mapFacultyAffiliation(a: any): FacultyAffiliation {
 
 function toSnakeCase(data: CreateFacultyRequest | UpdateFacultyRequest): any {
   return {
-    faculty_id: (data as CreateFacultyRequest).facultyId,
     first_name: (data as CreateFacultyRequest).firstName,
     last_name: (data as CreateFacultyRequest).lastName,
     email: (data as CreateFacultyRequest).email,
