@@ -74,9 +74,28 @@ export function SchedulingPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   // Derive unique instructors and subjects from loaded schedules for the form
-  const instructors = useMemo(() => [...new Set(schedules.map((s) => s.instructor))], [schedules]);
-  const subjects = useMemo(() => [...new Set(schedules.map((s) => s.subject))], [schedules]);
-  const roomNames = useMemo(() => [...new Set(schedules.map((s) => s.room))], [schedules]);
+  const instructors = useMemo(() => {
+    const fromSchedules = [...new Set(schedules.map((s) => s.instructor))];
+    // Add default instructors if none exist
+    if (fromSchedules.length === 0) {
+      return ['Dr. Smith', 'Prof. Johnson', 'Dr. Williams', 'Prof. Brown', 'Dr. Davis'];
+    }
+    return fromSchedules;
+  }, [schedules]);
+  
+  const subjects = useMemo(() => {
+    const fromSchedules = [...new Set(schedules.map((s) => s.subject))];
+    // Add default subjects if none exist
+    if (fromSchedules.length === 0) {
+      return ['Computer Science 101', 'Mathematics 201', 'Physics 301', 'Chemistry 101', 'Biology 201'];
+    }
+    return fromSchedules;
+  }, [schedules]);
+  
+  const roomNames = useMemo(() => {
+    const fromSchedules = [...new Set(schedules.map((s) => s.room))];
+    return fromSchedules;
+  }, [schedules]);
 
   // Apply filters
   const filteredSchedules = useMemo(() => {
