@@ -14,6 +14,7 @@ import { useStudentsData } from './useStudentsData';
 import { StudentForm } from './StudentForm';
 import { StudentProfile } from './StudentProfile';
 import studentsService from '@/services/api/studentsService';
+import analyticsService from '@/services/api/analyticsService';
 import type { Student } from '@/types/students';
 import type { Column } from '@/components/ui/Table';
 
@@ -33,25 +34,35 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
 
-  // Local state for text inputs (debounced)
-  const [programInput, setProgramInput] = useState('');
-  const [skillInput, setSkillInput] = useState('');
+  // Available filter options from backend data
+  const [availablePrograms, setAvailablePrograms] = useState<string[]>([]);
+  const [availableSkills, setAvailableSkills] = useState<string[]>([]);
 
-  // Debounce program input
+  // Fetch available programs and skills for dropdowns
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setFilters({ ...filters, program: programInput || undefined });
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [programInput]);
+    const fetchFilterOptions = async () => {
+      try {
+        const [statsData, skillsData] = await Promise.all([
+          studentsService.getStudentStats(),
+          analyticsService.getSkillDistribution().catch(() => null),
+        ]);
 
-  // Debounce skill input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFilters({ ...filters, skill: skillInput || undefined });
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [skillInput]);
+        // Extract programs from stats
+        if (statsData?.students_by_program) {
+          setAvailablePrograms(Object.keys(statsData.students_by_program).sort());
+        }
+
+        // Extract skills from analytics
+        if (skillsData?.top_skills) {
+          setAvailableSkills(skillsData.top_skills.map(s => s.skill_name).sort());
+        }
+      } catch (err) {
+        // Silently fail - dropdowns will be empty
+      }
+    };
+
+    fetchFilterOptions();
+  }, []);
 
   const filteredStudents = useMemo(() => {
     if (!search) return students;
@@ -275,13 +286,18 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Program
                     </label>
-                    <input
-                      type="text"
-                      value={programInput}
-                      onChange={(e) => setProgramInput(e.target.value)}
-                      placeholder="e.g. BSCS, BSIT"
+                    <select
+                      value={filters.program ?? ''}
+                      onChange={(e) => setFilters({ ...filters, program: e.target.value || undefined })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    >
+                      <option value="">All Programs</option>
+                      {availablePrograms.map((program) => (
+                        <option key={program} value={program}>
+                          {program}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
@@ -322,13 +338,18 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Skill
                     </label>
-                    <input
-                      type="text"
-                      value={skillInput}
-                      onChange={(e) => setSkillInput(e.target.value)}
-                      placeholder="e.g. Basketball, Programming"
+                    <select
+                      value={filters.skill ?? ''}
+                      onChange={(e) => setFilters({ ...filters, skill: e.target.value || undefined })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    >
+                      <option value="">All Skills</option>
+                      {availableSkills.map((skill) => (
+                        <option key={skill} value={skill}>
+                          {skill}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="md:col-span-2 lg:col-span-4">
@@ -336,8 +357,6 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
                       onClick={() => {
                         setFilters({});
                         setSearch('');
-                        setProgramInput('');
-                        setSkillInput('');
                       }}
                       className="w-full md:w-auto px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                     >
@@ -356,10 +375,7 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
                       <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
                         Program: {filters.program}
                         <button
-                          onClick={() => {
-                            setFilters({ ...filters, program: undefined });
-                            setProgramInput('');
-                          }}
+                          onClick={() => setFilters({ ...filters, program: undefined })}
                           className="hover:text-blue-900"
                         >
                           ×
@@ -392,10 +408,7 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
                       <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs">
                         Skill: {filters.skill}
                         <button
-                          onClick={() => {
-                            setFilters({ ...filters, skill: undefined });
-                            setSkillInput('');
-                          }}
+                          onClick={() => setFilters({ ...filters, skill: undefined })}
                           className="hover:text-orange-900"
                         >
                           ×
