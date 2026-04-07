@@ -67,8 +67,8 @@ class DashboardService {
     try {
       // Fetch dashboard metrics and analytics data in parallel
       const [metricsResponse, enrollmentResponse] = await Promise.all([
-        api.get('/v1/admin/dashboard'),
-        api.get('/v1/admin/analytics/enrollments'),
+        api.get('/admin/dashboard'),
+        api.get('/admin/analytics/enrollments'),
       ]);
 
       const metrics = metricsResponse.data.data;
@@ -113,7 +113,7 @@ class DashboardService {
 
   async getDashboardMetrics(): Promise<any> {
     try {
-      const response = await api.get('/v1/admin/dashboard');
+      const response = await api.get('/admin/dashboard');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching dashboard metrics:', error);
@@ -123,7 +123,7 @@ class DashboardService {
 
   async getStudentStats(): Promise<any> {
     try {
-      const response = await api.get('/v1/admin/dashboard/students');
+      const response = await api.get('/admin/dashboard/students');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching student stats:', error);
@@ -133,7 +133,7 @@ class DashboardService {
 
   async getFacultyStats(): Promise<any> {
     try {
-      const response = await api.get('/v1/admin/dashboard/faculty');
+      const response = await api.get('/admin/dashboard/faculty');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching faculty stats:', error);
@@ -143,7 +143,7 @@ class DashboardService {
 
   async getEnrollmentStats(): Promise<any> {
     try {
-      const response = await api.get('/v1/admin/dashboard/enrollments');
+      const response = await api.get('/admin/dashboard/enrollments');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching enrollment stats:', error);
@@ -153,7 +153,7 @@ class DashboardService {
 
   async getEventStats(): Promise<any> {
     try {
-      const response = await api.get('/v1/admin/dashboard/events');
+      const response = await api.get('/admin/dashboard/events');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching event stats:', error);
@@ -163,7 +163,7 @@ class DashboardService {
 
   async getRecentActivity(limit: number = 10): Promise<RecentActivity[]> {
     try {
-      const response = await api.get(`/v1/admin/dashboard/recent-activity?limit=${limit}`);
+      const response = await api.get(`/admin/dashboard/recent-activity?limit=${limit}`);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching recent activity:', error);
@@ -174,7 +174,7 @@ class DashboardService {
 
   async getPriorityAlerts(limit: number = 5): Promise<PriorityAlert[]> {
     try {
-      const response = await api.get(`/v1/admin/dashboard/priority-alerts?limit=${limit}`);
+      const response = await api.get(`/admin/dashboard/priority-alerts?limit=${limit}`);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching priority alerts:', error);
@@ -185,7 +185,7 @@ class DashboardService {
 
   async getUpcomingEvents(limit: number = 5): Promise<UpcomingEvent[]> {
     try {
-      const response = await api.get(`/v1/admin/dashboard/upcoming-events?limit=${limit}`);
+      const response = await api.get(`/admin/dashboard/upcoming-events?limit=${limit}`);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching upcoming events:', error);

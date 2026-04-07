@@ -10,7 +10,7 @@ class ReportsService {
   async generateStudentProfileReport(studentId: string): Promise<Blob> {
     try {
       const response = await api.post(
-        '/v1/admin/reports/student-profile',
+        '/admin/reports/student-profile',
         { student_id: studentId },
         { responseType: 'blob' }
       );
@@ -24,7 +24,7 @@ class ReportsService {
   async generateFacultyProfileReport(facultyId: string): Promise<Blob> {
     try {
       const response = await api.post(
-        '/v1/admin/reports/faculty-profile',
+        '/admin/reports/faculty-profile',
         { faculty_id: facultyId },
         { responseType: 'blob' }
       );
@@ -42,7 +42,7 @@ class ReportsService {
   }): Promise<Blob> {
     try {
       const response = await api.post(
-        '/v1/admin/reports/enrollments',
+        '/admin/reports/enrollments',
         params,
         { responseType: 'blob' }
       );
@@ -60,7 +60,7 @@ class ReportsService {
   }): Promise<Blob> {
     try {
       const response = await api.post(
-        '/v1/admin/reports/analytics',
+        '/admin/reports/analytics',
         params,
         { responseType: 'blob' }
       );
@@ -90,7 +90,7 @@ class ReportsService {
       params.append('page', page.toString());
       params.append('pageSize', pageSize.toString());
 
-      const response = await api.get(`/v1/admin/reports?${params.toString()}`);
+      const response = await api.get(`/admin/reports?${params.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching reports:', error);
@@ -100,7 +100,7 @@ class ReportsService {
 
   async getReportStatistics(): Promise<ReportStatistics> {
     try {
-      const response = await api.get('/v1/admin/reports/statistics');
+      const response = await api.get('/admin/reports/statistics');
       return response.data.data;
     } catch (error) {
       console.error('Error fetching report statistics:', error);
@@ -111,7 +111,7 @@ class ReportsService {
   async downloadReport(reportId: string): Promise<Blob> {
     try {
       const response = await api.get(
-        `/v1/admin/reports/${reportId}/download`,
+        `/admin/reports/${reportId}/download`,
         { responseType: 'blob' }
       );
       return response.data;
@@ -123,7 +123,7 @@ class ReportsService {
 
   async deleteReport(reportId: string): Promise<void> {
     try {
-      await api.delete(`/v1/admin/reports/${reportId}`);
+      await api.delete(`/admin/reports/${reportId}`);
     } catch (error) {
       console.error('Error deleting report:', error);
       throw error;
@@ -287,7 +287,7 @@ class ReportsService {
 
   async getReportById(reportId: string): Promise<Report> {
     try {
-      const response = await api.get(`/v1/admin/reports/${reportId}`);
+      const response = await api.get(`/admin/reports/${reportId}`);
       return response.data.data;
     } catch (error) {
       console.error('Error fetching report by ID:', error);

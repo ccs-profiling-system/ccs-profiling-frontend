@@ -54,7 +54,7 @@ class InstructionsService {
    */
   async listInstructions(filters?: InstructionFilters): Promise<InstructionListResponse> {
     try {
-      const response = await api.get<InstructionListResponse>('/v1/admin/instructions', {
+      const response = await api.get<InstructionListResponse>('/admin/instructions', {
         params: filters,
       });
       return response.data;
@@ -71,7 +71,7 @@ class InstructionsService {
   async getInstruction(id: string): Promise<Instruction> {
     try {
       const response = await api.get<{ success: boolean; data: Instruction }>(
-        `/v1/admin/instructions/${id}`
+        `/admin/instructions/${id}`
       );
       return response.data.data;
     } catch (error) {
@@ -87,7 +87,7 @@ class InstructionsService {
   async createInstruction(data: CreateInstructionRequest): Promise<Instruction> {
     try {
       const response = await api.post<{ success: boolean; data: Instruction }>(
-        '/v1/admin/instructions',
+        '/admin/instructions',
         data
       );
       return response.data.data;
@@ -104,7 +104,7 @@ class InstructionsService {
   async updateInstruction(id: string, data: UpdateInstructionRequest): Promise<Instruction> {
     try {
       const response = await api.put<{ success: boolean; data: Instruction }>(
-        `/v1/admin/instructions/${id}`,
+        `/admin/instructions/${id}`,
         data
       );
       return response.data.data;
@@ -120,7 +120,7 @@ class InstructionsService {
    */
   async deleteInstruction(id: string): Promise<void> {
     try {
-      await api.delete(`/v1/admin/instructions/${id}`);
+      await api.delete(`/admin/instructions/${id}`);
     } catch (error) {
       console.error('Error deleting instruction:', error);
       throw error;
@@ -133,7 +133,7 @@ class InstructionsService {
    */
   async getDeletedInstructions(filters?: InstructionFilters): Promise<InstructionListResponse> {
     try {
-      const response = await api.get<InstructionListResponse>('/v1/admin/instructions/deleted', {
+      const response = await api.get<InstructionListResponse>('/admin/instructions/deleted', {
         params: filters,
       });
       return response.data;
@@ -150,7 +150,7 @@ class InstructionsService {
   async restoreInstruction(id: string): Promise<Instruction> {
     try {
       const response = await api.patch<{ success: boolean; data: Instruction }>(
-        `/v1/admin/instructions/${id}/restore`
+        `/admin/instructions/${id}/restore`
       );
       return response.data.data;
     } catch (error) {
@@ -165,7 +165,7 @@ class InstructionsService {
    */
   async permanentDeleteInstruction(id: string): Promise<void> {
     try {
-      await api.delete(`/v1/admin/instructions/${id}/permanent`);
+      await api.delete(`/admin/instructions/${id}/permanent`);
     } catch (error) {
       console.error('Error permanently deleting instruction:', error);
       throw error;
