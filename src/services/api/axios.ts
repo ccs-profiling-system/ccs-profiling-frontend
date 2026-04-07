@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { callLogout } from './authCallbacks';
 
 // Create Axios instance with default config
 const api = axios.create({
@@ -34,9 +35,8 @@ api.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 401:
-          // Unauthorized - clear token and redirect to login
-          localStorage.removeItem('auth_token');
-          window.location.href = '/login';
+          // Unauthorized - call logout via callback to avoid circular import
+          callLogout();
           break;
         case 403:
           console.error('Access forbidden');

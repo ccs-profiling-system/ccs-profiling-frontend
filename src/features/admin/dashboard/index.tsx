@@ -81,37 +81,37 @@ export function AdminDashboard() {
               Quick Actions
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-            <button onClick={() => navigate('/students/add')} className="action-card group">
+            <button onClick={() => navigate('/admin/students/add')} className="action-card group">
               <div className="action-icon bg-blue-100 group-hover:bg-blue-200 transition-colors">
                 <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
               </div>
               <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Add Student</h4>
             </button>
-            <button onClick={() => navigate('/events/create')} className="action-card group">
+            <button onClick={() => navigate('/admin/events/create')} className="action-card group">
               <div className="action-icon bg-purple-100 group-hover:bg-purple-200 transition-colors">
                 <CalendarPlus className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
               </div>
               <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">New Event</h4>
             </button>
-            <button onClick={() => navigate('/reports')} className="action-card group">
+            <button onClick={() => navigate('/admin/reports')} className="action-card group">
               <div className="action-icon bg-green-100 group-hover:bg-green-200 transition-colors">
                 <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
               </div>
               <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Reports</h4>
             </button>
-            <button onClick={() => navigate('/students')} className="action-card group">
+            <button onClick={() => navigate('/admin/students')} className="action-card group">
               <div className="action-icon bg-orange-100 group-hover:bg-orange-200 transition-colors">
                 <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
               <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Students</h4>
             </button>
-            <button onClick={() => navigate('/faculty')} className="action-card group">
+            <button onClick={() => navigate('/admin/faculty')} className="action-card group">
               <div className="action-icon bg-teal-100 group-hover:bg-teal-200 transition-colors">
                 <Users className="w-4 h-4 sm:w-5 sm:h-5 text-teal-600" />
               </div>
               <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Faculty</h4>
             </button>
-            <button onClick={() => navigate('/research')} className="action-card group">
+            <button onClick={() => navigate('/admin/research')} className="action-card group">
               <div className="action-icon bg-pink-100 group-hover:bg-pink-200 transition-colors">
                 <FlaskConical className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600" />
               </div>
@@ -122,7 +122,7 @@ export function AdminDashboard() {
 
         {/* Key Metrics - Clickable */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <button onClick={() => navigate('/students')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '0ms' }}>
+          <button onClick={() => navigate('/admin/students')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '0ms' }}>
             <div className="flex items-start justify-between mb-2">
               <div className="stat-icon stat-icon-blue">
                 <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -137,7 +137,7 @@ export function AdminDashboard() {
             </div>
           </button>
 
-          <button onClick={() => navigate('/faculty')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '100ms' }}>
+          <button onClick={() => navigate('/admin/faculty')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '100ms' }}>
             <div className="flex items-start justify-between mb-2">
               <div className="stat-icon stat-icon-green">
                 <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -152,7 +152,7 @@ export function AdminDashboard() {
             </div>
           </button>
 
-          <button onClick={() => navigate('/events')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '200ms' }}>
+          <button onClick={() => navigate('/admin/events')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '200ms' }}>
             <div className="flex items-start justify-between mb-2">
               <div className="stat-icon stat-icon-purple">
                 <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -167,7 +167,7 @@ export function AdminDashboard() {
             </div>
           </button>
 
-          <button onClick={() => navigate('/research')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '300ms' }}>
+          <button onClick={() => navigate('/admin/research')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '300ms' }}>
             <div className="flex items-start justify-between mb-2">
               <div className="stat-icon stat-icon-orange">
                 <FlaskConical className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -190,7 +190,7 @@ export function AdminDashboard() {
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-primary" /> Upcoming Events
               </h3>
-              <button onClick={() => navigate('/events')} className="text-sm text-primary hover:text-primary-dark font-medium">
+              <button onClick={() => navigate('/admin/events')} className="text-sm text-primary hover:text-primary-dark font-medium">
                 View All
               </button>
             </div>

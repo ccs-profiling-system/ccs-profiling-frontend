@@ -1,4 +1,7 @@
 import { NavLink } from 'react-router-dom';
+import {
+  LayoutDashboard, FileText, BookOpen,
+} from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -7,9 +10,9 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navLinks = [
-    { to: '/dashboard', label: 'Dashboard' },
-    { to: '/reports', label: 'Reports' },
-    { to: '/instructions', label: 'Instructions' },
+    { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/admin/reports', label: 'Reports', icon: FileText },
+    { to: '/admin/instructions', label: 'Instructions', icon: BookOpen },
   ];
 
   return (
@@ -49,6 +52,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     `sidebar-nav-item ${isActive ? 'sidebar-nav-item-active' : ''}`
                   }
                 >
+                  <link.icon className="w-4 h-4 flex-shrink-0" />
                   {link.label}
                 </NavLink>
               </li>
