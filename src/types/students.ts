@@ -1,4 +1,4 @@
-﻿export interface Student {
+export interface Student {
   id: string;
   studentId: string;
   firstName: string;
@@ -86,7 +86,8 @@ export interface UpdateStudentRequest extends Partial<CreateStudentRequest> {
 export interface StudentsResponse {
   success: boolean;
   data: Student[];
-  total: number;
+  total?: number;
+  meta?: { total: number; page: number; pageSize: number };
   page?: number;
   pageSize?: number;
   message?: string;

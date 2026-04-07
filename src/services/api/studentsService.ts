@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import api from './axios';
 import type {
   Student,
@@ -18,10 +18,81 @@ interface ApiResponse<T> {
   success: boolean;
   data: T;
   total?: number;
+  meta?: { total: number; page: number; limit: number; totalPages: number };
   message?: string;
 }
 
-// Handles both wrapped { success, data } and unwrapped direct responses
+// Maps snake_case backend fields to camelCase frontend fields
+function mapStudent(s: any): Student {
+  return {
+    id: s.id,
+    studentId: s.studentId ?? s.student_id,
+    firstName: s.firstName ?? s.first_name,
+    lastName: s.lastName ?? s.last_name,
+    email: s.email,
+    program: s.program,
+    yearLevel: s.yearLevel ?? s.year_level,
+    section: s.section,
+    status: s.status,
+    enrollmentDate: s.enrollmentDate ?? s.enrollment_date,
+    createdAt: s.createdAt ?? s.created_at,
+    updatedAt: s.updatedAt ?? s.updated_at,
+  };
+}
+
+function mapSkill(s: any): StudentSkill {
+  return {
+    skillName: s.skillName ?? s.skill_name,
+    category: s.category ?? 'other',
+    proficiencyLevel: s.proficiencyLevel ?? s.proficiency_level,
+  };
+}
+
+function mapAffiliation(a: any): StudentAffiliation {
+  return {
+    organizationName: a.organizationName ?? a.organization_name,
+    type: a.type ?? 'other',
+    role: a.role,
+    joinDate: a.joinDate ?? a.start_date,
+  };
+}
+
+function mapAcademicRecord(r: any): AcademicRecord {
+  return {
+    term: r.term ?? r.academic_year ?? '',
+    semester: r.semester ?? '',
+    year: r.year ?? 0,
+    completedSubjects: r.completedSubjects ?? (r.subject_code ? [r.subject_code] : []),
+    grades: r.grades ?? (r.grade != null ? { [r.subject_code ?? 'grade']: r.grade } : {}),
+  };
+}
+
+function mapEnrollment(e: any): SubjectEnrollment {
+  return {
+    subjectId: e.subjectId ?? e.instruction_id ?? e.id,
+    subjectCode: e.subjectCode ?? e.subject_code,
+    subjectName: e.subjectName ?? e.subject_name,
+    semester: e.semester ?? '',
+    year: e.year ?? 0,
+    grade: e.grade,
+    status: e.status ?? e.enrollment_status ?? '',
+  };
+}
+
+// Converts camelCase frontend fields to snake_case for backend
+function toSnakeCase(data: CreateStudentRequest | UpdateStudentRequest): any {
+  return {
+    student_id: (data as CreateStudentRequest).studentId,
+    first_name: (data as CreateStudentRequest).firstName,
+    last_name: (data as CreateStudentRequest).lastName,
+    email: (data as CreateStudentRequest).email,
+    program: (data as CreateStudentRequest).program,
+    year_level: (data as CreateStudentRequest).yearLevel,
+    section: (data as CreateStudentRequest).section,
+    status: (data as CreateStudentRequest).status,
+  };
+}
+
 function unwrap<T>(raw: T | ApiResponse<T>): T {
   if (raw !== null && typeof raw === 'object' && 'data' in (raw as object)) {
     return (raw as ApiResponse<T>).data;
@@ -51,7 +122,10 @@ class StudentsService {
       const response = await api.get<ApiResponse<Student[]>>('/admin/students', {
         params: { ...filters, page, limit },
       });
-      return response.data;
+      return {
+        ...response.data,
+        data: (response.data.data ?? []).map(mapStudent),
+      };
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         const msg = (error.response?.data as { message?: string })?.message ?? 'Network error — please check your connection';
@@ -63,19 +137,19 @@ class StudentsService {
 
   async getStudentById(id: string): Promise<Student> {
     return handleRequest(() =>
-      api.get<Student | ApiResponse<Student>>(`/admin/students/${id}`).then((r) => r.data)
+      api.get<Student | ApiResponse<Student>>(`/admin/students/${id}`).then((r) => mapStudent(unwrap(r.data)))
     );
   }
 
   async createStudent(data: CreateStudentRequest): Promise<Student> {
     return handleRequest(() =>
-      api.post<Student | ApiResponse<Student>>('/admin/students', data).then((r) => r.data)
+      api.post<Student | ApiResponse<Student>>('/admin/students', toSnakeCase(data)).then((r) => mapStudent(unwrap(r.data)))
     );
   }
 
   async updateStudent(data: UpdateStudentRequest): Promise<Student> {
     return handleRequest(() =>
-      api.put<Student | ApiResponse<Student>>(`/admin/students/${data.id}`, data).then((r) => r.data)
+      api.put<Student | ApiResponse<Student>>(`/admin/students/${data.id}`, toSnakeCase(data)).then((r) => mapStudent(unwrap(r.data)))
     );
   }
 
@@ -109,13 +183,15 @@ class StudentsService {
 
   async getStudentAcademicHistory(studentId: string): Promise<AcademicRecord[]> {
     return handleRequest(() =>
-      api.get<AcademicRecord[] | ApiResponse<AcademicRecord[]>>(`/admin/students/${studentId}/academic-history`).then((r) => r.data)
+      api.get<AcademicRecord[] | ApiResponse<AcademicRecord[]>>(`/admin/students/${studentId}/academic-history`)
+        .then((r) => (unwrap(r.data) as any[]).map(mapAcademicRecord))
     );
   }
 
   async getStudentEnrollments(studentId: string): Promise<SubjectEnrollment[]> {
     return handleRequest(() =>
-      api.get<SubjectEnrollment[] | ApiResponse<SubjectEnrollment[]>>(`/admin/students/${studentId}/enrollments`).then((r) => r.data)
+      api.get<SubjectEnrollment[] | ApiResponse<SubjectEnrollment[]>>(`/admin/students/${studentId}/enrollments`)
+        .then((r) => (unwrap(r.data) as any[]).map(mapEnrollment))
     );
   }
 
@@ -127,7 +203,7 @@ class StudentsService {
 
   async getStudentViolations(studentId: string): Promise<Violation[]> {
     return handleRequest(() =>
-      api.get<Violation[] | ApiResponse<Violation[]>>(`/admin/students/${studentId}/violations`).then((r) => r.data)
+      api.get<Violation[] | ApiResponse<Violation[]>>(`/admin/students/${studentId}/violations`).then((r) => unwrap(r.data) as Violation[])
     );
   }
 
@@ -157,25 +233,29 @@ class StudentsService {
 
   async getStudentSkills(studentId: string): Promise<StudentSkill[]> {
     return handleRequest(() =>
-      api.get<StudentSkill[] | ApiResponse<StudentSkill[]>>(`/admin/students/${studentId}/skills`).then((r) => r.data)
+      api.get<StudentSkill[] | ApiResponse<StudentSkill[]>>(`/admin/students/${studentId}/skills`)
+        .then((r) => (unwrap(r.data) as any[]).map(mapSkill))
     );
   }
 
   async updateStudentSkills(studentId: string, skills: StudentSkill[]): Promise<StudentSkill[]> {
     return handleRequest(() =>
-      api.put<StudentSkill[] | ApiResponse<StudentSkill[]>>(`/admin/students/${studentId}/skills`, { skills }).then((r) => r.data)
+      api.put<StudentSkill[] | ApiResponse<StudentSkill[]>>(`/admin/students/${studentId}/skills`, { skills })
+        .then((r) => (unwrap(r.data) as any[]).map(mapSkill))
     );
   }
 
   async getStudentAffiliations(studentId: string): Promise<StudentAffiliation[]> {
     return handleRequest(() =>
-      api.get<StudentAffiliation[] | ApiResponse<StudentAffiliation[]>>(`/admin/students/${studentId}/affiliations`).then((r) => r.data)
+      api.get<StudentAffiliation[] | ApiResponse<StudentAffiliation[]>>(`/admin/students/${studentId}/affiliations`)
+        .then((r) => (unwrap(r.data) as any[]).map(mapAffiliation))
     );
   }
 
   async updateStudentAffiliations(studentId: string, affiliations: StudentAffiliation[]): Promise<StudentAffiliation[]> {
     return handleRequest(() =>
-      api.put<StudentAffiliation[] | ApiResponse<StudentAffiliation[]>>(`/admin/students/${studentId}/affiliations`, { affiliations }).then((r) => r.data)
+      api.put<StudentAffiliation[] | ApiResponse<StudentAffiliation[]>>(`/admin/students/${studentId}/affiliations`, { affiliations })
+        .then((r) => (unwrap(r.data) as any[]).map(mapAffiliation))
     );
   }
 }

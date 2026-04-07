@@ -68,7 +68,8 @@ export interface UpdateFacultyRequest extends Partial<CreateFacultyRequest> {
 export interface FacultyResponse {
   success: boolean;
   data: Faculty[];
-  total: number;
+  total?: number;
+  meta?: { total: number; page: number; pageSize: number };
   page?: number;
   pageSize?: number;
   message?: string;

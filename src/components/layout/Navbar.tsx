@@ -37,8 +37,8 @@ export function Navbar({ title = 'Dashboard', onMenuClick }: NavbarProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const initials = user ? getInitials(user.name) : 'A';
-  const displayName = user?.name ?? '';
+  const initials = user ? getInitials(user.name ?? user.email) : 'A';
+  const displayName = user?.name ?? user?.email ?? '';
   const displayEmail = user?.email ?? '';
 
   return (
