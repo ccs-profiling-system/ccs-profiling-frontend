@@ -2,7 +2,7 @@ import { useState, ReactNode } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import type { BadgeProps } from '@/components/ui/Badge';
 
-interface Tab {
+export interface ProfileTab {
   key: string;
   label: string;
   content: ReactNode;
@@ -13,7 +13,7 @@ interface ProfileLayoutProps {
   subtitle?: string;
   status?: string;
   statusVariant?: BadgeProps['variant'];
-  tabs: Tab[];
+  tabs: ProfileTab[];
   onEdit?: () => void;
   onDelete?: () => void;
   onClose?: () => void;
@@ -29,7 +29,7 @@ export function ProfileLayout({
   onDelete,
 }: ProfileLayoutProps) {
   const [activeTab, setActiveTab] = useState(tabs[0]?.key ?? '');
-  const current = tabs.find((t) => t.key === activeTab);
+  const current = tabs.find((t: ProfileTab) => t.key === activeTab);
 
   return (
     <div className="flex flex-col h-full">
