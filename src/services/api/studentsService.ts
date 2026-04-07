@@ -124,8 +124,16 @@ class StudentsService {
     limit: number = 20
   ): Promise<ApiResponse<Student[]>> {
     try {
+      // Convert camelCase filters to snake_case for backend
+      const backendFilters: any = {};
+      if (filters?.program) backendFilters.program = filters.program;
+      if (filters?.yearLevel) backendFilters.year_level = filters.yearLevel;
+      if (filters?.status) backendFilters.status = filters.status;
+      if (filters?.search) backendFilters.search = filters.search;
+      if (filters?.skill) backendFilters.skill = filters.skill;
+      
       const response = await api.get<ApiResponse<Student[]>>('/admin/students', {
-        params: { ...filters, page, limit },
+        params: { ...backendFilters, page, limit },
       });
       return {
         ...response.data,

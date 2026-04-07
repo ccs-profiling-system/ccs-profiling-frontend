@@ -7,6 +7,7 @@ interface UseStudentsDataReturn {
   stats: StudentStatistics | null;
   total: number;
   loading: boolean;
+  tableLoading: boolean;
   error: string | null;
   page: number;
   setPage: (page: number) => void;
@@ -20,23 +21,34 @@ export function useStudentsData(): UseStudentsDataReturn {
   const [stats, setStats] = useState<StudentStatistics | null>(null);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<StudentFilters>({});
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitialLoad = useRef(true);
 
   const fetchData = useCallback(async (): Promise<void> => {
     try {
-      setLoading(true);
+      // Use full loading only on initial load, table loading for subsequent fetches
+      if (isInitialLoad.current) {
+        setLoading(true);
+      } else {
+        setTableLoading(true);
+      }
       setError(null);
-      const [studentsResponse, statsData] = await Promise.all([
+      
+      // Fetch stats only on initial load
+      const promises: [Promise<any>, Promise<any> | null] = [
         studentsService.getStudents(filters, page, 20),
-        studentsService.getStudentStats().catch(() => null),
-      ]);
+        isInitialLoad.current ? studentsService.getStudentStats().catch(() => null) : null,
+      ];
+      
+      const [studentsResponse, statsData] = await Promise.all(promises);
       setStudents(studentsResponse.data ?? []);
       setTotal(studentsResponse.meta?.total ?? studentsResponse.total ?? 0);
       
-      // Map new stats format to old format for compatibility
+      // Map new stats format to old format for compatibility (only on initial load)
       if (statsData) {
         setStats({
           totalStudents: statsData.total_students,
@@ -45,6 +57,10 @@ export function useStudentsData(): UseStudentsDataReturn {
           graduatedStudents: statsData.graduated_students,
           droppedStudents: 0, // Not in new stats, keep for compatibility
         });
+      }
+      
+      if (isInitialLoad.current) {
+        isInitialLoad.current = false;
       }
     } catch (err: unknown) {
       setError('Failed to connect to server. Showing sample data.');
@@ -59,6 +75,7 @@ export function useStudentsData(): UseStudentsDataReturn {
       setStats({ totalStudents: 4, activeStudents: 2, inactiveStudents: 1, graduatedStudents: 1, droppedStudents: 0 });
     } finally {
       setLoading(false);
+      setTableLoading(false);
     }
   }, [filters, page]);
 
@@ -95,13 +112,14 @@ export function useStudentsData(): UseStudentsDataReturn {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [filters, page]);
+  }, [filters, page, fetchData]);
 
   return {
     students,
     stats,
     total,
     loading,
+    tableLoading,
     error,
     page,
     setPage,

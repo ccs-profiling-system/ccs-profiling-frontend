@@ -22,7 +22,7 @@ interface StudentsProps {
 }
 
 export function Students({ initialOpenAdd = false }: StudentsProps) {
-  const { students, stats, loading, error, filters, setFilters, refetch } = useStudentsData();
+  const { students, stats, loading, tableLoading, error, filters, setFilters, refetch } = useStudentsData();
 
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -407,13 +407,20 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
               )}
             </Card>
 
-            {/* Table */}
-            <Table<Student>
-              data={filteredStudents}
-              columns={columns}
-              onRowClick={(s) => setSelectedStudent(s)}
-              emptyMessage="No students found."
-            />
+            {/* Table with loading overlay */}
+            <div className="relative">
+              {tableLoading && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
+                  <Spinner size="md" text="Updating table…" />
+                </div>
+              )}
+              <Table<Student>
+                data={filteredStudents}
+                columns={columns}
+                onRowClick={(s) => setSelectedStudent(s)}
+                emptyMessage="No students found."
+              />
+            </div>
           </>
         )}
       </div>
