@@ -384,7 +384,7 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
               )}
 
               {/* Active Filters Summary */}
-              {(filters.program || filters.yearLevel || filters.status || filters.skill) && (
+              {(filters.program || filters.yearLevel || filters.status) && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex flex-wrap gap-2 items-center">
                     <span className="text-sm font-medium text-gray-700">Active filters:</span>
@@ -416,17 +416,6 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
                         <button
                           onClick={() => setFilters({ ...filters, status: undefined })}
                           className="hover:text-purple-900"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    )}
-                    {filters.skill && (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs">
-                        Skill: {filters.skill}
-                        <button
-                          onClick={() => setFilters({ ...filters, skill: undefined })}
-                          className="hover:text-orange-900"
                         >
                           ×
                         </button>
