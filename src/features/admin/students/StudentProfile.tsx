@@ -319,6 +319,38 @@ function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdde
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<'technical' | 'soft' | 'sports'>('technical');
+  const [selectedSkill, setSelectedSkill] = useState('');
+
+  // Pre-defined skills by category
+  const predefinedSkills = {
+    technical: [
+      'JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', 'PHP', 'Ruby',
+      'React', 'Angular', 'Vue.js', 'Node.js', 'Express', 'Django', 'Flask',
+      'SQL', 'MongoDB', 'PostgreSQL', 'MySQL', 'Redis',
+      'Git', 'Docker', 'Kubernetes', 'AWS', 'Azure', 'GCP',
+      'HTML/CSS', 'REST API', 'GraphQL', 'Microservices',
+      'Machine Learning', 'Data Analysis', 'AI', 'Cybersecurity',
+      'Mobile Development', 'Web Development', 'Game Development',
+      'UI/UX Design', 'Graphic Design', 'Video Editing'
+    ],
+    soft: [
+      'Communication', 'Leadership', 'Teamwork', 'Problem Solving',
+      'Critical Thinking', 'Time Management', 'Adaptability', 'Creativity',
+      'Public Speaking', 'Presentation Skills', 'Negotiation', 'Conflict Resolution',
+      'Emotional Intelligence', 'Decision Making', 'Project Management',
+      'Organization', 'Attention to Detail', 'Work Ethic', 'Collaboration',
+      'Active Listening', 'Empathy', 'Flexibility', 'Initiative'
+    ],
+    sports: [
+      'Basketball', 'Volleyball', 'Football', 'Soccer', 'Baseball',
+      'Tennis', 'Badminton', 'Table Tennis', 'Swimming', 'Track and Field',
+      'Chess', 'Martial Arts', 'Boxing', 'Taekwondo', 'Karate',
+      'Cycling', 'Running', 'Gymnastics', 'Dance', 'Cheerleading',
+      'E-Sports', 'Gaming', 'Archery', 'Bowling', 'Golf'
+    ]
+  };
 
   const load = useCallback((): void => {
     setLoading(true);
@@ -330,18 +362,19 @@ function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdde
 
   useEffect(() => { load(); }, [load]);
 
-  const tags: Tag[] = skills.map((s) => ({ id: s.id, name: s.skillName, category: s.category }));
-
-  const handleAdd = async (tag: Tag): Promise<void> => {
+  const handleAdd = async (): Promise<void> => {
+    if (!selectedSkill) return;
+    
     setSaving(true);
     setError(null);
     try {
       await studentsService.addStudentSkill(studentId, {
-        skill_name: tag.name,
+        skill_name: selectedSkill,
         proficiency_level: 'beginner',
       });
+      setIsAddOpen(false);
+      setSelectedSkill('');
       load();
-      // Notify parent to refresh skills dropdown
       onSkillAdded?.();
     } catch (e: unknown) {
       console.error('[SkillsTab] Error adding skill:', e);
@@ -351,12 +384,11 @@ function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdde
     }
   };
 
-  const handleRemove = async (tag: Tag): Promise<void> => {
-    if (!tag.id) return;
+  const handleRemove = async (skillId: string): Promise<void> => {
     setSaving(true);
     setError(null);
     try {
-      await studentsService.deleteStudentSkill(tag.id);
+      await studentsService.deleteStudentSkill(skillId);
       load();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to remove skill');
@@ -369,16 +401,145 @@ function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdde
   if (error) return <ErrorAlert message={error} />;
 
   return (
-    <div>
-      <p className="text-sm text-gray-600 mb-3">Add or remove student skills. Press Enter or comma to add.</p>
-      <TagInput
-        tags={tags}
-        onAdd={handleAdd}
-        onRemove={handleRemove}
-        categories={['technical', 'soft', 'other']}
-        placeholder="Add skill…"
-        disabled={saving}
-      />
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setIsAddOpen(true)}
+          className="px-4 py-2 bg-primary hover:bg-primary-dark text-white text-sm rounded-lg transition"
+        >
+          + Add Skill
+        </button>
+      </div>
+
+      {/* Skills List */}
+      {skills.length === 0 ? (
+        <p className="text-gray-500 text-sm text-center py-8">No skills added yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {/* Group by category */}
+          {['technical', 'soft', 'sports'].map((category) => {
+            const categorySkills = skills.filter(s => s.category === category);
+            if (categorySkills.length === 0) return null;
+            
+            return (
+              <div key={category} className="border border-gray-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 capitalize">{category} Skills</h4>
+                <div className="flex flex-wrap gap-2">
+                  {categorySkills.map((skill) => (
+                    <span
+                      key={skill.id}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm ${
+                        category === 'technical' ? 'bg-blue-100 text-blue-800' :
+                        category === 'soft' ? 'bg-green-100 text-green-800' :
+                        'bg-orange-100 text-orange-800'
+                      }`}
+                    >
+                      {skill.skillName}
+                      {skill.proficiencyLevel && (
+                        <span className="text-xs opacity-70">({skill.proficiencyLevel})</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => skill.id && handleRemove(skill.id)}
+                        disabled={saving}
+                        className="ml-1 hover:opacity-70 transition"
+                        aria-label={`Remove ${skill.skillName}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Add Skill Modal */}
+      <Modal
+        isOpen={isAddOpen}
+        onClose={() => {
+          setIsAddOpen(false);
+          setSelectedSkill('');
+          setError(null);
+        }}
+        title="Add Skill"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Category
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {(['technical', 'soft', 'sports'] as const).map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    setSelectedSkill('');
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    selectedCategory === cat
+                      ? cat === 'technical' ? 'bg-blue-600 text-white' :
+                        cat === 'soft' ? 'bg-green-600 text-white' :
+                        'bg-orange-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Skill
+            </label>
+            <select
+              value={selectedSkill}
+              onChange={(e) => setSelectedSkill(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="">Choose a skill...</option>
+              {predefinedSkills[selectedCategory].map((skill) => (
+                <option key={skill} value={skill}>
+                  {skill}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsAddOpen(false);
+                setSelectedSkill('');
+                setError(null);
+              }}
+              disabled={saving}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleAdd}
+              disabled={saving || !selectedSkill}
+              className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition disabled:opacity-50"
+            >
+              {saving ? 'Adding…' : 'Add Skill'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
