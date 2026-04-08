@@ -321,7 +321,8 @@ function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdde
   const [saving, setSaving] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'technical' | 'soft' | 'sports'>('technical');
-  const [selectedSkill, setSelectedSkill] = useState('');
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Pre-defined skills by category
   const predefinedSkills = {
@@ -362,23 +363,43 @@ function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdde
 
   useEffect(() => { load(); }, [load]);
 
-  const handleAdd = async (): Promise<void> => {
-    if (!selectedSkill) return;
+  // Get existing skill names to filter them out
+  const existingSkillNames = skills.map(s => s.skillName);
+  const availableSkills = predefinedSkills[selectedCategory]
+    .filter(skill => !existingSkillNames.includes(skill))
+    .filter(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const toggleSkill = (skill: string) => {
+    setSelectedSkills(prev => 
+      prev.includes(skill) 
+        ? prev.filter(s => s !== skill)
+        : [...prev, skill]
+    );
+  };
+
+  const handleAddSkills = async (): Promise<void> => {
+    if (selectedSkills.length === 0) return;
     
     setSaving(true);
     setError(null);
     try {
-      await studentsService.addStudentSkill(studentId, {
-        skill_name: selectedSkill,
-        proficiency_level: 'beginner',
-      });
+      // Add all selected skills
+      await Promise.all(
+        selectedSkills.map(skillName =>
+          studentsService.addStudentSkill(studentId, {
+            skill_name: skillName,
+            proficiency_level: 'beginner',
+          })
+        )
+      );
       setIsAddOpen(false);
-      setSelectedSkill('');
+      setSelectedSkills([]);
+      setSearchQuery('');
       load();
       onSkillAdded?.();
     } catch (e: unknown) {
-      console.error('[SkillsTab] Error adding skill:', e);
-      setError(e instanceof Error ? e.message : 'Failed to add skill');
+      console.error('[SkillsTab] Error adding skills:', e);
+      setError(e instanceof Error ? e.message : 'Failed to add skills');
     } finally {
       setSaving(false);
     }
@@ -408,7 +429,7 @@ function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdde
           onClick={() => setIsAddOpen(true)}
           className="px-4 py-2 bg-primary hover:bg-primary-dark text-white text-sm rounded-lg transition"
         >
-          + Add Skill
+          + Add Skills
         </button>
       </div>
 
@@ -457,16 +478,17 @@ function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdde
         </div>
       )}
 
-      {/* Add Skill Modal */}
+      {/* Add Skills Modal */}
       <Modal
         isOpen={isAddOpen}
         onClose={() => {
           setIsAddOpen(false);
-          setSelectedSkill('');
+          setSelectedSkills([]);
+          setSearchQuery('');
           setError(null);
         }}
-        title="Add Skill"
-        size="md"
+        title="Add Skills"
+        size="lg"
       >
         <div className="space-y-4">
           <div>
@@ -480,7 +502,8 @@ function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdde
                   type="button"
                   onClick={() => {
                     setSelectedCategory(cat);
-                    setSelectedSkill('');
+                    setSelectedSkills([]);
+                    setSearchQuery('');
                   }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                     selectedCategory === cat
@@ -498,21 +521,82 @@ function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdde
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Skill
+              Search Skills
             </label>
-            <select
-              value={selectedSkill}
-              onChange={(e) => setSelectedSkill(e.target.value)}
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Type to search..."
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="">Choose a skill...</option>
-              {predefinedSkills[selectedCategory].map((skill) => (
-                <option key={skill} value={skill}>
-                  {skill}
-                </option>
-              ))}
-            </select>
+            />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Skills ({selectedSkills.length} selected)
+            </label>
+            {availableSkills.length === 0 ? (
+              <p className="text-gray-500 text-sm text-center py-8">
+                {searchQuery 
+                  ? `No skills found matching "${searchQuery}"`
+                  : `All ${selectedCategory} skills have been added.`
+                }
+              </p>
+            ) : (
+              <div className="border border-gray-300 rounded-lg p-3 max-h-64 overflow-y-auto">
+                <div className="space-y-1">
+                  {availableSkills.map((skill) => (
+                    <label
+                      key={skill}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition ${
+                        selectedSkills.includes(skill)
+                          ? selectedCategory === 'technical' ? 'bg-blue-50 border border-blue-200' :
+                            selectedCategory === 'soft' ? 'bg-green-50 border border-green-200' :
+                            'bg-orange-50 border border-orange-200'
+                          : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedSkills.includes(skill)}
+                        onChange={() => toggleSkill(skill)}
+                        className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                      />
+                      <span className="text-sm text-gray-700">{skill}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {selectedSkills.length > 0 && (
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs font-medium text-gray-600 mb-2">Selected skills:</p>
+              <div className="flex flex-wrap gap-1">
+                {selectedSkills.map((skill) => (
+                  <span
+                    key={skill}
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${
+                      selectedCategory === 'technical' ? 'bg-blue-100 text-blue-800' :
+                      selectedCategory === 'soft' ? 'bg-green-100 text-green-800' :
+                      'bg-orange-100 text-orange-800'
+                    }`}
+                  >
+                    {skill}
+                    <button
+                      type="button"
+                      onClick={() => toggleSkill(skill)}
+                      className="hover:opacity-70"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
 
@@ -521,7 +605,8 @@ function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdde
               type="button"
               onClick={() => {
                 setIsAddOpen(false);
-                setSelectedSkill('');
+                setSelectedSkills([]);
+                setSearchQuery('');
                 setError(null);
               }}
               disabled={saving}
@@ -531,11 +616,11 @@ function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdde
             </button>
             <button
               type="button"
-              onClick={handleAdd}
-              disabled={saving || !selectedSkill}
+              onClick={handleAddSkills}
+              disabled={saving || selectedSkills.length === 0}
               className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition disabled:opacity-50"
             >
-              {saving ? 'Adding…' : 'Add Skill'}
+              {saving ? 'Adding…' : `Add ${selectedSkills.length} Skill${selectedSkills.length !== 1 ? 's' : ''}`}
             </button>
           </div>
         </div>
