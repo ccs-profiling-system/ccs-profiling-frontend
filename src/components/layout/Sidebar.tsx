@@ -14,7 +14,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { to: '/admin/students', label: 'Students', icon: GraduationCap },
     { to: '/admin/faculty', label: 'Faculty', icon: Users },
     { to: '/admin/events', label: 'Events', icon: Calendar },
-    { to: '/admin/scheduling', label: 'Scheduling', icon: Clock },
+    // { to: '/admin/scheduling', label: 'Scheduling', icon: Clock }, // Disabled - data type issues
     { to: '/admin/research', label: 'Research', icon: FlaskConical },
     { to: '/admin/reports', label: 'Reports', icon: FileText },
     { to: '/admin/instructions', label: 'Instructions', icon: BookOpen },

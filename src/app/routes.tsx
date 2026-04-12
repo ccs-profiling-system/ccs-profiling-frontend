@@ -8,7 +8,7 @@ import { Faculty } from '@/features/admin/faculty';
 import { Reports } from '@/features/admin/reports';
 import { Instructions } from '@/features/admin/instructions';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { SchedulingPage } from '@/features/admin/scheduling';
+// import { SchedulingPage } from '@/features/admin/scheduling'; // Disabled - data type issues
 import { ResearchPage, ResearchDetailPage } from '@/features/admin/research';
 
 export function AppRoutes() {
@@ -66,14 +66,15 @@ export function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route
+        {/* Scheduling route disabled due to data type issues - will be fixed */}
+        {/* <Route
           path="/admin/scheduling"
           element={
             <ProtectedRoute>
               <SchedulingPage />
             </ProtectedRoute>
           }
-        />
+        /> */}
         <Route
           path="/admin/research"
           element={

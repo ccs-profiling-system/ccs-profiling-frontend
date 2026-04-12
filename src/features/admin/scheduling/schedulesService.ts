@@ -42,8 +42,29 @@ const mockSchedules: Schedule[] = [
 
 export async function getSchedules(params?: { start?: string; end?: string }): Promise<Schedule[]> {
   try {
-    const response = await axios.get<Schedule[]>(BASE_URL, { params });
-    return response.data;
+    const response = await axios.get<any>(BASE_URL, { params });
+    
+    // Normalize response: extract array from any possible structure
+    let data = response.data;
+    
+    // If it's already an array, use it
+    if (Array.isArray(data)) {
+      return data;
+    }
+    
+    // If it's an object with a data property that's an array, use that
+    if (data && typeof data === 'object' && Array.isArray(data.data)) {
+      return data.data;
+    }
+    
+    // If it's an object with a schedules property that's an array, use that
+    if (data && typeof data === 'object' && Array.isArray(data.schedules)) {
+      return data.schedules;
+    }
+    
+    // If nothing worked, log the unexpected structure and return mock data
+    console.warn('Unexpected API response structure:', data);
+    return mockSchedules;
   } catch (error) {
     console.warn('API not available, using mock data:', error);
     // Return mock data instead of throwing to prevent page crash
