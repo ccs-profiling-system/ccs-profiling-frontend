@@ -9,6 +9,7 @@ import { Reports } from '@/features/admin/reports';
 import { Instructions } from '@/features/admin/instructions';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { SchedulingPage } from '@/features/admin/scheduling';
+import { ResearchPage, ResearchDetailPage } from '@/features/admin/research';
 
 export function AppRoutes() {
   return (
@@ -70,6 +71,22 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <SchedulingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/research"
+          element={
+            <ProtectedRoute>
+              <ResearchPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/research/:id"
+          element={
+            <ProtectedRoute>
+              <ResearchDetailPage />
             </ProtectedRoute>
           }
         />
