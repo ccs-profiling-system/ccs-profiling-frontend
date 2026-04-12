@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Spinner } from '@/components/ui/Spinner';
 import { ErrorAlert } from '@/components/ui/ErrorAlert';
@@ -23,6 +24,7 @@ interface StudentsProps {
 }
 
 export function Students({ initialOpenAdd = false }: StudentsProps) {
+  const navigate = useNavigate();
   const { students, stats, loading, tableLoading, error, filters, setFilters, refetch } = useStudentsData();
 
   const [search, setSearch] = useState('');
@@ -436,7 +438,7 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
               <Table<Student>
                 data={filteredStudents}
                 columns={columns}
-                onRowClick={(s) => setSelectedStudent(s)}
+                onRowClick={(s) => navigate(`/admin/students/${s.id}`)}
                 emptyMessage="No students found."
               />
             </div>

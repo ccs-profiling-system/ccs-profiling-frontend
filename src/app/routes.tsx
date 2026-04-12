@@ -4,6 +4,7 @@ import { Login } from '@/features/auth/Login';
 import { EventsPage } from '@/features/admin/events';
 import { EventsErrorBoundary } from '@/features/admin/events/EventsErrorBoundary';
 import { Students } from '@/features/admin/students';
+import { StudentDetailPage } from '@/features/admin/students/StudentDetailPage';
 import { Faculty } from '@/features/admin/faculty';
 import { Reports } from '@/features/admin/reports';
 import { Instructions } from '@/features/admin/instructions';
@@ -29,6 +30,14 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <Students />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/students/:id"
+          element={
+            <ProtectedRoute>
+              <StudentDetailPage />
             </ProtectedRoute>
           }
         />
