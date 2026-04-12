@@ -2,7 +2,7 @@ import { describe, it } from 'vitest';
 import * as fc from 'fast-check';
 import { filterEventsByStatus } from './useEvents';
 import { reconcileAssigned } from './useParticipants';
-import type { Event, EventStatus, Participant } from './types';
+import type { Event, EventStatus, Participant, FileAttachment } from './types';
 import { VALID_EVENT_STATUSES } from './validation';
 
 // ── Arbitraries ──────────────────────────────────────────────────────────────
@@ -12,15 +12,17 @@ const validStatus = fc.constantFrom<EventStatus>(...(VALID_EVENT_STATUSES as Eve
 const arbitraryEvent = fc.record<Event>({
   id: fc.uuid(),
   title: fc.string({ minLength: 1 }),
+  description: fc.string({ minLength: 1 }),
   type: fc.constantFrom('seminar', 'workshop', 'defense', 'meeting', 'other'),
   date: fc.string({ minLength: 1 }),
+  location: fc.string({ minLength: 1 }),
   venue: fc.string({ minLength: 1 }),
   status: validStatus,
-  participants: fc.constant([]),
-  attachments: fc.constant([]),
+  participants: fc.constant([] as Participant[]),
+  attachments: fc.constant([] as FileAttachment[]),
   createdAt: fc.string({ minLength: 1 }),
   updatedAt: fc.string({ minLength: 1 }),
-});
+}, { requiredKeys: ['id', 'title', 'description', 'type', 'date', 'location', 'status'] });
 
 const arbitraryParticipant = fc.record<Participant>({
   id: fc.uuid(),

@@ -46,7 +46,7 @@ export function useParticipants(eventId: string) {
     async (participantIds: string[]): Promise<Participant[]> => {
       setState((s) => ({ ...s, loading: true, error: null }));
       try {
-        const updated = await participantsService.assignParticipants(eventId, { participantIds });
+        const updated = await participantsService.assignParticipants(eventId, { eventId, participantIds });
         setState((s) => ({ ...s, assigned: updated, loading: false }));
         return updated;
       } catch (err: any) {

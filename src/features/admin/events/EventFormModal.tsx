@@ -14,6 +14,7 @@ const EMPTY_FORM: CreateEventPayload = {
   description: '',
   date: '',
   location: '',
+  type: 'meeting',
 };
 
 export function EventFormModal({ event, onSave, onClose, apiError }: EventFormModalProps) {
@@ -21,19 +22,20 @@ export function EventFormModal({ event, onSave, onClose, apiError }: EventFormMo
   const [errors, setErrors] = useState<EventFormErrors>({});
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (event) {
-      setForm({
-        title: event.title,
-        description: event.description,
-        date: event.date,
-        location: event.location,
-      });
-    } else {
-      setForm(EMPTY_FORM);
-    }
-    setErrors({});
-  }, [event]);
+useEffect(() => {
+  if (event) {
+    setForm({
+      title: event.title,
+      description: event.description,
+      date: event.date,
+      location: event.location,
+      type: event.type ?? 'meeting',
+    });
+  } else {
+    setForm(EMPTY_FORM);
+  }
+  setErrors({});
+}, [event]);
 
   function handleChange(field: keyof CreateEventPayload, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));

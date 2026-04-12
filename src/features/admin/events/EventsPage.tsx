@@ -5,10 +5,14 @@ import type { Event, CreateEventPayload } from './types';
 import { useEvents } from './useEvents';
 import { EventFormModal } from './EventFormModal';
 import { EventsAside } from './EventsAside';
+import { ParticipantAssignModal } from './ParticipantAssignModal';
+import { FileAttachmentPanel } from './FileAttachmentPanel';
 
 type ActiveModal =
   | { kind: 'create' }
   | { kind: 'edit'; event: Event }
+  | { kind: 'participants'; event: Event }
+  | { kind: 'attachments'; event: Event }
   | null;
 
 export function EventsPage() {

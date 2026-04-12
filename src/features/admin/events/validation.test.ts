@@ -18,8 +18,10 @@ const validEventType = fc.constantFrom(...VALID_EVENT_TYPES);
 // Arbitrary for a fully valid event payload
 const validPayload: fc.Arbitrary<CreateEventPayload> = fc.record({
   title: nonBlankString,
+  description: nonBlankString,
   type: validEventType,
   date: nonBlankString,
+  location: nonBlankString,
   venue: nonBlankString,
 });
 

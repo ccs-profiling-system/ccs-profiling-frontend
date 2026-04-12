@@ -89,3 +89,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
           <p className="text-xs text-white/50 text-center mt-4">© 2026 CCS System</p>
         </div>
+      </aside>
+    </>
+  );
+}  

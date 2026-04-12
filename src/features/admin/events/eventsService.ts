@@ -10,6 +10,8 @@ const mockEvents: Event[] = [
     title: 'Tech Conference',
     type: 'meeting',
     date: '2026-04-15',
+    description: '',
+    location: '',
     venue: 'Main Hall',
     status: 'upcoming',
     participants: [],
@@ -22,6 +24,8 @@ const mockEvents: Event[] = [
     title: 'Faculty Meeting',
     type: 'meeting',
     date: '2026-04-08',
+    description: '',
+    location: '',
     venue: 'Conference Room A',
     status: 'upcoming',
     participants: [],
@@ -66,18 +70,20 @@ export async function updateEvent(id: string, payload: UpdateEventPayload): Prom
     return response.data;
   } catch (error) {
     console.warn('API not available, simulating update:', error);
-    const updated: Event = {
-      id,
-      title: payload.title || '',
-      type: payload.type || 'meeting',
-      date: payload.date || '',
-      venue: payload.venue || '',
-      status: payload.status || 'upcoming',
-      participants: [],
-      attachments: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      const updated: Event = {
+        id,
+        title: payload.title || '',
+        description: payload.description || '',
+        location: payload.location || '',
+        type: payload.type || 'meeting',
+        date: payload.date || '',
+        venue: payload.venue || '',
+        status: payload.status || 'upcoming',
+        participants: [],
+        attachments: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
     return updated;
   }
 }
