@@ -1,5 +1,0 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { FileDown, FileSpreadsheet } from 'lucide-react';
-export function ExportButtons({ onExportPDF, onExportExcel, loading = false, className = '' }) {
-    return (_jsxs("div", { className: `flex items-center gap-2 ${className}`, children: [onExportPDF && (_jsxs("button", { onClick: onExportPDF, disabled: loading, className: "flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/90 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow hover:shadow-md", children: [_jsx(FileDown, { className: "w-4 h-4" }), _jsx("span", { className: "text-sm font-medium", children: "Export PDF" })] })), onExportExcel && (_jsxs("button", { onClick: onExportExcel, disabled: loading, className: "flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow hover:shadow-md", children: [_jsx(FileSpreadsheet, { className: "w-4 h-4" }), _jsx("span", { className: "text-sm font-medium", children: "Export Excel" })] }))] }));
-}

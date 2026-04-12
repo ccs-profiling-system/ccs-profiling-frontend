@@ -37,12 +37,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
     localStorage.removeItem('auth_refresh_token');
+    localStorage.removeItem('studentToken');
     setToken(null);
     setUser(null);
   };
 
   useEffect(() => {
     setLogoutCallback(logout);
+  }, []);
+
+  // Listen for storage changes (e.g., from student login)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const newToken = localStorage.getItem('auth_token');
+      const newUserStr = localStorage.getItem('auth_user');
+      const newUser = newUserStr ? (() => { try { return JSON.parse(newUserStr) as AuthUser; } catch { return null; } })() : null;
+      
+      setToken(newToken);
+      setUser(newUser);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const value: AuthContextValue = {
