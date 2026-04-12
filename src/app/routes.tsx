@@ -8,6 +8,7 @@ import { Faculty } from '@/features/admin/faculty';
 import { Reports } from '@/features/admin/reports';
 import { Instructions } from '@/features/admin/instructions';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { SchedulingPage } from '@/features/admin/scheduling';
 
 export function AppRoutes() {
   return (
@@ -61,6 +62,14 @@ export function AppRoutes() {
               <EventsErrorBoundary>
                 <EventsPage />
               </EventsErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/scheduling"
+          element={
+            <ProtectedRoute>
+              <SchedulingPage />
             </ProtectedRoute>
           }
         />
