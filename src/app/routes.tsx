@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AdminDashboard } from '@/features/admin/dashboard';
 import { Login } from '@/features/auth/Login';
 import { EventsPage } from '@/features/admin/events';
+import { EventsErrorBoundary } from '@/features/admin/events/EventsErrorBoundary';
 import { Students } from '@/features/admin/students';
 import { Faculty } from '@/features/admin/faculty';
 import { Reports } from '@/features/admin/reports';
@@ -57,7 +58,9 @@ export function AppRoutes() {
           path="/admin/events"
           element={
             <ProtectedRoute>
-              <EventsPage />
+              <EventsErrorBoundary>
+                <EventsPage />
+              </EventsErrorBoundary>
             </ProtectedRoute>
           }
         />
