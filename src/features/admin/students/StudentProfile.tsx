@@ -5,7 +5,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { ErrorAlert } from '@/components/ui/ErrorAlert';
 import { Modal } from '@/components/ui/Modal';
 import studentsService from '@/services/api/studentsService';
-import type { Student, AcademicRecord, SubjectEnrollment, Violation, StudentSkill, StudentAffiliation } from '@/types/students';
+import type { Student, AcademicRecord, SubjectEnrollment, StudentActivity, Violation, StudentSkill, StudentAffiliation } from '@/types/students';
 import type { Tag } from '@/components/ui/TagInput';
 
 interface StudentProfileProps {
@@ -102,13 +102,84 @@ function EnrollmentsTab({ studentId }: { studentId: string }) {
 }
 
 // ── Activities Tab ─────────────────────────────────────────────────────────────
-function ActivitiesTab() {
-  // Note: The activities endpoint doesn't exist in the backend yet
-  // This would need to query events where the student is a participant
+const EVENT_TYPE_STYLES: Record<string, string> = {
+  seminar:  'bg-blue-100 text-blue-800',
+  workshop: 'bg-purple-100 text-purple-800',
+  defense:  'bg-orange-100 text-orange-800',
+  meeting:  'bg-gray-100 text-gray-700',
+  other:    'bg-teal-100 text-teal-800',
+};
+
+function ActivityTypeBadge({ type }: { type: string }) {
+  const cls = EVENT_TYPE_STYLES[type?.toLowerCase()] ?? EVENT_TYPE_STYLES.other;
   return (
-    <div className="text-center py-8">
-      <p className="text-gray-500 text-sm">Activities tracking is not yet implemented.</p>
-      <p className="text-gray-400 text-xs mt-2">This feature will show events and activities where the student participated.</p>
+    <span className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium capitalize ${cls}`}>
+      {type || 'other'}
+    </span>
+  );
+}
+
+function ActivitiesTab({ studentId }: { studentId: string }) {
+  const [activities, setActivities] = useState<StudentActivity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback((): void => {
+    setLoading(true);
+    setError(null);
+    studentsService
+      .getStudentActivities(studentId)
+      .then(setActivities)
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Failed to load activities'))
+      .finally(() => setLoading(false));
+  }, [studentId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  if (loading) return <Spinner size="sm" />;
+  if (error) return <ErrorAlert message={error} onRetry={load} />;
+
+  if (activities.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-gray-500 text-sm">No activities recorded for this student.</p>
+        <p className="text-gray-400 text-xs mt-1">
+          Activities are auto-linked when the student is added as a participant in an event.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-gray-500">{activities.length} event{activities.length !== 1 ? 's' : ''} participated</p>
+      {activities.map((activity, idx) => (
+        <div
+          key={`${activity.eventId}-${idx}`}
+          className="flex items-start justify-between gap-3 border border-gray-200 rounded-lg p-4"
+        >
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm text-gray-900 truncate">{activity.eventName}</p>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <ActivityTypeBadge type={activity.type} />
+              {activity.participationDate && (
+                <span className="text-xs text-gray-500">
+                  {new Date(activity.participationDate).toLocaleDateString('en-PH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </span>
+              )}
+            </div>
+          </div>
+          {activity.role && (
+            <span className="flex-shrink-0 text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded capitalize">
+              {activity.role}
+            </span>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -708,7 +779,7 @@ export function StudentProfile({ student, onEdit, onDelete, onClose, onSkillAdde
     { key: 'personal', label: 'Personal Info', content: <PersonalInfoTab student={student} /> },
     { key: 'academic', label: 'Academic History', content: <AcademicHistoryTab studentId={student.id} /> },
     { key: 'enrollments', label: 'Enrollments', content: <EnrollmentsTab studentId={student.id} /> },
-    { key: 'activities', label: 'Activities', content: <ActivitiesTab /> },
+    { key: 'activities', label: 'Activities', content: <ActivitiesTab studentId={student.id} /> },
     { key: 'violations', label: 'Violations', content: <ViolationsTab studentId={student.id} /> },
     { key: 'skills', label: 'Skills', content: <SkillsTab studentId={student.id} onSkillAdded={onSkillAdded} /> },
     { key: 'affiliations', label: 'Affiliations', content: <AffiliationsTab studentId={student.id} /> },
