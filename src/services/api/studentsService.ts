@@ -300,9 +300,26 @@ class StudentsService {
   }
 
   async getStudentActivities(studentId: string): Promise<StudentActivity[]> {
-    return handleRequest(() =>
-      api.get<StudentActivity[] | ApiResponse<StudentActivity[]>>(`/admin/students/${studentId}/activities`).then((r) => r.data)
-    );
+    try {
+      const response = await api.get<StudentActivity[] | ApiResponse<StudentActivity[]>>(
+        `/admin/students/${studentId}/activities`
+      );
+      const raw = unwrap(response.data) as any[];
+      if (!Array.isArray(raw)) return [];
+      return raw.map((a: any): StudentActivity => ({
+        eventId: a.eventId ?? a.event_id ?? a.id ?? '',
+        eventName: a.eventName ?? a.event_name ?? a.title ?? 'Unknown Event',
+        type: a.type ?? a.event_type ?? 'other',
+        participationDate: a.participationDate ?? a.participation_date ?? a.date ?? '',
+        role: a.role ?? undefined,
+      }));
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable, returning empty activities');
+        return [];
+      }
+      throw error;
+    }
   }
 
   async getStudentViolations(studentId: string): Promise<Violation[]> {
