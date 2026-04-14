@@ -40,7 +40,8 @@
   - **Property 1: Dashboard Data Consistency**
   - **Validates: Requirements 1.2**
 
-- [x] 6. Build profile page
+- [ ] 6. Build profile page
+
 
 
 
@@ -67,14 +68,26 @@
   - **Property 3: Schedule Completeness**
   - **Validates: Requirements 2.1, 2.3**
 
+
 - [ ] 8. Build schedule page
+
+
+
+
+
+
 
   - Weekly calendar view of enrolled courses
   - Course meeting times and room locations
   - Instructor consultation hours
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 9. Build grades page
+
+- [x] 9. Build grades page
+
+
+
+
   - Current semester grades: course code, title, units, final grade, GPA equivalent
   - Semester GPA and cumulative GPA display
   - Historical grades by semester
@@ -85,6 +98,7 @@
   - **Validates: Requirements 3.1, 3.2**
 
 - [ ] 10. Build transcript page
+
   - Complete academic record: all courses, final grades, units, GPA equivalents
   - Cumulative GPA and academic standing
   - Graduation requirements progress

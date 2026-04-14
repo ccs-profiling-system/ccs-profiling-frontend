@@ -2,6 +2,7 @@ import { RouteObject } from 'react-router-dom';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { CoursesPage } from './pages/CoursesPage';
 import { GradesPage } from './pages/GradesPage';
+import { TranscriptPage } from './pages/TranscriptPage';
 import { ResearchPage } from './pages/ResearchPage';
 import { EventsPage } from './pages/EventsPage';
 import { AdvisorPage } from './pages/AdvisorPage';
@@ -12,6 +13,7 @@ export const studentRoutes: RouteObject[] = [
   { path: '/student/dashboard', element: <StudentDashboard /> },
   { path: '/student/courses', element: <CoursesPage /> },
   { path: '/student/grades', element: <GradesPage /> },
+  { path: '/student/transcript', element: <TranscriptPage /> },
   { path: '/student/research', element: <ResearchPage /> },
   { path: '/student/events', element: <EventsPage /> },
   { path: '/student/advisor', element: <AdvisorPage /> },
