@@ -66,7 +66,7 @@ export function StudentSidebar({ isOpen, onClose }: StudentSidebarProps) {
                   to={link.to}
                   onClick={onClose}
                   className={({ isActive }) =>
-                    `sidebar-nav-item flex items-center gap-3 transition-all duration-200 ${
+                    `sidebar-nav-item flex items-center gap-3 transition-all duration-200 min-h-[44px] ${
                       isActive
                         ? 'sidebar-nav-item-active'
                         : 'text-white/80 hover:text-white hover:bg-white/10'

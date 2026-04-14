@@ -67,8 +67,8 @@ export function StudentLogin() {
         style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.85) 0%, rgba(37,99,235,0.75) 100%)' }}
       />
 
-      {/* Left branding */}
-      <div className="relative z-10 flex-1 flex flex-col justify-between p-12">
+      {/* Left branding - hidden on mobile */}
+      <div className="relative z-10 hidden md:flex flex-1 flex-col justify-between p-12" aria-hidden="true">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <BookOpen className="w-8 h-8 text-white" />
@@ -79,9 +79,14 @@ export function StudentLogin() {
         <p className="text-white/60 text-sm">© 2026 CCS System</p>
       </div>
 
-      {/* Login panel - right side */}
-      <div className="relative z-10 w-[30rem] bg-white flex items-center justify-center p-10">
-        <div className="w-full">
+      {/* Login panel - full width on mobile, fixed width on desktop */}
+      <div className="relative z-10 w-full md:w-[30rem] bg-white flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-sm md:max-w-none">
+          {/* Mobile branding */}
+          <div className="flex items-center gap-3 mb-6 md:hidden">
+            <BookOpen className="w-7 h-7 text-blue-600" />
+          </div>
+
           <div className="p-2">
             <h2 className="text-xl font-bold text-gray-900 mb-1">Welcome, Student</h2>
             <p className="text-gray-500 text-sm mb-6">Sign in to your student account</p>
@@ -99,7 +104,7 @@ export function StudentLogin() {
                   placeholder="student@ccs.edu.ph"
                   required
                   autoComplete="email"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                 />
               </div>
 
@@ -115,7 +120,7 @@ export function StudentLogin() {
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                 />
               </div>
 
