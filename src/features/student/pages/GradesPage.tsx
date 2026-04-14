@@ -230,8 +230,8 @@ export function GradesPage() {
                   <h2 className="text-lg font-semibold text-gray-900 mb-3">{semester}</h2>
                 )}
                 <Card>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
+                  <div className="overflow-x-auto -mx-4 sm:-mx-0">
+                    <table className="w-full min-w-[500px]">
                       <thead>
                         <tr className="border-b border-gray-200">
                           <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">

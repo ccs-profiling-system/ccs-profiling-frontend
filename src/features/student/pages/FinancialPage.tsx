@@ -205,8 +205,8 @@ export function FinancialPage() {
               <p className="text-gray-500">No payments recorded yet.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto -mx-4 sm:-mx-0">
+              <table className="w-full min-w-[400px]">
                 <thead>
                   <tr className="border-b border-gray-200">
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date</th>

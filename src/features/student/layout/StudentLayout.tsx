@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { StudentSidebar } from './StudentSidebar';
 import { StudentNavbar } from './StudentNavbar';
 
@@ -10,8 +10,20 @@ interface StudentLayoutProps {
 export function StudentLayout({ children, title }: StudentLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
   const closeSidebar = () => setSidebarOpen(false);
+
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -19,7 +31,7 @@ export function StudentLayout({ children, title }: StudentLayoutProps) {
       <StudentSidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden w-full lg:w-auto">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Navbar */}
         <StudentNavbar title={title} onMenuClick={toggleSidebar} />
 

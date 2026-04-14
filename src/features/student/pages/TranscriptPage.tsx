@@ -319,8 +319,8 @@ export function TranscriptPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 bg-gray-100 px-3 py-2 rounded">
                     {semester}
                   </h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
+                  <div className="overflow-x-auto -mx-4 sm:-mx-0">
+                    <table className="w-full min-w-[480px]">
                       <thead>
                         <tr className="border-b border-gray-200">
                           <th className="text-left py-2 px-3 text-sm font-semibold text-gray-700">

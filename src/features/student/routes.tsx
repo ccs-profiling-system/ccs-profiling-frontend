@@ -9,6 +9,7 @@ import { AdvisorPage } from './pages/AdvisorPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { ProgressPage } from './pages/ProgressPage';
+import { FinancialPage } from './pages/FinancialPage';
 
 export const studentRoutes: RouteObject[] = [
   { path: '/student/dashboard', element: <StudentDashboard /> },
@@ -21,4 +22,5 @@ export const studentRoutes: RouteObject[] = [
   { path: '/student/advisor', element: <AdvisorPage /> },
   { path: '/student/notifications', element: <NotificationsPage /> },
   { path: '/student/profile', element: <ProfilePage /> },
+  { path: '/student/financial', element: <FinancialPage /> },
 ];

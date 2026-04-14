@@ -222,7 +222,9 @@
 
 ## Phase 6: Financial Records
 
-- [-] 18. Build financial page (view-only)
+- [x] 18. Build financial page (view-only)
+
+
 
 
 
@@ -236,11 +238,19 @@
   - **Property 9: Financial Record Accuracy**
   - **Validates: Requirements 10.1, 10.5**
 
-- [ ] 19. Checkpoint — ensure all tests pass
+- [x] 19. Checkpoint — ensure all tests pass
+
+
+
+
+
 
 ## Phase 7: Polish & Quality
 
-- [ ] 20. Responsive design review
+- [-] 20. Responsive design review
+
+
+
   - Test on mobile, tablet, desktop
   - Ensure sidebar collapses properly on mobile
   - Touch-friendly interactions

@@ -117,8 +117,9 @@ export function SchedulePage() {
         ) : (
           <>
             {/* Weekly Calendar View */}
-            <Card className="overflow-x-auto">
-              <div className="min-w-[800px]">
+            <Card>
+              <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6">
+              <div className="min-w-[700px]">
                 <div className="grid grid-cols-[100px_repeat(7,1fr)] gap-px bg-gray-200">
                   {/* Header Row */}
                   <div className="bg-gray-50 p-3 font-semibold text-sm text-gray-700">
@@ -175,6 +176,7 @@ export function SchedulePage() {
                     </div>
                   ))}
                 </div>
+              </div>
               </div>
             </Card>
 

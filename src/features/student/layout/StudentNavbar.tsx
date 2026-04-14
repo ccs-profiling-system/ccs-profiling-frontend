@@ -24,7 +24,7 @@ export function StudentNavbar({ title, onMenuClick }: StudentNavbarProps) {
           <div className="flex items-center gap-4">
             <button
               onClick={onMenuClick}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="lg:hidden p-2.5 hover:bg-gray-100 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Toggle menu"
             >
               <Menu className="w-6 h-6 text-gray-600" />
@@ -35,17 +35,17 @@ export function StudentNavbar({ title, onMenuClick }: StudentNavbarProps) {
           </div>
 
           {/* Right side - User menu */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => navigate('/student/profile')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Profile"
             >
               <User className="w-6 h-6 text-gray-600" />
             </button>
             <button
               onClick={handleLogout}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 hover:text-red-600"
+              className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 hover:text-red-600 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Logout"
             >
               <LogOut className="w-6 h-6" />
