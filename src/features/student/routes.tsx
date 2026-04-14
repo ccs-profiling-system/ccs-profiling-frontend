@@ -8,12 +8,14 @@ import { EventsPage } from './pages/EventsPage';
 import { AdvisorPage } from './pages/AdvisorPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { ProgressPage } from './pages/ProgressPage';
 
 export const studentRoutes: RouteObject[] = [
   { path: '/student/dashboard', element: <StudentDashboard /> },
   { path: '/student/courses', element: <CoursesPage /> },
   { path: '/student/grades', element: <GradesPage /> },
   { path: '/student/transcript', element: <TranscriptPage /> },
+  { path: '/student/progress', element: <ProgressPage /> },
   { path: '/student/research', element: <ResearchPage /> },
   { path: '/student/events', element: <EventsPage /> },
   { path: '/student/advisor', element: <AdvisorPage /> },

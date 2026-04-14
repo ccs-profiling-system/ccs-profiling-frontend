@@ -112,7 +112,8 @@
   - **Property 8: Transcript Completeness**
   - **Validates: Requirements 4.1**
 
-- [ ] 11. Build academic progress page
+- [x] 11. Build academic progress page
+
 
   - CCS degree requirements checklist
   - Completed vs remaining courses and units
@@ -124,11 +125,18 @@
   - **Property 10: Academic Progress Calculation**
   - **Validates: Requirements 11.2, 11.3**
 
-- [ ] 12. Checkpoint — ensure all tests pass
+- [x] 12. Checkpoint — ensure all tests pass
+
+
+
+
 
 ## Phase 4: Research & Events
 
-- [ ] 13. Build research opportunities page
+- [-] 13. Build research opportunities page
+
+
+
   - Available CCS research projects list
   - Filter by area, faculty, status
   - Project detail modal: description, required skills, deadline, faculty

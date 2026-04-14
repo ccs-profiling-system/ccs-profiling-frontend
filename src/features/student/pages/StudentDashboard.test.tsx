@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { StudentDashboard } from './StudentDashboard';
 import studentService from '@/services/api/studentService';
 import courseService from '@/services/api/courseService';
+import { AuthProvider } from '@/context/AuthContext';
 import type { StudentProfile, Course } from '../types';
 
 // Mock the services
@@ -81,7 +82,9 @@ describe('StudentDashboard', () => {
 
     render(
       <BrowserRouter>
-        <StudentDashboard />
+        <AuthProvider>
+          <StudentDashboard />
+        </AuthProvider>
       </BrowserRouter>
     );
 
@@ -94,7 +97,9 @@ describe('StudentDashboard', () => {
 
     render(
       <BrowserRouter>
-        <StudentDashboard />
+        <AuthProvider>
+          <StudentDashboard />
+        </AuthProvider>
       </BrowserRouter>
     );
 
@@ -109,7 +114,9 @@ describe('StudentDashboard', () => {
 
     render(
       <BrowserRouter>
-        <StudentDashboard />
+        <AuthProvider>
+          <StudentDashboard />
+        </AuthProvider>
       </BrowserRouter>
     );
 
@@ -124,7 +131,9 @@ describe('StudentDashboard', () => {
 
     render(
       <BrowserRouter>
-        <StudentDashboard />
+        <AuthProvider>
+          <StudentDashboard />
+        </AuthProvider>
       </BrowserRouter>
     );
 
@@ -142,7 +151,9 @@ describe('StudentDashboard', () => {
 
     render(
       <BrowserRouter>
-        <StudentDashboard />
+        <AuthProvider>
+          <StudentDashboard />
+        </AuthProvider>
       </BrowserRouter>
     );
 
@@ -157,7 +168,9 @@ describe('StudentDashboard', () => {
 
     render(
       <BrowserRouter>
-        <StudentDashboard />
+        <AuthProvider>
+          <StudentDashboard />
+        </AuthProvider>
       </BrowserRouter>
     );
 
@@ -173,15 +186,20 @@ describe('StudentDashboard', () => {
 
     render(
       <BrowserRouter>
-        <StudentDashboard />
+        <AuthProvider>
+          <StudentDashboard />
+        </AuthProvider>
       </BrowserRouter>
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/view courses/i)).toBeInTheDocument();
-      expect(screen.getByText(/view schedule/i)).toBeInTheDocument();
-      expect(screen.getByText(/check grades/i)).toBeInTheDocument();
-      expect(screen.getByText(/contact advisor/i)).toBeInTheDocument();
+      expect(screen.getByText(/quick actions/i)).toBeInTheDocument();
+      const buttons = screen.getAllByRole('button');
+      const buttonTexts = buttons.map(btn => btn.textContent);
+      expect(buttonTexts).toContain('View Courses');
+      expect(buttonTexts).toContain('Check Grades');
+      expect(buttonTexts).toContain('Research');
+      expect(buttonTexts).toContain('Contact Advisor');
     });
   });
 
@@ -191,7 +209,9 @@ describe('StudentDashboard', () => {
 
     render(
       <BrowserRouter>
-        <StudentDashboard />
+        <AuthProvider>
+          <StudentDashboard />
+        </AuthProvider>
       </BrowserRouter>
     );
 
@@ -208,7 +228,9 @@ describe('StudentDashboard', () => {
 
     render(
       <BrowserRouter>
-        <StudentDashboard />
+        <AuthProvider>
+          <StudentDashboard />
+        </AuthProvider>
       </BrowserRouter>
     );
 
@@ -225,7 +247,9 @@ describe('StudentDashboard', () => {
 
     render(
       <BrowserRouter>
-        <StudentDashboard />
+        <AuthProvider>
+          <StudentDashboard />
+        </AuthProvider>
       </BrowserRouter>
     );
 
