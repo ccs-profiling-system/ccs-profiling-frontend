@@ -146,10 +146,14 @@ export interface FinancialRecord {
   studentId: string;
   balance: number;
   tuitionCharges: number;
-  fees: number;
+  miscFees: number;
+  labFees: number;
+  outstandingAmount: number;
   payments: {
+    id: string;
     amount: number;
     date: string;
+    referenceNumber: string;
     method: string;
   }[];
   dueDate: string;

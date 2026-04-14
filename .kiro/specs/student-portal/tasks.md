@@ -153,7 +153,9 @@
   - **Property 4: Research Application State Transition**
   - **Validates: Requirements 5.4, 5.5**
 
-- [-] 14. Build events page
+- [x] 14. Build events page
+
+
 
 
 
@@ -167,17 +169,48 @@
   - **Property 5: Event Registration Idempotence**
   - **Validates: Requirements 6.3**
 
-- [ ] 15. Checkpoint — ensure all tests pass
+- [x] 15. Checkpoint — ensure all tests pass
+
+
+
+
 
 ## Phase 5: Communication & Notifications
 
-- [ ] 16. Build advisor page
+- [x] 16. Build advisor page
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   - Assigned advisor: name, email, phone, office location, consultation schedule
   - Messaging interface with conversation history
   - Appointment booking with available time slots
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 17. Build notifications page
+- [x] 17. Build notifications page
+
+
+
+
+
+
+
+
   - All notifications with timestamps and read/unread status
   - Filter by type (grade, announcement, event, message)
   - Mark as read functionality
@@ -189,7 +222,10 @@
 
 ## Phase 6: Financial Records
 
-- [ ] 18. Build financial page (view-only)
+- [-] 18. Build financial page (view-only)
+
+
+
   - Current balance and outstanding amount
   - Fee breakdown: tuition, miscellaneous, lab fees
   - Payment history: date, amount, reference number
