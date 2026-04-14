@@ -11,6 +11,9 @@ import { Reports } from '@/features/admin/reports';
 import { Instructions } from '@/features/admin/instructions';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { StudentProtectedRoute } from '@/components/auth/StudentProtectedRoute';
+import { FacultyLogin } from '@/features/faculty/pages/FacultyLogin';
+import { FacultyProtectedRoute } from '@/components/auth/FacultyProtectedRoute';
+import { facultyRoutes } from '@/features/faculty/routes';
 // import { SchedulingPage } from '@/features/admin/scheduling'; // Disabled - data type issues
 import { ResearchPage, ResearchDetailPage } from '@/features/admin/research';
 import { studentRoutes } from '@/features/student/routes';
@@ -21,6 +24,7 @@ export function AppRoutes() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/student/login" element={<StudentLogin />} />
+        <Route path="/faculty/login" element={<FacultyLogin />} />
         <Route
           path="/admin/dashboard"
           element={
@@ -113,6 +117,18 @@ export function AppRoutes() {
               <StudentProtectedRoute>
                 {route.element}
               </StudentProtectedRoute>
+            }
+          />
+        ))}
+        {/* Faculty Portal Routes - wrapped with FacultyProtectedRoute */}
+        {facultyRoutes.map((route) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={
+              <FacultyProtectedRoute>
+                {route.element}
+              </FacultyProtectedRoute>
             }
           />
         ))}
