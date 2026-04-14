@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { StudentDashboard } from './StudentDashboard';
+import { AuthProvider } from '@/context/AuthContext';
 import studentService from '@/services/api/studentService';
 import courseService from '@/services/api/courseService';
 import type { StudentProfile, Course } from '../types';
@@ -80,9 +81,11 @@ describe('StudentDashboard', () => {
     );
 
     render(
-      <BrowserRouter>
-        <StudentDashboard />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <StudentDashboard />
+        </BrowserRouter>
+      </AuthProvider>
     );
 
     expect(screen.getByText(/loading your dashboard/i)).toBeInTheDocument();
@@ -93,9 +96,11 @@ describe('StudentDashboard', () => {
     vi.mocked(courseService.getEnrolledCourses).mockResolvedValue(mockCourses);
 
     render(
-      <BrowserRouter>
-        <StudentDashboard />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <StudentDashboard />
+        </BrowserRouter>
+      </AuthProvider>
     );
 
     await waitFor(() => {
@@ -108,9 +113,11 @@ describe('StudentDashboard', () => {
     vi.mocked(courseService.getEnrolledCourses).mockResolvedValue(mockCourses);
 
     render(
-      <BrowserRouter>
-        <StudentDashboard />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <StudentDashboard />
+        </BrowserRouter>
+      </AuthProvider>
     );
 
     await waitFor(() => {
@@ -123,9 +130,11 @@ describe('StudentDashboard', () => {
     vi.mocked(courseService.getEnrolledCourses).mockResolvedValue(mockCourses);
 
     render(
-      <BrowserRouter>
-        <StudentDashboard />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <StudentDashboard />
+        </BrowserRouter>
+      </AuthProvider>
     );
 
     await waitFor(() => {
@@ -141,9 +150,11 @@ describe('StudentDashboard', () => {
     vi.mocked(courseService.getEnrolledCourses).mockResolvedValue(mockCourses);
 
     render(
-      <BrowserRouter>
-        <StudentDashboard />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <StudentDashboard />
+        </BrowserRouter>
+      </AuthProvider>
     );
 
     await waitFor(() => {
@@ -156,9 +167,11 @@ describe('StudentDashboard', () => {
     vi.mocked(courseService.getEnrolledCourses).mockResolvedValue(mockCourses);
 
     render(
-      <BrowserRouter>
-        <StudentDashboard />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <StudentDashboard />
+        </BrowserRouter>
+      </AuthProvider>
     );
 
     await waitFor(() => {
@@ -172,14 +185,16 @@ describe('StudentDashboard', () => {
     vi.mocked(courseService.getEnrolledCourses).mockResolvedValue(mockCourses);
 
     render(
-      <BrowserRouter>
-        <StudentDashboard />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <StudentDashboard />
+        </BrowserRouter>
+      </AuthProvider>
     );
 
     await waitFor(() => {
       expect(screen.getByText(/view courses/i)).toBeInTheDocument();
-      expect(screen.getByText(/view schedule/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /research/i })).toBeInTheDocument();
       expect(screen.getByText(/check grades/i)).toBeInTheDocument();
       expect(screen.getByText(/contact advisor/i)).toBeInTheDocument();
     });
@@ -190,9 +205,11 @@ describe('StudentDashboard', () => {
     vi.mocked(courseService.getEnrolledCourses).mockRejectedValue(new Error('API Error'));
 
     render(
-      <BrowserRouter>
-        <StudentDashboard />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <StudentDashboard />
+        </BrowserRouter>
+      </AuthProvider>
     );
 
     await waitFor(() => {
@@ -207,9 +224,11 @@ describe('StudentDashboard', () => {
     vi.mocked(courseService.getEnrolledCourses).mockResolvedValue(mockCourses);
 
     render(
-      <BrowserRouter>
-        <StudentDashboard />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <StudentDashboard />
+        </BrowserRouter>
+      </AuthProvider>
     );
 
     await waitFor(() => {
@@ -224,9 +243,11 @@ describe('StudentDashboard', () => {
     vi.mocked(courseService.getEnrolledCourses).mockResolvedValue(mockCourses);
 
     render(
-      <BrowserRouter>
-        <StudentDashboard />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <StudentDashboard />
+        </BrowserRouter>
+      </AuthProvider>
     );
 
     await waitFor(() => {
