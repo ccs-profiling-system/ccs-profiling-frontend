@@ -133,7 +133,12 @@
 
 ## Phase 4: Research & Events
 
-- [-] 13. Build research opportunities page
+- [x] 13. Build research opportunities page
+
+
+
+
+
 
 
 
@@ -148,7 +153,10 @@
   - **Property 4: Research Application State Transition**
   - **Validates: Requirements 5.4, 5.5**
 
-- [ ] 14. Build events page
+- [-] 14. Build events page
+
+
+
   - Upcoming CCS events, seminars, workshops
   - Event details: date, time, venue, available slots
   - Event registration with slot count update
