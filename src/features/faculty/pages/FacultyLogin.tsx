@@ -36,7 +36,7 @@ export function FacultyLogin() {
       {/* Green gradient overlay for faculty portal */}
       <div
         className="absolute inset-0"
-        style={{ background: 'linear-gradient(135deg, rgba(22,163,74,0.85) 0%, rgba(21,128,61,0.75) 100%)' }}
+        style={{ background: 'linear-gradient(135deg, rgba(234,88,12,0.85) 0%, rgba(194,65,12,0.75) 100%)' }}
       />
 
       {/* Left branding */}
@@ -71,7 +71,7 @@ export function FacultyLogin() {
                   placeholder="faculty@ccs.edu.ph"
                   required
                   autoComplete="email"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
 
@@ -87,16 +87,16 @@ export function FacultyLogin() {
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
 
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="w-4 h-4 accent-green-500" />
+                  <input type="checkbox" className="w-4 h-4 accent-orange-500" />
                   <span className="text-sm text-gray-600">Remember me</span>
                 </label>
-                <a href="#" className="text-sm text-green-600 hover:text-green-700 font-medium">
+                <a href="#" className="text-sm text-primary hover:text-primary-dark font-medium">
                   Forgot password?
                 </a>
               </div>
@@ -110,7 +110,7 @@ export function FacultyLogin() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold transition shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-semibold transition shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -124,7 +124,7 @@ export function FacultyLogin() {
 
               <div className="text-center text-sm text-gray-600 mt-6">
                 Not a faculty member?{' '}
-                <a href="/login" className="text-green-600 hover:text-green-700 font-medium">
+                <a href="/login" className="text-primary hover:text-primary-dark font-medium">
                   Admin Login
                 </a>
               </div>
@@ -135,3 +135,5 @@ export function FacultyLogin() {
     </div>
   );
 }
+
+

@@ -17,14 +17,14 @@ const FILTER_LABELS: { value: StatusFilter; label: string }[] = [
 ];
 
 const STATUS_COLORS: Record<FacultyEvent['status'], string> = {
-  upcoming: 'bg-green-100 text-green-800',
+  upcoming: 'bg-orange-100 text-orange-800',
   ongoing: 'bg-blue-100 text-blue-800',
   completed: 'bg-gray-100 text-gray-800',
   cancelled: 'bg-red-100 text-red-800',
 };
 
 const PARTICIPATION_STATUS_COLORS: Record<EventParticipation['status'], string> = {
-  registered: 'bg-green-100 text-green-800',
+  registered: 'bg-orange-100 text-orange-800',
   attended: 'bg-blue-100 text-blue-800',
   absent: 'bg-red-100 text-red-800',
 };
@@ -117,7 +117,7 @@ export function EventsPage() {
               onClick={() => setStatusFilter(value)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 statusFilter === value
-                  ? 'bg-green-600 text-white'
+                  ? 'bg-primary text-white'
                   : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
               }`}
             >
@@ -207,7 +207,7 @@ export function EventsPage() {
                           data-testid={`register-btn-${event.id}`}
                           onClick={() => handleRegister(event.id)}
                           disabled={isRegistering}
-                          className="w-full px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="w-full px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                           {isRegistering ? 'Registering…' : 'Register Participation'}
                         </button>
@@ -349,3 +349,4 @@ export function EventsPage() {
     </FacultyLayout>
   );
 }
+

@@ -81,7 +81,7 @@ export function FacultyDashboard() {
     <FacultyLayout title="Dashboard">
       <div className="space-y-6">
         {/* Welcome Banner */}
-        <div className="bg-gradient-to-r from-green-600 to-green-800 rounded-xl shadow-lg p-6 sm:p-8">
+        <div className="bg-gradient-to-r from-primary to-orange-800 rounded-xl shadow-lg p-6 sm:p-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
             Welcome back, {faculty?.firstName} {faculty?.lastName}!
           </h1>
@@ -101,7 +101,7 @@ export function FacultyDashboard() {
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Assigned this semester</p>
               </div>
-              <BookOpen className="w-8 h-8 text-green-600" />
+              <BookOpen className="w-8 h-8 text-primary" />
             </div>
           </Card>
 
@@ -114,7 +114,7 @@ export function FacultyDashboard() {
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Across all sections</p>
               </div>
-              <Users className="w-8 h-8 text-green-600" />
+              <Users className="w-8 h-8 text-primary" />
             </div>
           </Card>
 
@@ -127,7 +127,7 @@ export function FacultyDashboard() {
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Scheduled events</p>
               </div>
-              <CalendarDays className="w-8 h-8 text-green-600" />
+              <CalendarDays className="w-8 h-8 text-primary" />
             </div>
           </Card>
         </div>
@@ -137,7 +137,7 @@ export function FacultyDashboard() {
           <Card title="Teaching Load">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="flex items-center gap-3">
-                <Layers className="w-6 h-6 text-green-600 flex-shrink-0" />
+                <Layers className="w-6 h-6 text-primary flex-shrink-0" />
                 <div>
                   <p className="text-xs text-gray-500">Total Units</p>
                   <p className="text-xl font-bold text-gray-900" data-testid="teaching-load-units">
@@ -146,7 +146,7 @@ export function FacultyDashboard() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <GraduationCap className="w-6 h-6 text-green-600 flex-shrink-0" />
+                <GraduationCap className="w-6 h-6 text-primary flex-shrink-0" />
                 <div>
                   <p className="text-xs text-gray-500">Total Classes</p>
                   <p className="text-xl font-bold text-gray-900" data-testid="teaching-load-classes">
@@ -155,7 +155,7 @@ export function FacultyDashboard() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Clock className="w-6 h-6 text-green-600 flex-shrink-0" />
+                <Clock className="w-6 h-6 text-primary flex-shrink-0" />
                 <div>
                   <p className="text-xs text-gray-500">Current Semester</p>
                   <p className="text-sm font-semibold text-gray-900" data-testid="teaching-load-semester">
@@ -226,3 +226,4 @@ export function FacultyDashboard() {
     </FacultyLayout>
   );
 }
+

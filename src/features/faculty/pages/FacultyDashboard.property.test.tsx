@@ -275,3 +275,4 @@ describe('Property 9: Teaching load summary is always displayed', () => {
     );
   }, 60000);
 });
+

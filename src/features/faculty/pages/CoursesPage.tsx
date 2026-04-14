@@ -66,7 +66,7 @@ export function CoursesPage() {
           <Card>
             <div className="flex flex-wrap items-center gap-6">
               <div className="flex items-center gap-2">
-                <Layers className="w-5 h-5 text-green-600" />
+                <Layers className="w-5 h-5 text-primary" />
                 <div>
                   <p className="text-xs text-gray-500">Total Units</p>
                   <p className="text-lg font-bold text-gray-900" data-testid="teaching-load-units">
@@ -75,7 +75,7 @@ export function CoursesPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-green-600" />
+                <GraduationCap className="w-5 h-5 text-primary" />
                 <div>
                   <p className="text-xs text-gray-500">Total Classes</p>
                   <p className="text-lg font-bold text-gray-900" data-testid="teaching-load-classes">
@@ -84,7 +84,7 @@ export function CoursesPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-green-600" />
+                <Clock className="w-5 h-5 text-primary" />
                 <div>
                   <p className="text-xs text-gray-500">Current Semester</p>
                   <p className="text-sm font-semibold text-gray-900" data-testid="teaching-load-semester">
@@ -119,7 +119,7 @@ export function CoursesPage() {
                   <div className="space-y-2">
                     <div className="flex items-start justify-between">
                       <span
-                        className="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded"
+                        className="text-xs font-bold text-primary-dark bg-orange-50 px-2 py-0.5 rounded"
                         data-testid={`course-code-${course.subjectId}`}
                       >
                         {course.subjectCode}
@@ -213,7 +213,7 @@ export function CoursesPage() {
 
             <button
               onClick={() => navigate(`/faculty/students?course=${selectedCourse.subjectId}`)}
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+              className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 px-4 rounded-lg transition-colors"
             >
               View Roster
             </button>
@@ -223,3 +223,4 @@ export function CoursesPage() {
     </FacultyLayout>
   );
 }
+

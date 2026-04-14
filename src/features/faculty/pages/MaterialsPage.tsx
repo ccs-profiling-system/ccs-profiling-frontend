@@ -139,7 +139,7 @@ export function MaterialsPage() {
               data-testid="materials-course-select"
               value={selectedCourseId}
               onChange={handleCourseChange}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">-- Select a course --</option>
               {courses.map((course) => (
@@ -157,7 +157,7 @@ export function MaterialsPage() {
                 data-testid="materials-upload-btn"
                 onClick={handleUploadClick}
                 disabled={uploading}
-                className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 {uploading ? 'Uploading…' : 'Upload File'}
               </button>
@@ -228,7 +228,7 @@ export function MaterialsPage() {
                             href={material.downloadUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-green-600 hover:text-green-800 hover:underline"
+                            className="text-primary hover:text-orange-800 hover:underline"
                           >
                             Download
                           </a>
@@ -261,3 +261,4 @@ export function MaterialsPage() {
     </FacultyLayout>
   );
 }
+

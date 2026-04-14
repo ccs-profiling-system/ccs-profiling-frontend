@@ -119,7 +119,7 @@ export function ProfilePage() {
         {saveSuccess && (
           <div
             role="alert"
-            className="rounded-md bg-green-50 border border-green-200 px-4 py-3 text-green-800 text-sm"
+            className="rounded-md bg-orange-50 border border-orange-200 px-4 py-3 text-orange-800 text-sm"
           >
             Profile updated successfully.
           </div>
@@ -141,7 +141,7 @@ export function ProfilePage() {
                   value={form.firstName}
                   onChange={handleChange('firstName')}
                   required
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
 
@@ -157,7 +157,7 @@ export function ProfilePage() {
                   value={form.lastName}
                   onChange={handleChange('lastName')}
                   required
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
             </div>
@@ -175,7 +175,7 @@ export function ProfilePage() {
                 value={form.email}
                 onChange={handleChange('email')}
                 required
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
               {emailError && (
                 <p
@@ -199,7 +199,7 @@ export function ProfilePage() {
                 value={form.department}
                 onChange={handleChange('department')}
                 required
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -214,7 +214,7 @@ export function ProfilePage() {
                 type="text"
                 value={form.position}
                 onChange={handleChange('position')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -229,7 +229,7 @@ export function ProfilePage() {
                 type="text"
                 value={form.specialization}
                 onChange={handleChange('specialization')}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -238,7 +238,7 @@ export function ProfilePage() {
                 type="submit"
                 data-testid="profile-save-btn"
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded-md bg-green-600 px-5 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary-dark disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 {saving ? 'Saving…' : 'Save Changes'}
               </button>
@@ -249,3 +249,4 @@ export function ProfilePage() {
     </FacultyLayout>
   );
 }
+

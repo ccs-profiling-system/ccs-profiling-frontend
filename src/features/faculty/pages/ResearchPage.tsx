@@ -7,7 +7,7 @@ import facultyPortalService from '@/services/api/facultyPortalService';
 import type { FacultyResearchProject, ResearchSubmissionPayload } from '../types';
 
 const STATUS_COLORS: Record<FacultyResearchProject['status'], string> = {
-  ongoing: 'bg-green-100 text-green-800',
+  ongoing: 'bg-orange-100 text-orange-800',
   completed: 'bg-blue-100 text-blue-800',
   proposed: 'bg-yellow-100 text-yellow-800',
 };
@@ -152,7 +152,7 @@ export function ResearchPage() {
             type="button"
             data-testid="new-research-btn"
             onClick={openCreateModal}
-            className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <Plus className="w-4 h-4" />
             New Research
@@ -197,7 +197,7 @@ export function ResearchPage() {
 
                     <p
                       data-testid={`research-role-${project.id}`}
-                      className="text-xs text-green-700 font-medium capitalize"
+                      className="text-xs text-primary-dark font-medium capitalize"
                     >
                       {project.role}
                     </p>
@@ -237,7 +237,7 @@ export function ResearchPage() {
               form="research-form"
               disabled={submitting}
               data-testid="research-form-submit"
-              className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-dark disabled:opacity-50"
             >
               {submitting ? 'Saving…' : editingProject ? 'Save Changes' : 'Create'}
             </button>
@@ -267,7 +267,7 @@ export function ResearchPage() {
               data-testid="research-form-title"
               value={form.title}
               onChange={handleFormChange}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               placeholder="Research project title"
             />
           </div>
@@ -288,7 +288,7 @@ export function ResearchPage() {
               data-testid="research-form-description"
               value={form.description}
               onChange={handleFormChange}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
               placeholder="Describe the research project"
             />
           </div>
@@ -308,7 +308,7 @@ export function ResearchPage() {
               data-testid="research-form-status"
               value={form.status}
               onChange={handleFormChange}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="proposed">Proposed</option>
               <option value="ongoing">Ongoing</option>
@@ -331,7 +331,7 @@ export function ResearchPage() {
               data-testid="research-form-role"
               value={form.role}
               onChange={handleFormChange}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="adviser">Adviser</option>
               <option value="panelist">Panelist</option>
@@ -343,3 +343,4 @@ export function ResearchPage() {
     </FacultyLayout>
   );
 }
+

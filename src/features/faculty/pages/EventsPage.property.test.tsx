@@ -295,3 +295,4 @@ describe('Property 28: Participation history renders all participation records',
     );
   }, 120000);
 });
+

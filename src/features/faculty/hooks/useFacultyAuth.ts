@@ -16,6 +16,18 @@ export function useFacultyAuth() {
       return;
     }
 
+    // Use cached profile from localStorage if available (avoids backend dependency)
+    const cached = localStorage.getItem('faculty');
+    if (cached) {
+      try {
+        setFaculty(JSON.parse(cached));
+        setLoading(false);
+        return;
+      } catch {
+        // cached data malformed, fall through to fetch
+      }
+    }
+
     fetchFacultyProfile();
   }, [navigate]);
 
@@ -24,6 +36,7 @@ export function useFacultyAuth() {
       setLoading(true);
       const profile = await facultyPortalService.getProfile();
       setFaculty(profile);
+      localStorage.setItem('faculty', JSON.stringify(profile));
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load profile');

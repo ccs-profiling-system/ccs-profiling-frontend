@@ -150,3 +150,4 @@ describe('Property 8: Courses page renders all required course fields', () => {
     );
   }, 60000);
 });
+

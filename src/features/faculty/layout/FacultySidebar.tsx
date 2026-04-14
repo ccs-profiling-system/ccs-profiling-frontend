@@ -35,13 +35,13 @@ export function FacultySidebar({ isOpen, onClose }: FacultySidebarProps) {
       <aside
         className={`
           fixed lg:static inset-y-0 left-0 z-50
-          w-56 sm:w-64 bg-green-700 text-white shadow-2xl flex flex-col
+          w-56 sm:w-64 bg-primary text-white shadow-2xl flex flex-col
           transform transition-transform duration-300 ease-in-out
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-green-800/30 bg-gradient-to-br from-green-700 to-green-800">
+        <div className="p-4 sm:p-6 border-b border-orange-900/30 bg-gradient-to-br from-orange-600 to-orange-700">
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/30">
               <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -65,7 +65,7 @@ export function FacultySidebar({ isOpen, onClose }: FacultySidebarProps) {
                     `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
                       isActive
                         ? 'bg-white/20 text-white font-semibold shadow-sm'
-                        : 'text-white/80 hover:text-white hover:bg-green-600/20'
+                        : 'text-white/80 hover:text-white hover:bg-orange-500/20'
                     }`
                   }
                 >
@@ -78,7 +78,7 @@ export function FacultySidebar({ isOpen, onClose }: FacultySidebarProps) {
         </nav>
 
         {/* Footer */}
-        <div className="p-3 sm:p-4 border-t border-green-800/30 bg-gradient-to-t from-green-800/20 to-transparent">
+        <div className="p-3 sm:p-4 border-t border-orange-900/30 bg-gradient-to-t from-orange-700/20 to-transparent">
           <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-3 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-colors">
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/20 flex items-center justify-center border border-white/30 flex-shrink-0">
               <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">

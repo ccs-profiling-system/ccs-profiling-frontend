@@ -145,7 +145,7 @@ export function AttendancePage() {
                 id="attendance-course-select"
                 value={selectedCourseId}
                 onChange={(e) => setSelectedCourseId(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 {courses.length === 0 && <option value="">No courses available</option>}
                 {courses.map((course) => (
@@ -165,7 +165,7 @@ export function AttendancePage() {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
           </div>
@@ -174,7 +174,7 @@ export function AttendancePage() {
         {/* Error / Success feedback */}
         {error && <ErrorAlert title="Error" message={error} />}
         {successMessage && (
-          <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-green-800 text-sm">
+          <div className="rounded-lg bg-orange-50 border border-orange-200 px-4 py-3 text-orange-800 text-sm">
             {successMessage}
           </div>
         )}
@@ -224,7 +224,7 @@ export function AttendancePage() {
                             onChange={(e) =>
                               handleStatusChange(student.id, e.target.value as AttendanceStatus)
                             }
-                            className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                            className="border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                           >
                             <option value="present">Present</option>
                             <option value="absent">Absent</option>
@@ -241,7 +241,7 @@ export function AttendancePage() {
                 <button
                   onClick={handleSubmit}
                   disabled={submitting}
-                  className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-medium px-6 py-2 rounded-lg text-sm transition-colors"
+                  className="bg-primary hover:bg-primary-dark disabled:opacity-50 text-white font-medium px-6 py-2 rounded-lg text-sm transition-colors"
                 >
                   {submitting ? 'Submitting...' : 'Submit Attendance'}
                 </button>
@@ -253,3 +253,4 @@ export function AttendancePage() {
     </FacultyLayout>
   );
 }
+

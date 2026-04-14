@@ -111,7 +111,7 @@ export function StudentsPage() {
                 id="course-select"
                 value={selectedCourseId}
                 onChange={(e) => setSelectedCourseId(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 {courses.length === 0 && (
                   <option value="">No courses available</option>
@@ -237,3 +237,4 @@ export function StudentsPage() {
     </FacultyLayout>
   );
 }
+
