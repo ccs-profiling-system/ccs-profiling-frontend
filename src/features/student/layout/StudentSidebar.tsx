@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, BarChart3, Beaker,
-  CalendarDays, UserRound, Bell, GraduationCap,
+  CalendarDays, UserRound, Bell, GraduationCap, FileText,
 } from 'lucide-react';
 
 interface StudentSidebarProps {
@@ -14,6 +14,7 @@ export function StudentSidebar({ isOpen, onClose }: StudentSidebarProps) {
     { to: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/student/courses', label: 'Courses', icon: BookOpen },
     { to: '/student/grades', label: 'Grades', icon: BarChart3 },
+    { to: '/student/transcript', label: 'Transcript', icon: FileText },
     { to: '/student/research', label: 'Research', icon: Beaker },
     { to: '/student/events', label: 'Events', icon: CalendarDays },
     { to: '/student/advisor', label: 'Advisor', icon: UserRound },

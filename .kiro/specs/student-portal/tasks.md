@@ -97,7 +97,9 @@
   - **Property 2: Grade Display Accuracy**
   - **Validates: Requirements 3.1, 3.2**
 
-- [ ] 10. Build transcript page
+- [x] 10. Build transcript page
+
+
 
   - Complete academic record: all courses, final grades, units, GPA equivalents
   - Cumulative GPA and academic standing
@@ -111,6 +113,7 @@
   - **Validates: Requirements 4.1**
 
 - [ ] 11. Build academic progress page
+
   - CCS degree requirements checklist
   - Completed vs remaining courses and units
   - Estimated graduation term
