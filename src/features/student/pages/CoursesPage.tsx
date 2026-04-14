@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { StudentLayout } from '../layout/StudentLayout';
 import { Card } from '@/components/layout';
 import { Modal } from '@/components/ui/Modal';
+import { LoadingState, ErrorState } from '@/components/ui/PageStates';
 import { BookOpen, Clock, MapPin, Mail, Phone } from 'lucide-react';
 import type { Course } from '../types';
 import { courseService } from '@/services/api/courseService';
@@ -12,19 +13,23 @@ export function CoursesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSemester, setSelectedSemester] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadCourses = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await courseService.getEnrolledCourses();
+      setCourses(data);
+    } catch (error) {
+      console.error('Failed to load courses:', error);
+      setError('Failed to load courses. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadCourses = async () => {
-      try {
-        const data = await courseService.getEnrolledCourses();
-        setCourses(data);
-      } catch (error) {
-        console.error('Failed to load courses:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadCourses();
   }, []);
 
@@ -49,9 +54,15 @@ export function CoursesPage() {
   if (loading) {
     return (
       <StudentLayout title="Courses">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-600">Loading courses...</p>
-        </div>
+        <LoadingState text="Loading courses..." />
+      </StudentLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <StudentLayout title="Courses">
+        <ErrorState message={error} onRetry={loadCourses} />
       </StudentLayout>
     );
   }

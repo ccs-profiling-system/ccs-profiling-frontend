@@ -258,7 +258,8 @@
   - Touch-friendly interactions
   - _Requirements: All_
 
-- [-] 21. Error states and loading states
+- [x] 21. Error states and loading states
+
 
 
 
@@ -267,7 +268,10 @@
   - Empty state illustrations
   - _Requirements: All_
 
-- [ ] 22. Final integration testing
+- [-] 22. Final integration testing
+
+
+
   - All student portal routes accessible after login
   - Logout clears session and redirects to `/student/login`
   - Mock data fallback works when backend is unavailable

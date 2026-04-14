@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { StudentLayout } from '../layout/StudentLayout';
 import { Card } from '@/components/layout';
+import { LoadingState, ErrorState } from '@/components/ui/PageStates';
 import { FileText, Printer, Award, CheckCircle, Clock } from 'lucide-react';
 import type { Grade, Course, StudentProfile, DegreeRequirement } from '../types';
 import { gradeService } from '@/services/api/gradeService';
@@ -21,12 +22,13 @@ export function TranscriptPage() {
   const [transcriptCourses, setTranscriptCourses] = useState<TranscriptCourse[]>([]);
   const [degreeRequirements, setDegreeRequirements] = useState<DegreeRequirement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [academicStanding, setAcademicStanding] = useState<string>('Regular');
 
-  useEffect(() => {
-    const loadTranscriptData = async () => {
-      try {
-        setLoading(true);
+  const loadTranscriptData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
         // Load student profile
         const profileData = await studentService.getProfile();
@@ -65,11 +67,13 @@ export function TranscriptPage() {
         setDegreeRequirements(requirements);
       } catch (error) {
         console.error('Failed to load transcript data:', error);
+        setError('Failed to load transcript. Please try again.');
       } finally {
         setLoading(false);
       }
-    };
+  };
 
+  useEffect(() => {
     loadTranscriptData();
   }, []);
 
@@ -171,9 +175,15 @@ export function TranscriptPage() {
   if (loading) {
     return (
       <StudentLayout title="Transcript">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-600">Loading transcript...</p>
-        </div>
+        <LoadingState text="Loading transcript..." />
+      </StudentLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <StudentLayout title="Transcript">
+        <ErrorState message={error} onRetry={loadTranscriptData} />
       </StudentLayout>
     );
   }

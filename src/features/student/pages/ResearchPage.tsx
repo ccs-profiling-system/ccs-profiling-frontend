@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StudentLayout } from '../layout/StudentLayout';
 import { Card } from '@/components/layout';
+import { ErrorState } from '@/components/ui/PageStates';
 import { Beaker, Search, Filter, X, Clock, Users, Calendar, Mail, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { researchService } from '@/services/api/researchService';
 import type { ResearchOpportunity } from '../types';
@@ -16,6 +17,7 @@ export function ResearchPage() {
   const [opportunities, setOpportunities] = useState<ResearchOpportunity[]>([]);
   const [applications, setApplications] = useState<ResearchApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedOpportunity, setSelectedOpportunity] = useState<ResearchOpportunity | null>(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [applicationForm, setApplicationForm] = useState({
@@ -40,6 +42,7 @@ export function ResearchPage() {
   async function loadOpportunities() {
     try {
       setLoading(true);
+      setError(null);
       const data = await researchService.getOpportunities();
       setOpportunities(data);
       
@@ -48,6 +51,7 @@ export function ResearchPage() {
       setApplications(mockApplications);
     } catch (error) {
       console.error('Failed to load research opportunities:', error);
+      setError('Failed to load research opportunities. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -171,6 +175,11 @@ export function ResearchPage() {
             Explore and apply for CCS research projects
           </p>
         </div>
+
+        {/* Error State */}
+        {error && !loading && (
+          <ErrorState message={error} onRetry={loadOpportunities} />
+        )}
 
         {/* Search and Filter Bar */}
         <Card className="!p-4">

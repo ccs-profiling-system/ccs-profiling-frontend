@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { StudentLayout } from '../layout/StudentLayout';
 import { Card } from '@/components/layout';
+import { LoadingState, ErrorState } from '@/components/ui/PageStates';
 import { 
   GraduationCap, 
   CheckCircle2, 
@@ -16,30 +17,39 @@ import { studentService } from '@/services/api/studentService';
 export function ProgressPage() {
   const [progress, setProgress] = useState<AcademicProgress | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  useEffect(() => {
-    const loadProgress = async () => {
-      try {
-        setLoading(true);
-        const data = await studentService.getAcademicProgress();
-        setProgress(data);
-      } catch (error) {
-        console.error('Failed to load academic progress:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadProgress = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await studentService.getAcademicProgress();
+      setProgress(data);
+    } catch (error) {
+      console.error('Failed to load academic progress:', error);
+      setError('Failed to load academic progress. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadProgress();
   }, []);
 
   if (loading) {
     return (
       <StudentLayout title="Academic Progress">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-600">Loading academic progress...</p>
-        </div>
+        <LoadingState text="Loading academic progress..." />
+      </StudentLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <StudentLayout title="Academic Progress">
+        <ErrorState message={error} onRetry={loadProgress} />
       </StudentLayout>
     );
   }

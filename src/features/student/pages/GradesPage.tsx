@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { StudentLayout } from '../layout/StudentLayout';
 import { Card } from '@/components/layout';
+import { LoadingState, ErrorState } from '@/components/ui/PageStates';
 import { BarChart3, TrendingUp, Award } from 'lucide-react';
 import type { Grade, Course } from '../types';
 import { gradeService } from '@/services/api/gradeService';
@@ -19,13 +20,14 @@ export function GradesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedSemester, setSelectedSemester] = useState<string>('current');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [semesterGPA, setSemesterGPA] = useState<number>(0);
   const [cumulativeGPA, setCumulativeGPA] = useState<number>(0);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
         
         // Load courses to get course details
         const coursesData = await courseService.getEnrolledCourses();
@@ -79,11 +81,13 @@ export function GradesPage() {
         }
       } catch (error) {
         console.error('Failed to load grades:', error);
+        setError('Failed to load grades. Please try again.');
       } finally {
         setLoading(false);
       }
-    };
+  };
 
+  useEffect(() => {
     loadData();
   }, [selectedSemester]);
 
@@ -130,9 +134,15 @@ export function GradesPage() {
   if (loading) {
     return (
       <StudentLayout title="Grades">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-600">Loading grades...</p>
-        </div>
+        <LoadingState text="Loading grades..." />
+      </StudentLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <StudentLayout title="Grades">
+        <ErrorState message={error} onRetry={loadData} />
       </StudentLayout>
     );
   }

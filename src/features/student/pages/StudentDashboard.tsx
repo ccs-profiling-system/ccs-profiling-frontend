@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StudentLayout } from '../layout/StudentLayout';
 import { Card } from '@/components/ui/Card';
+import { ErrorState } from '@/components/ui/PageStates';
 import { BarChart3, BookOpen, Clock, AlertCircle, ArrowRight, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import studentService from '@/services/api/studentService';
@@ -25,41 +26,39 @@ export function StudentDashboard() {
     error: null,
   });
 
+  const fetchDashboardData = async () => {
+    try {
+      setData((prev) => ({ ...prev, loading: true, error: null }));
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout')), 5000)
+      );
+
+      const [profile, courses] = await Promise.race([
+        Promise.all([
+          studentService.getProfile(),
+          courseService.getEnrolledCourses(),
+        ]),
+        timeoutPromise,
+      ]) as [StudentProfile, Course[]];
+
+      setData((prev) => ({
+        ...prev,
+        profile,
+        courses,
+        loading: false,
+      }));
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setData((prev) => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to load dashboard data',
+      }));
+    }
+  };
+
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setData((prev) => ({ ...prev, loading: true, error: null }));
-
-        // Create a timeout promise
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Request timeout')), 5000)
-        );
-
-        // Fetch student profile and courses in parallel with timeout
-        const [profile, courses] = await Promise.race([
-          Promise.all([
-            studentService.getProfile(),
-            courseService.getEnrolledCourses(),
-          ]),
-          timeoutPromise,
-        ]) as [StudentProfile, Course[]];
-
-        setData((prev) => ({
-          ...prev,
-          profile,
-          courses,
-          loading: false,
-        }));
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        setData((prev) => ({
-          ...prev,
-          loading: false,
-          error: 'Failed to load dashboard data',
-        }));
-      }
-    };
-
     fetchDashboardData();
   }, []);
 
@@ -119,12 +118,7 @@ export function StudentDashboard() {
   if (error) {
     return (
       <StudentLayout title="Dashboard">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <p className="text-gray-600">{error}</p>
-          </div>
-        </div>
+        <ErrorState message={error} onRetry={fetchDashboardData} />
       </StudentLayout>
     );
   }

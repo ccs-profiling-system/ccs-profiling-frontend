@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Spinner } from '@/components/ui/Spinner';
+import { ErrorState } from '@/components/ui/PageStates';
 import { User, Mail, Phone, MapPin, Clock, Send, Calendar, CheckCircle } from 'lucide-react';
 import { advisorService } from '@/services/api/advisorService';
 import type { Advisor, Message, Appointment } from '@/features/student/types';
@@ -14,6 +15,7 @@ export function AdvisorPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [bookingAppointment, setBookingAppointment] = useState(false);
   const [messageContent, setMessageContent] = useState('');
@@ -35,6 +37,7 @@ export function AdvisorPage() {
 
   const loadAdvisorData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [advisorData, messagesData, appointmentsData, slotsData] = await Promise.all([
         advisorService.getAdvisor(),
@@ -48,6 +51,7 @@ export function AdvisorPage() {
       setAvailableSlots(slotsData);
     } catch (error) {
       console.error('Failed to load advisor data:', error);
+      setError('Failed to load advisor information. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -117,6 +121,14 @@ export function AdvisorPage() {
         <div className="flex items-center justify-center h-64">
           <Spinner size="lg" />
         </div>
+      </StudentLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <StudentLayout title="Academic Advisor">
+        <ErrorState message={error} onRetry={loadAdvisorData} />
       </StudentLayout>
     );
   }

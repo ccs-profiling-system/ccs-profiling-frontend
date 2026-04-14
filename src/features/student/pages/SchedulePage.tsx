@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { StudentLayout } from '../layout/StudentLayout';
 import { Card } from '@/components/layout';
+import { LoadingState, ErrorState } from '@/components/ui/PageStates';
 import { Calendar, Clock, MapPin, User } from 'lucide-react';
 import type { Course } from '../types';
 import { courseService } from '@/services/api/courseService';
@@ -39,19 +40,23 @@ interface ScheduleEvent {
 export function SchedulePage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadCourses = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await courseService.getEnrolledCourses();
+      setCourses(data.filter(c => c.status === 'enrolled'));
+    } catch (error) {
+      console.error('Failed to load courses:', error);
+      setError('Failed to load schedule. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadCourses = async () => {
-      try {
-        const data = await courseService.getEnrolledCourses();
-        setCourses(data.filter(c => c.status === 'enrolled'));
-      } catch (error) {
-        console.error('Failed to load courses:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadCourses();
   }, []);
 
@@ -86,9 +91,15 @@ export function SchedulePage() {
   if (loading) {
     return (
       <StudentLayout title="Schedule">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-gray-600">Loading schedule...</p>
-        </div>
+        <LoadingState text="Loading schedule..." />
+      </StudentLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <StudentLayout title="Schedule">
+        <ErrorState message={error} onRetry={loadCourses} />
       </StudentLayout>
     );
   }
