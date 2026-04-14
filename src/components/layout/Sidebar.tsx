@@ -1,21 +1,37 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, GraduationCap, Users, FileText, BookOpen,
+  Calendar, Briefcase, FlaskConical,
 } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  variant?: 'admin' | 'chair';
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const navLinks = [
+export function Sidebar({ isOpen, onClose, variant = 'admin' }: SidebarProps) {
+  const adminLinks = [
     { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/admin/students', label: 'Students', icon: GraduationCap },
     { to: '/admin/faculty', label: 'Faculty', icon: Users },
     { to: '/admin/reports', label: 'Reports', icon: FileText },
     { to: '/admin/instructions', label: 'Instructions', icon: BookOpen },
   ];
+
+  const chairLinks = [
+    { to: '/chair/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/chair/students', label: 'Students', icon: GraduationCap },
+    { to: '/chair/faculty', label: 'Faculty', icon: Users },
+    { to: '/chair/schedules', label: 'Schedules', icon: Calendar },
+    { to: '/chair/events', label: 'Events', icon: Briefcase },
+    { to: '/chair/research', label: 'Research', icon: FlaskConical },
+    { to: '/chair/curriculum', label: 'Curriculum', icon: BookOpen },
+    { to: '/chair/reports', label: 'Reports', icon: FileText },
+  ];
+
+  const navLinks = variant === 'chair' ? chairLinks : adminLinks;
+  const portalName = variant === 'chair' ? 'Chair Portal' : 'Admin Portal';
 
   return (
     <>
@@ -39,7 +55,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         {/* Header */}
         <div className="p-6 border-b border-primary-dark/30">
           <h1 className="text-xl font-bold">CCS Profiling</h1>
-          <p className="text-sm text-white/80 mt-1">Admin Portal</p>
+          <p className="text-sm text-white/80 mt-1">{portalName}</p>
         </div>
 
         {/* Navigation */}

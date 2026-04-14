@@ -12,10 +12,15 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Redirect already-authenticated users
+  // Redirect already-authenticated users based on role
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/admin/dashboard', { replace: true });
+      const userRole = localStorage.getItem('userRole');
+      if (userRole === 'chair') {
+        navigate('/chair/dashboard', { replace: true });
+      } else {
+        navigate('/admin/dashboard', { replace: true });
+      }
     }
   }, [isAuthenticated, navigate]);
 
@@ -26,9 +31,23 @@ export function Login() {
     try {
       const response = await authService.login({ email, password });
       login(response);
-      // Use setTimeout to ensure state update completes before navigation
+      
+      // Store user role and department info
+      const userRole = response.user?.role || 'admin';
+      const departmentId = response.user?.department_id;
+      const departmentName = response.user?.department_name;
+      
+      localStorage.setItem('userRole', userRole);
+      if (departmentId) localStorage.setItem('departmentId', departmentId);
+      if (departmentName) localStorage.setItem('departmentName', departmentName);
+      
+      // Role-based redirection
       setTimeout(() => {
-        navigate('/admin/dashboard', { replace: true });
+        if (userRole === 'chair') {
+          navigate('/chair/dashboard', { replace: true });
+        } else {
+          navigate('/admin/dashboard', { replace: true });
+        }
       }, 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');

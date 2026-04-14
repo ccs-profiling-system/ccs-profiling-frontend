@@ -8,9 +8,24 @@ import { Reports } from '@/features/admin/reports';
 import { Instructions } from '@/features/admin/instructions';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
+// Chair Portal Imports
+import { ChairDashboard } from '@/features/chair/dashboard';
+import { ChairStudents } from '@/features/chair/students';
+import { ChairFaculty } from '@/features/chair/faculty';
+import { ChairSchedules } from '@/features/chair/schedules';
+import { ChairEvents } from '@/features/chair/events';
+import { ChairResearch } from '@/features/chair/research';
+import { ChairCurriculum } from '@/features/chair/curriculum';
+import { ChairReports } from '@/features/chair/reports';
+
 export function AppRoutes() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route
@@ -62,6 +77,18 @@ export function AppRoutes() {
           }
         />
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        
+        {/* Chair Portal Routes - DEVELOPMENT MODE: Authentication disabled */}
+        <Route path="/chair/dashboard" element={<ChairDashboard />} />
+        <Route path="/chair/students" element={<ChairStudents />} />
+        <Route path="/chair/faculty" element={<ChairFaculty />} />
+        <Route path="/chair/schedules" element={<ChairSchedules />} />
+        <Route path="/chair/events" element={<ChairEvents />} />
+        <Route path="/chair/research" element={<ChairResearch />} />
+        <Route path="/chair/curriculum" element={<ChairCurriculum />} />
+        <Route path="/chair/reports" element={<ChairReports />} />
+        <Route path="/chair" element={<Navigate to="/chair/dashboard" replace />} />
+        
         <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
