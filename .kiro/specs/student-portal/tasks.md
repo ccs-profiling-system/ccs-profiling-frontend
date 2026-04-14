@@ -40,7 +40,11 @@
   - **Property 1: Dashboard Data Consistency**
   - **Validates: Requirements 1.2**
 
-- [ ] 6. Build profile page
+- [x] 6. Build profile page
+
+
+
+
   - Display: name, student ID, email, phone, program, year level, section, enrollment date, status
   - Edit contact info (phone, email)
   - Notification preferences
@@ -64,6 +68,7 @@
   - **Validates: Requirements 2.1, 2.3**
 
 - [ ] 8. Build schedule page
+
   - Weekly calendar view of enrolled courses
   - Course meeting times and room locations
   - Instructor consultation hours
