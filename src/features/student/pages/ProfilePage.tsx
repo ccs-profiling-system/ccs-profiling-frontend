@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { StudentLayout } from '../layout/StudentLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
-import { User, Mail, Phone, Calendar, BookOpen, Hash, CheckCircle, Edit2, Save, X, Bell, Lock, AlertCircle } from 'lucide-react';
+import { User, Mail, Phone, Calendar, BookOpen, Hash, CheckCircle, Edit2, Save, X, Bell, Lock, AlertCircle, Beaker, Users, ArrowRight } from 'lucide-react';
 import { studentService } from '@/services/api/studentService';
 import type { StudentProfile } from '../types';
 
 export function ProfilePage() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -243,8 +245,48 @@ export function ProfilePage() {
           </div>
         </Card>
 
-        {/* Contact Information */}
-        <Card title="Contact Information" hover={false}>
+        {/* Activity Summary */}
+        <Card title="Activity Summary" hover={false}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div
+              className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg cursor-pointer hover:bg-primary/10 transition-colors"
+              onClick={() => navigate('/student/schedule')}
+            >
+              <BookOpen className="w-8 h-8 text-primary flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-600">Enrolled Courses</p>
+                <p className="text-xl font-bold text-gray-900">View Schedule</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-gray-400" />
+            </div>
+
+            <div
+              className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+              onClick={() => navigate('/student/participation')}
+            >
+              <Users className="w-8 h-8 text-blue-600 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-600">Events & Affiliations</p>
+                <p className="text-xl font-bold text-gray-900">Participation</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-gray-400" />
+            </div>
+
+            <div
+              className="flex items-center gap-3 p-4 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
+              onClick={() => navigate('/student/research')}
+            >
+              <Beaker className="w-8 h-8 text-green-600 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-600">Thesis / Capstone</p>
+                <p className="text-xl font-bold text-gray-900">Research</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-gray-400" />
+            </div>
+          </div>
+        </Card>
+
+        {/* Contact Information */}        <Card title="Contact Information" hover={false}>
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-gray-600">Update your contact details</p>

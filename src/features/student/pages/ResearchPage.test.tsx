@@ -1,10 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { ResearchPage } from './ResearchPage';
 
-// Mock the research service
 vi.mock('@/services/api/researchService', () => ({
   researchService: {
     getOpportunities: vi.fn().mockResolvedValue([]),
@@ -13,7 +12,7 @@ vi.mock('@/services/api/researchService', () => ({
 }));
 
 describe('ResearchPage', () => {
-  it('renders the research opportunities page', async () => {
+  it('renders the research involvement page heading', async () => {
     render(
       <BrowserRouter>
         <AuthProvider>
@@ -22,11 +21,12 @@ describe('ResearchPage', () => {
       </BrowserRouter>
     );
 
-    expect(screen.getAllByText('Research Opportunities').length).toBeGreaterThan(0);
-    expect(screen.getByPlaceholderText(/search by title/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Research Involvement')).toBeInTheDocument();
+    });
   });
 
-  it('displays filter button', () => {
+  it('displays the thesis/capstone section', async () => {
     render(
       <BrowserRouter>
         <AuthProvider>
@@ -35,10 +35,30 @@ describe('ResearchPage', () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByRole('button', { name: /filters/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/my thesis \/ capstone project/i)).toBeInTheDocument();
+    });
   });
 
-  it('displays explore and apply message', () => {
+  it('displays available research opportunities section when opportunities exist', async () => {
+    const { researchService } = await import('@/services/api/researchService');
+    vi.mocked(researchService.getOpportunities).mockResolvedValue([
+      {
+        id: '1',
+        title: 'AI Research Project',
+        description: 'A project on AI',
+        faculty: 'Dr. Smith',
+        facultyEmail: 'smith@ccs.edu',
+        area: 'Machine Learning',
+        requiredSkills: ['Python'],
+        timeCommitment: '10 hrs/week',
+        deadline: '2026-06-01',
+        capacity: 5,
+        applicants: 2,
+        status: 'open',
+      },
+    ]);
+
     render(
       <BrowserRouter>
         <AuthProvider>
@@ -47,6 +67,8 @@ describe('ResearchPage', () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText(/explore and apply for ccs research projects/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('AI Research Project')).toBeInTheDocument();
+    });
   });
 });

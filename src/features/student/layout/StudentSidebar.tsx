@@ -1,8 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, BookOpen, BarChart3, Beaker,
-  CalendarDays, UserRound, Bell, GraduationCap, FileText,
-  TrendingUp, DollarSign,
+  UserRound, CalendarDays, BookOpen, Users, Beaker, GraduationCap,
 } from 'lucide-react';
 
 interface StudentSidebarProps {
@@ -12,17 +10,11 @@ interface StudentSidebarProps {
 
 export function StudentSidebar({ isOpen, onClose }: StudentSidebarProps) {
   const navLinks = [
-    { to: '/student/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/student/courses', label: 'Courses', icon: BookOpen },
-    { to: '/student/grades', label: 'Grades', icon: BarChart3 },
-    { to: '/student/transcript', label: 'Transcript', icon: FileText },
-    { to: '/student/progress', label: 'Progress', icon: TrendingUp },
+    { to: '/student/profile', label: 'My Profile', icon: UserRound },
+    { to: '/student/schedule', label: 'Schedule', icon: CalendarDays },
+    { to: '/student/requirements', label: 'Academic Requirements', icon: BookOpen },
+    { to: '/student/participation', label: 'Participation', icon: Users },
     { to: '/student/research', label: 'Research', icon: Beaker },
-    { to: '/student/events', label: 'Events', icon: CalendarDays },
-    { to: '/student/advisor', label: 'Advisor', icon: UserRound },
-    { to: '/student/notifications', label: 'Notifications', icon: Bell },
-    { to: '/student/financial', label: 'Financial', icon: DollarSign },
-    { to: '/student/profile', label: 'Profile', icon: GraduationCap },
   ];
 
   return (

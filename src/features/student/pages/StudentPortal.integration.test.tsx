@@ -4,17 +4,7 @@ import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { StudentProtectedRoute } from '@/components/auth/StudentProtectedRoute';
 import { StudentLogin } from './StudentLogin';
-import { StudentDashboard } from './StudentDashboard';
-import { CoursesPage } from './CoursesPage';
-import { GradesPage } from './GradesPage';
-import { TranscriptPage } from './TranscriptPage';
-import { ResearchPage } from './ResearchPage';
-import { EventsPage } from './EventsPage';
-import { AdvisorPage } from './AdvisorPage';
-import { NotificationsPage } from './NotificationsPage';
 import { ProfilePage } from './ProfilePage';
-import { ProgressPage } from './ProgressPage';
-import { FinancialPage } from './FinancialPage';
 import { studentRoutes } from '../routes';
 import studentService from '@/services/api/studentService';
 import courseService from '@/services/api/courseService';
@@ -24,10 +14,6 @@ import * as authService from '@/services/api/authService';
 vi.mock('@/services/api/studentService');
 vi.mock('@/services/api/courseService');
 vi.mock('@/services/api/authService');
-vi.mock('@/services/api/gradeService', () => ({
-  default: { getGrades: vi.fn().mockResolvedValue([]) },
-  gradeService: { getGrades: vi.fn().mockResolvedValue([]) },
-}));
 vi.mock('@/services/api/researchService', () => ({
   default: { getOpportunities: vi.fn().mockResolvedValue([]) },
   researchService: { getOpportunities: vi.fn().mockResolvedValue([]) },
@@ -35,18 +21,6 @@ vi.mock('@/services/api/researchService', () => ({
 vi.mock('@/services/api/eventService', () => ({
   default: { getUpcomingEvents: vi.fn().mockResolvedValue([]), getRegisteredEvents: vi.fn().mockResolvedValue([]) },
   eventService: { getUpcomingEvents: vi.fn().mockResolvedValue([]), getRegisteredEvents: vi.fn().mockResolvedValue([]) },
-}));
-vi.mock('@/services/api/advisorService', () => ({
-  default: { getAdvisor: vi.fn().mockResolvedValue(null), getMessages: vi.fn().mockResolvedValue([]) },
-  advisorService: { getAdvisor: vi.fn().mockResolvedValue(null), getMessages: vi.fn().mockResolvedValue([]) },
-}));
-vi.mock('@/services/api/notificationService', () => ({
-  default: { getNotifications: vi.fn().mockResolvedValue([]) },
-  notificationService: { getNotifications: vi.fn().mockResolvedValue([]) },
-}));
-vi.mock('@/services/api/financialService', () => ({
-  default: { getFinancialRecord: vi.fn().mockResolvedValue(null) },
-  financialService: { getFinancialRecord: vi.fn().mockResolvedValue(null) },
 }));
 
 const mockProfile = {
@@ -76,7 +50,6 @@ const mockLoginResponse = {
   },
 };
 
-// Helper: render the full student portal router
 function renderStudentPortal(initialPath = '/student/login') {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
@@ -102,6 +75,17 @@ describe('Student Portal Integration Tests', () => {
     vi.clearAllMocks();
     localStorage.clear();
     vi.mocked(studentService.getProfile).mockResolvedValue(mockProfile);
+    vi.mocked(studentService.getAcademicProgress).mockResolvedValue({
+      studentId: 'STU001',
+      program: 'BS Computer Science',
+      totalRequiredCredits: 120,
+      completedCredits: 60,
+      remainingCredits: 60,
+      completionPercentage: 50,
+      estimatedGraduation: '2026',
+      isAtRisk: false,
+      requirements: [],
+    });
     vi.mocked(courseService.getEnrolledCourses).mockResolvedValue([]);
     vi.mocked(authService.default.login).mockResolvedValue(mockLoginResponse as any);
   });
@@ -113,22 +97,21 @@ describe('Student Portal Integration Tests', () => {
   // ── Route Protection ──────────────────────────────────────────────────────
 
   describe('Route protection', () => {
-    it('redirects unauthenticated users from /student/dashboard to /student/login', async () => {
-      renderStudentPortal('/student/dashboard');
+    it('redirects unauthenticated users from /student/profile to /student/login', async () => {
+      renderStudentPortal('/student/profile');
 
       await waitFor(() => {
-        // StudentProtectedRoute shows spinner then redirects; login form should appear
         expect(screen.queryByText('Welcome, Student')).toBeInTheDocument();
       });
     });
 
-    it('allows authenticated users to access /student/dashboard', async () => {
+    it('allows authenticated users to access /student/profile', async () => {
       localStorage.setItem('studentToken', 'mock-student-token');
 
-      renderStudentPortal('/student/dashboard');
+      renderStudentPortal('/student/profile');
 
       await waitFor(() => {
-        expect(screen.getByText(/welcome back, jane/i)).toBeInTheDocument();
+        expect(screen.getByText(/my profile/i)).toBeInTheDocument();
       });
     });
   });
@@ -141,21 +124,15 @@ describe('Student Portal Integration Tests', () => {
     });
 
     const protectedRoutes = [
-      { path: '/student/dashboard', label: /welcome back/i },
-      { path: '/student/courses', label: /enrolled courses/i },
-      { path: '/student/grades', label: /grades/i },
-      { path: '/student/transcript', label: /transcript/i },
-      { path: '/student/progress', label: /academic progress/i },
-      { path: '/student/research', label: /research opportunities/i },
-      { path: '/student/events', label: /events/i },
-      { path: '/student/advisor', label: /advisor/i },
-      { path: '/student/notifications', label: /notifications/i },
       { path: '/student/profile', label: /profile/i },
-      { path: '/student/financial', label: /financial/i },
+      { path: '/student/schedule', label: /schedule/i },
+      { path: '/student/requirements', label: /academic requirements/i },
+      { path: '/student/participation', label: /participation/i },
+      { path: '/student/research', label: /research/i },
     ];
 
-    protectedRoutes.forEach(({ path, label }) => {
-      it(`renders ${path} without redirecting`, async () => {
+    protectedRoutes.forEach(({ path }) => {
+      it(`renders ${path} without redirecting to login`, async () => {
         renderStudentPortal(path);
 
         await waitFor(() => {
@@ -173,13 +150,12 @@ describe('Student Portal Integration Tests', () => {
       localStorage.setItem('auth_token', 'mock-auth-token');
       localStorage.setItem('auth_user', JSON.stringify(mockProfile));
 
-      renderStudentPortal('/student/dashboard');
+      renderStudentPortal('/student/profile');
 
       await waitFor(() => {
-        expect(screen.getByText(/welcome back, jane/i)).toBeInTheDocument();
+        expect(screen.getByText(/my profile/i)).toBeInTheDocument();
       });
 
-      // Click logout button in navbar
       const logoutButton = screen.getByRole('button', { name: /logout/i });
       fireEvent.click(logoutButton);
 
@@ -193,10 +169,10 @@ describe('Student Portal Integration Tests', () => {
     it('logout redirects to /student/login', async () => {
       localStorage.setItem('studentToken', 'mock-student-token');
 
-      renderStudentPortal('/student/dashboard');
+      renderStudentPortal('/student/profile');
 
       await waitFor(() => {
-        expect(screen.getByText(/welcome back, jane/i)).toBeInTheDocument();
+        expect(screen.getByText(/my profile/i)).toBeInTheDocument();
       });
 
       const logoutButton = screen.getByRole('button', { name: /logout/i });
@@ -212,12 +188,8 @@ describe('Student Portal Integration Tests', () => {
 
   describe('Mock data fallback when backend is unavailable', () => {
     it('studentService.getProfile returns mock data when API fails', async () => {
-      // Restore real implementation for this test
       vi.mocked(studentService.getProfile).mockRestore?.();
 
-      // The real studentService catches errors and returns mock data
-      // We verify the shape of the fallback by calling the actual service
-      // with a network error scenario (already handled inside the service)
       const realStudentService = (await vi.importActual('@/services/api/studentService')) as any;
       const profile = await realStudentService.default.getProfile();
 
@@ -230,23 +202,19 @@ describe('Student Portal Integration Tests', () => {
       });
     });
 
-    it('dashboard renders with mock data when API is unavailable', async () => {
-      // Simulate API failure — service falls back to mock data
+    it('profile page renders with mock data when API is unavailable', async () => {
       vi.mocked(studentService.getProfile).mockRejectedValue(new Error('Network Error'));
-      vi.mocked(courseService.getEnrolledCourses).mockRejectedValue(new Error('Network Error'));
 
       localStorage.setItem('studentToken', 'mock-student-token');
-      renderStudentPortal('/student/dashboard');
+      renderStudentPortal('/student/profile');
 
       await waitFor(() => {
-        // Dashboard should show an error state (not crash) when API fails
-        const errorEl = screen.queryByText(/failed to load dashboard data/i);
+        const errorEl = screen.queryByText(/failed to load profile/i);
         expect(errorEl).toBeInTheDocument();
       });
     });
 
     it('authService returns mock token when backend is unavailable', async () => {
-      // Restore real implementation
       vi.mocked(authService.default.login).mockRestore?.();
 
       const realAuthService = (await vi.importActual('@/services/api/authService')) as any;
