@@ -17,14 +17,12 @@ export function PaginationExample() {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     // In real usage, trigger API call here with new page
-    console.log('Fetching page:', page);
   };
 
   const handleItemsPerPageChange = (limit: number) => {
     setItemsPerPage(limit);
     setCurrentPage(1); // Reset to first page when changing items per page
     // In real usage, trigger API call here with new limit
-    console.log('Fetching with limit:', limit);
   };
 
   return (

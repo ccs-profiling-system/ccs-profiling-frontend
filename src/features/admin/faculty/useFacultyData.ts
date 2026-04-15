@@ -30,11 +30,20 @@ export function useFacultyData(): UseFacultyDataReturn {
       setError(null);
       const [facultyResponse, statsData] = await Promise.all([
         facultyService.getFaculty(filters, page, 20),
-        facultyService.getFacultyStatistics().catch(() => null),
+        facultyService.getFacultyStats().catch(() => null),
       ]);
       setFaculty(facultyResponse.data ?? []);
       setTotal(facultyResponse.meta?.total ?? facultyResponse.total ?? 0);
-      setStats(statsData);
+      
+      // Map new stats format to old format for compatibility
+      if (statsData) {
+        setStats({
+          totalFaculty: statsData.total_faculty,
+          activeFaculty: statsData.active_faculty,
+          inactiveFaculty: statsData.inactive_faculty,
+          onLeaveFaculty: 0, // Not in new stats, keep for compatibility
+        });
+      }
     } catch (err: unknown) {
       setError('Failed to connect to server. Showing sample data.');
       // Mock fallback — mirrors the confirmed POST /faculty fields

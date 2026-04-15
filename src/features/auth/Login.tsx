@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import authService from '@/services/api/authService';
 
@@ -75,7 +75,7 @@ export function Login() {
           <h1 className="text-white text-2xl font-bold">CCS Profiling</h1>
           <p className="text-white/80 text-sm mt-1">Admin Portal</p>
         </div>
-        <p className="text-white/60 text-sm">┬⌐ 2026 CCS System</p>
+        <p className="text-white/60 text-sm">&copy; 2026 CCS System</p>
       </div>
 
       {/* Login panel - right side */}
@@ -140,12 +140,19 @@ export function Login() {
                 {loading ? (
                   <>
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Signing inΓÇª
+                    Signing in...
                   </>
                 ) : (
                   'Sign In'
                 )}
               </button>
+
+              <p className="text-center text-sm text-gray-600 mt-4">
+                Don't have an account?{' '}
+                <Link to="/register" className="text-primary hover:text-primary-dark font-medium">
+                  Create account
+                </Link>
+              </p>
             </form>
           </div>
         </div>

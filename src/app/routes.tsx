@@ -1,12 +1,20 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AdminDashboard } from '@/features/admin/dashboard';
 import { Login } from '@/features/auth/Login';
+import { Register } from '@/features/auth/Register';
+import { StudentLogin } from '@/features/student/pages/StudentLogin';
 import { EventsPage } from '@/features/admin/events';
+import { EventsErrorBoundary } from '@/features/admin/events/EventsErrorBoundary';
 import { Students } from '@/features/admin/students';
+import { StudentDetailPage } from '@/features/admin/students/StudentDetailPage';
 import { Faculty } from '@/features/admin/faculty';
 import { Reports } from '@/features/admin/reports';
 import { Instructions } from '@/features/admin/instructions';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { StudentProtectedRoute } from '@/components/auth/StudentProtectedRoute';
+// import { SchedulingPage } from '@/features/admin/scheduling'; // Disabled - data type issues
+import { ResearchPage, ResearchDetailPage } from '@/features/admin/research';
+import { studentRoutes } from '@/features/student/routes';
 
 // Chair Portal Imports
 import { ChairDashboard } from '@/features/chair/dashboard';
@@ -27,6 +35,8 @@ export function AppRoutes() {
     >
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/student/login" element={<StudentLogin />} />
         <Route
           path="/admin/dashboard"
           element={
@@ -40,6 +50,14 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <Students />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/students/:id"
+          element={
+            <ProtectedRoute>
+              <StudentDetailPage />
             </ProtectedRoute>
           }
         />
@@ -71,10 +89,49 @@ export function AppRoutes() {
           path="/admin/events"
           element={
             <ProtectedRoute>
-              <EventsPage />
+              <EventsErrorBoundary>
+                <EventsPage />
+              </EventsErrorBoundary>
             </ProtectedRoute>
           }
         />
+        {/* Scheduling route disabled due to data type issues - will be fixed */}
+        {/* <Route
+          path="/admin/scheduling"
+          element={
+            <ProtectedRoute>
+              <SchedulingPage />
+            </ProtectedRoute>
+          }
+        /> */}
+        <Route
+          path="/admin/research"
+          element={
+            <ProtectedRoute>
+              <ResearchPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/research/:id"
+          element={
+            <ProtectedRoute>
+              <ResearchDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Student Portal Routes - wrapped with StudentProtectedRoute */}
+        {studentRoutes.map((route) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={
+              <StudentProtectedRoute>
+                {route.element}
+              </StudentProtectedRoute>
+            }
+          />
+        ))}
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
         
         {/* Chair Portal Routes - Protected with Authentication */}

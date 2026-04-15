@@ -1,3 +1,1 @@
-export function Scheduling() {
-  return <div>Scheduling Management</div>;
-}
+export { SchedulingPage } from './SchedulingPage';

@@ -41,24 +41,37 @@ export interface StudentActivity {
 
 export interface Violation {
   id: string;
-  date: string;
-  type: string;
+  student_id?: string;
+  violation_type: string;
   description: string;
-  actionTaken: string;
-  recordedBy: string;
+  violation_date: string;
+  resolution_status?: 'pending' | 'resolved' | 'dismissed';
+  resolution_notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  // Legacy fields for backward compatibility
+  date?: string;
+  type?: string;
+  actionTaken?: string;
+  recordedBy?: string;
 }
 
 export interface StudentSkill {
+  id?: string;
   skillName: string;
   category: 'technical' | 'soft' | 'other';
-  proficiencyLevel?: string;
+  proficiencyLevel?: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  yearsOfExperience?: number;
 }
 
 export interface StudentAffiliation {
+  id?: string;
   organizationName: string;
   type: 'organization' | 'sports' | 'other';
   role?: string;
   joinDate?: string;
+  endDate?: string;
+  isActive?: boolean;
 }
 
 export interface StudentFilters {
@@ -66,10 +79,10 @@ export interface StudentFilters {
   yearLevel?: number | string;
   status?: Student['status'];
   search?: string;
+  skill?: string | string[]; // Support both single and multiple skills
 }
 
 export interface CreateStudentRequest {
-  studentId: string;
   firstName: string;
   lastName: string;
   email: string;

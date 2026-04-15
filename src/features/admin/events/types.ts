@@ -1,10 +1,51 @@
+export type EventStatus = 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
 export type EventType = 'seminar' | 'workshop' | 'defense' | 'meeting' | 'other';
-export type EventStatus = 'upcoming' | 'ongoing' | 'completed';
+
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  type: EventType;
+  status: EventStatus;
+  venue?: string;
+  participants?: Participant[];
+  attachments?: FileAttachment[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateEventPayload {
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  type: EventType;
+  venue?: string;
+  status?: EventStatus;
+}
+
+export interface UpdateEventPayload {
+  title?: string;
+  description?: string;
+  date?: string;
+  location?: string;
+  type?: EventType;
+  venue?: string;
+  status?: EventStatus;
+}
 
 export interface Participant {
   id: string;
   name: string;
-  role: 'student' | 'faculty';
+  email?: string;
+  role?: string;
+}
+
+export interface AssignParticipantsPayload {
+  eventId: string;
+  participantIds: string[];
 }
 
 export interface FileAttachment {
@@ -12,36 +53,16 @@ export interface FileAttachment {
   filename: string;
   fileType: 'pdf' | 'image' | 'document';
   url: string;
-  uploadedAt: string;
+  size?: number;
+  uploadedAt?: string;
 }
 
-export interface Event {
-  id: string;
-  title: string;
-  type: EventType;
-  date: string; // ISO 8601 datetime string
-  venue: string;
-  status: EventStatus;
-  researchId?: string;
-  subjectIds?: string[];
-  participants: Participant[];
-  attachments: FileAttachment[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateEventPayload {
-  title: string;
-  type: EventType;
-  date: string;
-  venue: string;
-  status?: EventStatus;
-  researchId?: string;
-  subjectIds?: string[];
-}
-
-export interface UpdateEventPayload extends Partial<CreateEventPayload> {}
-
-export interface AssignParticipantsPayload {
-  participantIds: string[];
+export interface EventFormErrors {
+  title?: string;
+  description?: string;
+  date?: string;
+  location?: string;
+  type?: string;
+  venue?: string;
+  status?: string;
 }

@@ -6,7 +6,7 @@ const BYPASS_AUTH = import.meta.env.VITE_BYPASS_AUTH === 'true';
 
 // Create Axios instance with default config
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ api.interceptors.response.use(
           console.error('API Error:', error.response.data);
       }
     } else if (error.request) {
-      console.error('Network error - no response received');
+      console.warn('Network error - backend unavailable, using mock data');
     } else {
       console.error('Error:', error.message);
     }

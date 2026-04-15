@@ -296,7 +296,7 @@ export function AdminDashboard() {
         </div>
 
         {/* Aside - Priority Alerts, Upcoming Events, Status Cards & Analytics - Right Column */}
-        <div className="lg:col-span-4 space-y-4 sm:space-y-6">
+        <div className="lg:col-span-4 space-y-4 sm:space-y-6 overflow-y-auto scrollbar-hide max-h-screen">
           <DashboardAside />
           
           {/* Status Overview - 2x2 Grid */}

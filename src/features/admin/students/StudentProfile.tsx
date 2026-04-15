@@ -102,28 +102,82 @@ function EnrollmentsTab({ studentId }: { studentId: string }) {
 }
 
 // ── Activities Tab ─────────────────────────────────────────────────────────────
+const EVENT_TYPE_STYLES: Record<string, string> = {
+  seminar:  'bg-blue-100 text-blue-800',
+  workshop: 'bg-purple-100 text-purple-800',
+  defense:  'bg-orange-100 text-orange-800',
+  meeting:  'bg-gray-100 text-gray-700',
+  other:    'bg-teal-100 text-teal-800',
+};
+
+function ActivityTypeBadge({ type }: { type: string }) {
+  const cls = EVENT_TYPE_STYLES[type?.toLowerCase()] ?? EVENT_TYPE_STYLES.other;
+  return (
+    <span className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium capitalize ${cls}`}>
+      {type || 'other'}
+    </span>
+  );
+}
+
 function ActivitiesTab({ studentId }: { studentId: string }) {
   const [activities, setActivities] = useState<StudentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    studentsService.getStudentActivities(studentId)
+  const load = useCallback((): void => {
+    setLoading(true);
+    setError(null);
+    studentsService
+      .getStudentActivities(studentId)
       .then(setActivities)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Failed to load'))
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Failed to load activities'))
       .finally(() => setLoading(false));
   }, [studentId]);
 
+  useEffect(() => { load(); }, [load]);
+
   if (loading) return <Spinner size="sm" />;
-  if (error) return <ErrorAlert message={error} />;
-  if (activities.length === 0) return <p className="text-gray-500 text-sm">No activities recorded.</p>;
+  if (error) return <ErrorAlert message={error} onRetry={load} />;
+
+  if (activities.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-gray-500 text-sm">No activities recorded for this student.</p>
+        <p className="text-gray-400 text-xs mt-1">
+          Activities are auto-linked when the student is added as a participant in an event.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-2">
-      {activities.map((act) => (
-        <div key={act.eventId} className="p-3 bg-gray-50 rounded-lg">
-          <p className="font-medium text-sm text-gray-800">{act.eventName}</p>
-          <p className="text-xs text-gray-500">{act.type} · {act.participationDate}{act.role ? ` · ${act.role}` : ''}</p>
+    <div className="space-y-3">
+      <p className="text-xs text-gray-500">{activities.length} event{activities.length !== 1 ? 's' : ''} participated</p>
+      {activities.map((activity, idx) => (
+        <div
+          key={`${activity.eventId}-${idx}`}
+          className="flex items-start justify-between gap-3 border border-gray-200 rounded-lg p-4"
+        >
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm text-gray-900 truncate">{activity.eventName}</p>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <ActivityTypeBadge type={activity.type} />
+              {activity.participationDate && (
+                <span className="text-xs text-gray-500">
+                  {new Date(activity.participationDate).toLocaleDateString('en-PH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </span>
+              )}
+            </div>
+          </div>
+          {activity.role && (
+            <span className="flex-shrink-0 text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded capitalize">
+              {activity.role}
+            </span>
+          )}
         </div>
       ))}
     </div>
@@ -140,7 +194,13 @@ function ViolationsTab({ studentId }: { studentId: string }) {
   const [deleteTarget, setDeleteTarget] = useState<Violation | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [vForm, setVForm] = useState({ date: '', type: '', description: '', actionTaken: '', recordedBy: '' });
+  const [vForm, setVForm] = useState({ 
+    violation_type: '', 
+    description: '', 
+    violation_date: '', 
+    resolution_status: 'pending' as 'pending' | 'resolved' | 'dismissed',
+    resolution_notes: '' 
+  });
 
   const load = useCallback((): void => {
     setLoading(true);
@@ -153,14 +213,20 @@ function ViolationsTab({ studentId }: { studentId: string }) {
   useEffect(() => { load(); }, [load]);
 
   const openAdd = (): void => {
-    setVForm({ date: '', type: '', description: '', actionTaken: '', recordedBy: '' });
+    setVForm({ violation_type: '', description: '', violation_date: '', resolution_status: 'pending', resolution_notes: '' });
     setFormError(null);
     setIsAddOpen(true);
   };
 
   const openEdit = (v: Violation): void => {
     setEditTarget(v);
-    setVForm({ date: v.date, type: v.type, description: v.description, actionTaken: v.actionTaken, recordedBy: v.recordedBy });
+    setVForm({ 
+      violation_type: v.violation_type, 
+      description: v.description, 
+      violation_date: v.violation_date, 
+      resolution_status: v.resolution_status ?? 'pending',
+      resolution_notes: v.resolution_notes ?? '' 
+    });
     setFormError(null);
   };
 
@@ -169,7 +235,7 @@ function ViolationsTab({ studentId }: { studentId: string }) {
     setFormError(null);
     try {
       if (editTarget) {
-        await studentsService.updateStudentViolation(studentId, editTarget.id, vForm);
+        await studentsService.updateStudentViolation(editTarget.id, vForm);
         setEditTarget(null);
       } else {
         await studentsService.addStudentViolation(studentId, vForm);
@@ -187,7 +253,7 @@ function ViolationsTab({ studentId }: { studentId: string }) {
     if (!deleteTarget) return;
     setSaving(true);
     try {
-      await studentsService.deleteStudentViolation(studentId, deleteTarget.id);
+      await studentsService.deleteStudentViolation(deleteTarget.id);
       setDeleteTarget(null);
       load();
     } catch (e: unknown) {
@@ -197,7 +263,19 @@ function ViolationsTab({ studentId }: { studentId: string }) {
     }
   };
 
-  const vSet = (field: keyof typeof vForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const handleResolve = async (violationId: string): Promise<void> => {
+    setSaving(true);
+    try {
+      await studentsService.resolveStudentViolation(violationId);
+      load();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to resolve');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const vSet = (field: keyof typeof vForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setVForm((prev) => ({ ...prev, [field]: e.target.value }));
 
   const ViolationForm = () => (
@@ -205,24 +283,28 @@ function ViolationsTab({ studentId }: { studentId: string }) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-          <input type="date" value={vForm.date} onChange={vSet('date')} required />
+          <input type="date" value={vForm.violation_date} onChange={vSet('violation_date')} required className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-          <input type="text" value={vForm.type} onChange={vSet('type')} placeholder="e.g. Academic" required />
+          <input type="text" value={vForm.violation_type} onChange={vSet('violation_type')} placeholder="e.g. Academic" required className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
         </div>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-        <textarea value={vForm.description} onChange={vSet('description')} rows={2} placeholder="Describe the violation" required className="w-full" />
+        <textarea value={vForm.description} onChange={vSet('description')} rows={2} placeholder="Describe the violation" required className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Action Taken</label>
-        <input type="text" value={vForm.actionTaken} onChange={vSet('actionTaken')} placeholder="e.g. Warning issued" required />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select value={vForm.resolution_status} onChange={vSet('resolution_status')} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
+          <option value="pending">Pending</option>
+          <option value="resolved">Resolved</option>
+          <option value="dismissed">Dismissed</option>
+        </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Recorded By</label>
-        <input type="text" value={vForm.recordedBy} onChange={vSet('recordedBy')} placeholder="Name of recorder" required />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Resolution Notes</label>
+        <textarea value={vForm.resolution_notes} onChange={vSet('resolution_notes')} rows={2} placeholder="Optional notes" className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
       </div>
       {formError && <p className="text-red-600 text-sm">{formError}</p>}
       <div className="flex gap-3 pt-2">
@@ -252,11 +334,23 @@ function ViolationsTab({ studentId }: { studentId: string }) {
             <div key={v.id} className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
-                  <p className="font-medium text-sm text-gray-800">{v.type} — {v.date}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm text-gray-800">{v.violation_type} — {v.violation_date}</p>
+                    <span className={`px-2 py-0.5 text-xs rounded-full ${
+                      v.resolution_status === 'resolved' ? 'bg-green-100 text-green-700' :
+                      v.resolution_status === 'dismissed' ? 'bg-gray-100 text-gray-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {v.resolution_status ?? 'pending'}
+                    </span>
+                  </div>
                   <p className="text-sm text-gray-600 mt-1">{v.description}</p>
-                  <p className="text-xs text-gray-500 mt-1">Action: {v.actionTaken} · By: {v.recordedBy}</p>
+                  {v.resolution_notes && <p className="text-xs text-gray-500 mt-1">Notes: {v.resolution_notes}</p>}
                 </div>
                 <div className="flex gap-1">
+                  {v.resolution_status === 'pending' && (
+                    <button type="button" onClick={() => handleResolve(v.id)} disabled={saving} className="p-1.5 hover:bg-green-50 rounded text-gray-500 hover:text-green-600 transition text-xs">Resolve</button>
+                  )}
                   <button type="button" onClick={() => openEdit(v)} className="p-1.5 hover:bg-primary/10 rounded text-gray-500 hover:text-primary transition text-xs">Edit</button>
                   <button type="button" onClick={() => setDeleteTarget(v)} className="p-1.5 hover:bg-red-50 rounded text-gray-500 hover:text-red-600 transition text-xs">Delete</button>
                 </div>
@@ -291,42 +385,105 @@ function ViolationsTab({ studentId }: { studentId: string }) {
 }
 
 // ── Skills Tab ─────────────────────────────────────────────────────────────────
-function SkillsTab({ studentId }: { studentId: string }) {
+function SkillsTab({ studentId, onSkillAdded }: { studentId: string; onSkillAdded?: () => void }) {
   const [skills, setSkills] = useState<StudentSkill[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<'technical' | 'soft' | 'sports'>('technical');
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
+  // Pre-defined skills by category
+  const predefinedSkills = {
+    technical: [
+      'JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 'C#', 'PHP', 'Ruby',
+      'React', 'Angular', 'Vue.js', 'Node.js', 'Express', 'Django', 'Flask',
+      'SQL', 'MongoDB', 'PostgreSQL', 'MySQL', 'Redis',
+      'Git', 'Docker', 'Kubernetes', 'AWS', 'Azure', 'GCP',
+      'HTML/CSS', 'REST API', 'GraphQL', 'Microservices',
+      'Machine Learning', 'Data Analysis', 'AI', 'Cybersecurity',
+      'Mobile Development', 'Web Development', 'Game Development',
+      'UI/UX Design', 'Graphic Design', 'Video Editing'
+    ],
+    soft: [
+      'Communication', 'Leadership', 'Teamwork', 'Problem Solving',
+      'Critical Thinking', 'Time Management', 'Adaptability', 'Creativity',
+      'Public Speaking', 'Presentation Skills', 'Negotiation', 'Conflict Resolution',
+      'Emotional Intelligence', 'Decision Making', 'Project Management',
+      'Organization', 'Attention to Detail', 'Work Ethic', 'Collaboration',
+      'Active Listening', 'Empathy', 'Flexibility', 'Initiative'
+    ],
+    sports: [
+      'Basketball', 'Volleyball', 'Football', 'Soccer', 'Baseball',
+      'Tennis', 'Badminton', 'Table Tennis', 'Swimming', 'Track and Field',
+      'Chess', 'Martial Arts', 'Boxing', 'Taekwondo', 'Karate',
+      'Cycling', 'Running', 'Gymnastics', 'Dance', 'Cheerleading',
+      'E-Sports', 'Gaming', 'Archery', 'Bowling', 'Golf'
+    ]
+  };
+
+  const load = useCallback((): void => {
+    setLoading(true);
     studentsService.getStudentSkills(studentId)
       .then(setSkills)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, [studentId]);
 
-  const tags: Tag[] = skills.map((s) => ({ name: s.skillName, category: s.category }));
+  useEffect(() => { load(); }, [load]);
 
-  const handleAdd = async (tag: Tag): Promise<void> => {
-    const updated: StudentSkill[] = [...skills, { skillName: tag.name, category: (tag.category ?? 'other') as StudentSkill['category'] }];
+  // Get existing skill names to filter them out
+  const existingSkillNames = skills.map(s => s.skillName);
+  const availableSkills = predefinedSkills[selectedCategory]
+    .filter(skill => !existingSkillNames.includes(skill))
+    .filter(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const toggleSkill = (skill: string) => {
+    setSelectedSkills(prev => 
+      prev.includes(skill) 
+        ? prev.filter(s => s !== skill)
+        : [...prev, skill]
+    );
+  };
+
+  const handleAddSkills = async (): Promise<void> => {
+    if (selectedSkills.length === 0) return;
+    
     setSaving(true);
+    setError(null);
     try {
-      const saved = await studentsService.updateStudentSkills(studentId, updated);
-      setSkills(saved);
+      // Add all selected skills
+      await Promise.all(
+        selectedSkills.map(skillName =>
+          studentsService.addStudentSkill(studentId, {
+            skill_name: skillName,
+            proficiency_level: 'beginner',
+          })
+        )
+      );
+      setIsAddOpen(false);
+      setSelectedSkills([]);
+      setSearchQuery('');
+      load();
+      onSkillAdded?.();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to save');
+      console.error('[SkillsTab] Error adding skills:', e);
+      setError(e instanceof Error ? e.message : 'Failed to add skills');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleRemove = async (tag: Tag): Promise<void> => {
-    const updated = skills.filter((s) => !(s.skillName === tag.name && s.category === tag.category));
+  const handleRemove = async (skillId: string): Promise<void> => {
     setSaving(true);
+    setError(null);
     try {
-      const saved = await studentsService.updateStudentSkills(studentId, updated);
-      setSkills(saved);
+      await studentsService.deleteStudentSkill(skillId);
+      load();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to save');
+      setError(e instanceof Error ? e.message : 'Failed to remove skill');
     } finally {
       setSaving(false);
     }
@@ -336,16 +493,209 @@ function SkillsTab({ studentId }: { studentId: string }) {
   if (error) return <ErrorAlert message={error} />;
 
   return (
-    <div>
-      <p className="text-sm text-gray-600 mb-3">Add or remove student skills. Press Enter or comma to add.</p>
-      <TagInput
-        tags={tags}
-        onAdd={handleAdd}
-        onRemove={handleRemove}
-        categories={['technical', 'soft', 'other']}
-        placeholder="Add skill…"
-        disabled={saving}
-      />
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setIsAddOpen(true)}
+          className="px-4 py-2 bg-primary hover:bg-primary-dark text-white text-sm rounded-lg transition"
+        >
+          + Add Skills
+        </button>
+      </div>
+
+      {/* Skills List */}
+      {skills.length === 0 ? (
+        <p className="text-gray-500 text-sm text-center py-8">No skills added yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {/* Group by category */}
+          {['technical', 'soft', 'sports'].map((category) => {
+            const categorySkills = skills.filter(s => s.category === category);
+            if (categorySkills.length === 0) return null;
+            
+            return (
+              <div key={category} className="border border-gray-200 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 capitalize">{category} Skills</h4>
+                <div className="flex flex-wrap gap-2">
+                  {categorySkills.map((skill) => (
+                    <span
+                      key={skill.id}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm ${
+                        category === 'technical' ? 'bg-blue-100 text-blue-800' :
+                        category === 'soft' ? 'bg-green-100 text-green-800' :
+                        'bg-orange-100 text-orange-800'
+                      }`}
+                    >
+                      {skill.skillName}
+                      {skill.proficiencyLevel && (
+                        <span className="text-xs opacity-70">({skill.proficiencyLevel})</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => skill.id && handleRemove(skill.id)}
+                        disabled={saving}
+                        className="ml-1 hover:opacity-70 transition"
+                        aria-label={`Remove ${skill.skillName}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Add Skills Modal */}
+      <Modal
+        isOpen={isAddOpen}
+        onClose={() => {
+          setIsAddOpen(false);
+          setSelectedSkills([]);
+          setSearchQuery('');
+          setError(null);
+        }}
+        title="Add Skills"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Category
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {(['technical', 'soft', 'sports'] as const).map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    setSelectedSkills([]);
+                    setSearchQuery('');
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                    selectedCategory === cat
+                      ? cat === 'technical' ? 'bg-blue-600 text-white' :
+                        cat === 'soft' ? 'bg-green-600 text-white' :
+                        'bg-orange-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Search Skills
+            </label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Type to search..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Skills ({selectedSkills.length} selected)
+            </label>
+            {availableSkills.length === 0 ? (
+              <p className="text-gray-500 text-sm text-center py-8">
+                {searchQuery 
+                  ? `No skills found matching "${searchQuery}"`
+                  : `All ${selectedCategory} skills have been added.`
+                }
+              </p>
+            ) : (
+              <div className="border border-gray-300 rounded-lg p-3 max-h-64 overflow-y-auto">
+                <div className="space-y-1">
+                  {availableSkills.map((skill) => (
+                    <label
+                      key={skill}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition ${
+                        selectedSkills.includes(skill)
+                          ? selectedCategory === 'technical' ? 'bg-blue-50 border border-blue-200' :
+                            selectedCategory === 'soft' ? 'bg-green-50 border border-green-200' :
+                            'bg-orange-50 border border-orange-200'
+                          : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedSkills.includes(skill)}
+                        onChange={() => toggleSkill(skill)}
+                        className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                      />
+                      <span className="text-sm text-gray-700">{skill}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {selectedSkills.length > 0 && (
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs font-medium text-gray-600 mb-2">Selected skills:</p>
+              <div className="flex flex-wrap gap-1">
+                {selectedSkills.map((skill) => (
+                  <span
+                    key={skill}
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${
+                      selectedCategory === 'technical' ? 'bg-blue-100 text-blue-800' :
+                      selectedCategory === 'soft' ? 'bg-green-100 text-green-800' :
+                      'bg-orange-100 text-orange-800'
+                    }`}
+                  >
+                    {skill}
+                    <button
+                      type="button"
+                      onClick={() => toggleSkill(skill)}
+                      className="hover:opacity-70"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsAddOpen(false);
+                setSelectedSkills([]);
+                setSearchQuery('');
+                setError(null);
+              }}
+              disabled={saving}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleAddSkills}
+              disabled={saving || selectedSkills.length === 0}
+              className="flex-1 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition disabled:opacity-50"
+            >
+              {saving ? 'Adding…' : `Add ${selectedSkills.length} Skill${selectedSkills.length !== 1 ? 's' : ''}`}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -357,36 +707,44 @@ function AffiliationsTab({ studentId }: { studentId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback((): void => {
+    setLoading(true);
     studentsService.getStudentAffiliations(studentId)
       .then(setAffiliations)
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, [studentId]);
 
-  const tags: Tag[] = affiliations.map((a) => ({ name: a.organizationName, category: a.type }));
+  useEffect(() => { load(); }, [load]);
+
+  const tags: Tag[] = affiliations.map((a) => ({ id: a.id, name: a.organizationName, category: a.type }));
 
   const handleAdd = async (tag: Tag): Promise<void> => {
-    const updated: StudentAffiliation[] = [...affiliations, { organizationName: tag.name, type: (tag.category ?? 'other') as StudentAffiliation['type'] }];
     setSaving(true);
+    setError(null);
     try {
-      const saved = await studentsService.updateStudentAffiliations(studentId, updated);
-      setAffiliations(saved);
+      const today = new Date().toISOString().split('T')[0];
+      await studentsService.addStudentAffiliation(studentId, {
+        organization_name: tag.name,
+        start_date: today,
+      });
+      load();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to save');
+      setError(e instanceof Error ? e.message : 'Failed to add affiliation');
     } finally {
       setSaving(false);
     }
   };
 
   const handleRemove = async (tag: Tag): Promise<void> => {
-    const updated = affiliations.filter((a) => !(a.organizationName === tag.name && a.type === tag.category));
+    if (!tag.id) return;
     setSaving(true);
+    setError(null);
     try {
-      const saved = await studentsService.updateStudentAffiliations(studentId, updated);
-      setAffiliations(saved);
+      await studentsService.deleteStudentAffiliation(tag.id);
+      load();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Failed to save');
+      setError(e instanceof Error ? e.message : 'Failed to remove affiliation');
     } finally {
       setSaving(false);
     }
@@ -411,7 +769,7 @@ function AffiliationsTab({ studentId }: { studentId: string }) {
 }
 
 // ── Main StudentProfile ────────────────────────────────────────────────────────
-export function StudentProfile({ student, onEdit, onDelete, onClose }: StudentProfileProps) {
+export function StudentProfile({ student, onEdit, onDelete, onClose, onSkillAdded }: StudentProfileProps & { onSkillAdded?: () => void }) {
   const statusVariant = student.status === 'active' ? 'success'
     : student.status === 'graduated' ? 'info'
     : student.status === 'dropped' ? 'warning'
@@ -423,7 +781,7 @@ export function StudentProfile({ student, onEdit, onDelete, onClose }: StudentPr
     { key: 'enrollments', label: 'Enrollments', content: <EnrollmentsTab studentId={student.id} /> },
     { key: 'activities', label: 'Activities', content: <ActivitiesTab studentId={student.id} /> },
     { key: 'violations', label: 'Violations', content: <ViolationsTab studentId={student.id} /> },
-    { key: 'skills', label: 'Skills', content: <SkillsTab studentId={student.id} /> },
+    { key: 'skills', label: 'Skills', content: <SkillsTab studentId={student.id} onSkillAdded={onSkillAdded} /> },
     { key: 'affiliations', label: 'Affiliations', content: <AffiliationsTab studentId={student.id} /> },
   ];
 

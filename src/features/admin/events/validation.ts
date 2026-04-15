@@ -17,6 +17,9 @@ export interface EventFormErrors {
   type?: string;
   date?: string;
   venue?: string;
+  description?: string;
+  location?: string;
+  status?: string;
 }
 
 /**
