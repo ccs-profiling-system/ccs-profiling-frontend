@@ -3,6 +3,8 @@ export interface AuthUser {
   email: string;
   role: string;
   name?: string;
+  department_id?: string;
+  department_name?: string;
 }
 
 export interface LoginRequest {
