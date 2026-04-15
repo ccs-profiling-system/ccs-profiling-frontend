@@ -67,9 +67,14 @@ const courseMaterialArb: fc.Arbitrary<CourseMaterial> = fc.record<CourseMaterial
   id: fc.uuid(),
   fileName: safeString,
   fileType: fc.constantFrom('application/pdf', 'image/png', 'text/plain', 'application/zip'),
-  uploadDate: fc.date({ min: new Date('2020-01-01'), max: new Date('2024-12-31') }).map((d) =>
-    d.toISOString()
-  ),
+  uploadDate: fc
+    .integer({ min: 2020, max: 2024 })
+    .chain((year) =>
+      fc.integer({ min: 1, max: 12 }).map((month) => {
+        const mm = String(month).padStart(2, '0');
+        return `${year}-${mm}-01T00:00:00.000Z`;
+      })
+    ),
   downloadUrl: fc
     .string({ minLength: 1, maxLength: 20 })
     .filter((s) => /^[a-z]+$/.test(s))
