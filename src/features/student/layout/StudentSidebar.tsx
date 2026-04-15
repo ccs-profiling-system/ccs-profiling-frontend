@@ -2,6 +2,16 @@ import { NavLink } from 'react-router-dom';
 import {
   UserRound, CalendarDays, BookOpen, Users, Beaker, GraduationCap,
 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((part) => part[0] ?? '')
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
 
 interface StudentSidebarProps {
   isOpen: boolean;
@@ -9,6 +19,11 @@ interface StudentSidebarProps {
 }
 
 export function StudentSidebar({ isOpen, onClose }: StudentSidebarProps) {
+  const { user } = useAuth();
+  const displayName = user?.name ?? user?.email ?? 'Student';
+  const displayEmail = user?.email ?? '';
+  const initials = getInitials(displayName);
+
   const navLinks = [
     { to: '/student/profile', label: 'My Profile', icon: UserRound },
     { to: '/student/schedule', label: 'Schedule', icon: CalendarDays },
@@ -76,14 +91,12 @@ export function StudentSidebar({ isOpen, onClose }: StudentSidebarProps) {
         {/* Footer */}
         <div className="p-3 sm:p-4 border-t border-primary-dark/30 bg-gradient-to-t from-primary-dark/20 to-transparent">
           <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-3 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-colors">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/20 flex items-center justify-center border border-white/30 flex-shrink-0">
-              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-              </svg>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/20 flex items-center justify-center border border-white/30 flex-shrink-0 text-white font-semibold text-xs">
+              {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm font-semibold text-white truncate">Student</p>
-              <p className="text-xs text-white/60 truncate">Portal User</p>
+              <p className="text-xs sm:text-sm font-semibold text-white truncate">{displayName}</p>
+              <p className="text-xs text-white/60 truncate">{displayEmail || 'Student Portal'}</p>
             </div>
           </div>
           <p className="text-xs text-white/50 text-center mt-3 sm:mt-4 font-medium">© 2026 CCS</p>

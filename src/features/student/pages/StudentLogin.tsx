@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import authService from '@/services/api/authService';
 import { BookOpen } from 'lucide-react';
-import type { LoginResponse } from '@/types/auth';
 
 export function StudentLogin() {
   const navigate = useNavigate();
   const { isAuthenticated, login } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const [studentNumber, setStudentNumber] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +16,7 @@ export function StudentLogin() {
   // Redirect already-authenticated users
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/student/dashboard', { replace: true });
+      navigate('/student/profile', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -26,26 +25,16 @@ export function StudentLogin() {
     setError(null);
     setLoading(true);
     try {
-      const response = await authService.login({ email, password });
-      
-      // For mock authentication, set role to student
-      const loginResponse: LoginResponse = {
-        ...response,
-        user: {
-          ...response.user,
-          role: 'student', // Force student role for student portal
-        },
-      };
+      const response = await authService.login({ email: studentNumber, password, role: 'student' });
 
-      // Use AuthContext to handle login - this updates both context and localStorage
-      login(loginResponse);
-      
+      // Role is already 'student' from the service call
+      login(response);
+
       // Store student token separately for backward compatibility
-      localStorage.setItem('studentToken', loginResponse.tokens.access.token);
+      localStorage.setItem('studentToken', response.tokens.access.token);
 
-      // Use setTimeout to ensure state update completes before navigation
       setTimeout(() => {
-        navigate('/student/dashboard', { replace: true });
+        navigate('/student/profile', { replace: true });
       }, 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
@@ -93,17 +82,17 @@ export function StudentLogin() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
+                <label htmlFor="studentNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                  Student Number
                 </label>
                 <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="student@ccs.edu.ph"
+                  id="studentNumber"
+                  type="text"
+                  value={studentNumber}
+                  onChange={(e) => setStudentNumber(e.target.value)}
+                  placeholder="e.g. 2201671"
                   required
-                  autoComplete="email"
+                  autoComplete="username"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                 />
               </div>
@@ -159,6 +148,12 @@ export function StudentLogin() {
                 Not a student?{' '}
                 <a href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
                   Admin Login
+                </a>
+              </div>
+              <div className="text-center text-sm text-gray-600">
+                Don't have an account?{' '}
+                <a href="/student/register" className="text-blue-600 hover:text-blue-700 font-medium">
+                  Register
                 </a>
               </div>
             </form>

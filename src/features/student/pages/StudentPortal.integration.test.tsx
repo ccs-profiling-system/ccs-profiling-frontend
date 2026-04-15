@@ -4,13 +4,11 @@ import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { StudentProtectedRoute } from '@/components/auth/StudentProtectedRoute';
 import { StudentLogin } from './StudentLogin';
-import { ProfilePage } from './ProfilePage';
 import { studentRoutes } from '../routes';
 import studentService from '@/services/api/studentService';
 import courseService from '@/services/api/courseService';
 import * as authService from '@/services/api/authService';
 
-// Mock services
 vi.mock('@/services/api/studentService');
 vi.mock('@/services/api/courseService');
 vi.mock('@/services/api/authService');
@@ -49,6 +47,13 @@ const mockLoginResponse = {
     refresh: { token: 'mock-refresh-token', expiresAt: new Date(Date.now() + 3600000).toISOString() },
   },
 };
+
+/** Sets both auth_token + auth_user (used by AuthContext) and studentToken */
+function setStudentAuth() {
+  localStorage.setItem('auth_token', 'mock-student-token');
+  localStorage.setItem('auth_user', JSON.stringify({ id: '1', email: 'jane@ccs.edu', name: 'Jane Student', role: 'student' }));
+  localStorage.setItem('studentToken', 'mock-student-token');
+}
 
 function renderStudentPortal(initialPath = '/student/login') {
   return render(
@@ -105,9 +110,8 @@ describe('Student Portal Integration Tests', () => {
       });
     });
 
-    it('allows authenticated users to access /student/profile', async () => {
-      localStorage.setItem('studentToken', 'mock-student-token');
-
+    it('allows authenticated student users to access /student/profile', async () => {
+      setStudentAuth();
       renderStudentPortal('/student/profile');
 
       await waitFor(() => {
@@ -120,18 +124,18 @@ describe('Student Portal Integration Tests', () => {
 
   describe('All student portal routes are accessible after login', () => {
     beforeEach(() => {
-      localStorage.setItem('studentToken', 'mock-student-token');
+      setStudentAuth();
     });
 
     const protectedRoutes = [
-      { path: '/student/profile', label: /profile/i },
-      { path: '/student/schedule', label: /schedule/i },
-      { path: '/student/requirements', label: /academic requirements/i },
-      { path: '/student/participation', label: /participation/i },
-      { path: '/student/research', label: /research/i },
+      '/student/profile',
+      '/student/schedule',
+      '/student/requirements',
+      '/student/participation',
+      '/student/research',
     ];
 
-    protectedRoutes.forEach(({ path }) => {
+    protectedRoutes.forEach((path) => {
       it(`renders ${path} without redirecting to login`, async () => {
         renderStudentPortal(path);
 
@@ -145,19 +149,20 @@ describe('Student Portal Integration Tests', () => {
   // ── Logout Clears Session ─────────────────────────────────────────────────
 
   describe('Logout clears session and redirects', () => {
-    it('logout removes studentToken from localStorage', async () => {
-      localStorage.setItem('studentToken', 'mock-student-token');
-      localStorage.setItem('auth_token', 'mock-auth-token');
-      localStorage.setItem('auth_user', JSON.stringify(mockProfile));
-
+    it('logout removes all auth tokens from localStorage', async () => {
+      setStudentAuth();
       renderStudentPortal('/student/profile');
 
       await waitFor(() => {
         expect(screen.getByText(/my profile/i)).toBeInTheDocument();
       });
 
-      const logoutButton = screen.getByRole('button', { name: /logout/i });
-      fireEvent.click(logoutButton);
+      // Open user dropdown then click logout
+      fireEvent.click(screen.getByRole('button', { name: /user menu/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
+      });
+      fireEvent.click(screen.getByRole('button', { name: /logout/i }));
 
       await waitFor(() => {
         expect(localStorage.getItem('studentToken')).toBeNull();
@@ -167,16 +172,19 @@ describe('Student Portal Integration Tests', () => {
     });
 
     it('logout redirects to /student/login', async () => {
-      localStorage.setItem('studentToken', 'mock-student-token');
-
+      setStudentAuth();
       renderStudentPortal('/student/profile');
 
       await waitFor(() => {
         expect(screen.getByText(/my profile/i)).toBeInTheDocument();
       });
 
-      const logoutButton = screen.getByRole('button', { name: /logout/i });
-      fireEvent.click(logoutButton);
+      // Open user dropdown then click logout
+      fireEvent.click(screen.getByRole('button', { name: /user menu/i }));
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
+      });
+      fireEvent.click(screen.getByRole('button', { name: /logout/i }));
 
       await waitFor(() => {
         expect(screen.getByText('Welcome, Student')).toBeInTheDocument();
@@ -202,10 +210,10 @@ describe('Student Portal Integration Tests', () => {
       });
     });
 
-    it('profile page renders with mock data when API is unavailable', async () => {
+    it('profile page shows error state when API is unavailable', async () => {
       vi.mocked(studentService.getProfile).mockRejectedValue(new Error('Network Error'));
 
-      localStorage.setItem('studentToken', 'mock-student-token');
+      setStudentAuth();
       renderStudentPortal('/student/profile');
 
       await waitFor(() => {
