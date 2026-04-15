@@ -26,7 +26,6 @@ export function Sidebar({ isOpen, onClose, variant = 'admin' }: SidebarProps) {
     { to: '/chair/schedules', label: 'Schedules', icon: Calendar },
     { to: '/chair/events', label: 'Events', icon: Briefcase },
     { to: '/chair/research', label: 'Research', icon: FlaskConical },
-    { to: '/chair/curriculum', label: 'Curriculum', icon: BookOpen },
     { to: '/chair/reports', label: 'Reports', icon: FileText },
   ];
 

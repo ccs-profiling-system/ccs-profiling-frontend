@@ -6,6 +6,8 @@ import { SearchBar } from '@/components/ui/SearchBar';
 import { Spinner } from '@/components/ui/Spinner';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
+import { Pagination } from '@/components/ui/Pagination';
 import chairStudentsService from '@/services/api/chair/chairStudentsService';
 import { Check, X } from 'lucide-react';
 import type { Student } from '@/types/students';
@@ -19,6 +21,12 @@ export function ChairStudents() {
     yearLevel: '',
     status: '',
   });
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [totalItems, setTotalItems] = useState(0);
+  
   const [approvalModal, setApprovalModal] = useState<{
     student: Student;
     action: 'approve' | 'reject';
@@ -27,20 +35,31 @@ export function ChairStudents() {
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [filters, search]);
+
+  useEffect(() => {
     loadStudents();
-  }, [filters]);
+  }, [filters, search, currentPage, itemsPerPage]);
 
   const loadStudents = async () => {
     try {
       setLoading(true);
-      const response = await chairStudentsService.getStudents({
-        ...filters,
-        search,
-      });
+      const response = await chairStudentsService.getStudents(
+        {
+          ...filters,
+          search,
+        },
+        currentPage,
+        itemsPerPage
+      );
+      
       setStudents(response.data || []);
+      setTotalItems(response.total || 0);
     } catch (err) {
       // Show empty state instead of error for 404
       setStudents([]);
+      setTotalItems(0);
     } finally {
       setLoading(false);
     }
@@ -102,20 +121,22 @@ export function ChairStudents() {
       align: 'center',
       render: (s) => (
         <div className="flex items-center justify-center gap-2">
-          <button
+          <Button
             onClick={() => setApprovalModal({ student: s, action: 'approve' })}
-            className="p-1.5 hover:bg-green-50 rounded text-green-600"
+            variant="ghost"
+            size="sm"
+            icon={<Check className="w-4 h-4" />}
+            className="text-blue-600 hover:bg-blue-50"
             title="Approve"
-          >
-            <Check className="w-4 h-4" />
-          </button>
-          <button
+          />
+          <Button
             onClick={() => setApprovalModal({ student: s, action: 'reject' })}
-            className="p-1.5 hover:bg-red-50 rounded text-red-600"
+            variant="ghost"
+            size="sm"
+            icon={<X className="w-4 h-4" />}
+            className="text-red-600 hover:bg-red-50"
             title="Reject"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          />
         </div>
       ),
     },
@@ -170,15 +191,31 @@ export function ChairStudents() {
           </div>
         </Card>
 
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <Spinner size="lg" />
-          </div>
-        ) : (
-          <Card>
-            <Table data={students} columns={columns} />
-          </Card>
-        )}
+        <Card>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Spinner size="lg" />
+            </div>
+          ) : students.length === 0 && totalItems === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No students found</p>
+            </div>
+          ) : (
+            <>
+              <Table data={students} columns={columns} />
+              {totalItems > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(totalItems / itemsPerPage)}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  onItemsPerPageChange={setItemsPerPage}
+                />
+              )}
+            </>
+          )}
+        </Card>
 
         {/* Approval Modal */}
         <Modal
@@ -209,24 +246,23 @@ export function ChairStudents() {
                 />
               </div>
               <div className="flex gap-3">
-                <button
+                <Button
                   onClick={() => setApprovalModal(null)}
                   disabled={processing}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  variant="outline"
+                  fullWidth
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleApproval}
                   disabled={processing || (approvalModal.action === 'reject' && !notes)}
-                  className={`flex-1 px-4 py-2 text-white rounded-lg ${
-                    approvalModal.action === 'approve'
-                      ? 'bg-green-600 hover:bg-green-700'
-                      : 'bg-red-600 hover:bg-red-700'
-                  } disabled:opacity-50`}
+                  variant={approvalModal.action === 'approve' ? 'primary' : 'secondary'}
+                  loading={processing}
+                  fullWidth
                 >
-                  {processing ? 'Processing...' : approvalModal.action === 'approve' ? 'Approve' : 'Reject'}
-                </button>
+                  {approvalModal.action === 'approve' ? 'Approve' : 'Reject'}
+                </Button>
               </div>
             </div>
           )}

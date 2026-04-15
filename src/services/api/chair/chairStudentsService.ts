@@ -12,9 +12,16 @@ export interface ChairStudentFilters {
 }
 
 class ChairStudentsService {
-  async getStudents(filters?: ChairStudentFilters) {
-    const response = await api.get('/chair/students', { params: filters });
-    return response.data;
+  async getStudents(filters?: ChairStudentFilters, page: number = 1, limit: number = 20) {
+    const response = await api.get('/chair/students', { 
+      params: { ...filters, page, limit } 
+    });
+    return {
+      data: response.data.data || response.data,
+      total: response.data.total || response.data.meta?.total || (response.data.data || response.data).length,
+      page: response.data.page || response.data.meta?.page || page,
+      limit: response.data.limit || response.data.meta?.limit || limit,
+    };
   }
 
   async getStudentById(id: string): Promise<Student> {

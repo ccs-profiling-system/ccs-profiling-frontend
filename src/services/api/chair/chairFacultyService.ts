@@ -22,9 +22,16 @@ export interface FacultyMember {
 }
 
 class ChairFacultyService {
-  async getFaculty(filters?: ChairFacultyFilters) {
-    const response = await api.get('/chair/faculty', { params: filters });
-    return response.data;
+  async getFaculty(filters?: ChairFacultyFilters, page: number = 1, limit: number = 20) {
+    const response = await api.get('/chair/faculty', { 
+      params: { ...filters, page, limit } 
+    });
+    return {
+      data: response.data.data || response.data,
+      total: response.data.total || response.data.meta?.total || (response.data.data || response.data).length,
+      page: response.data.page || response.data.meta?.page || page,
+      limit: response.data.limit || response.data.meta?.limit || limit,
+    };
   }
 
   async getFacultyById(id: string): Promise<FacultyMember> {

@@ -4,12 +4,18 @@ import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
+import { SearchBar } from '@/components/ui/SearchBar';
 import chairResearchService, { type Research } from '@/services/api/chair/chairResearchService';
 import { Check, X } from 'lucide-react';
 
 export function ChairResearch() {
   const [research, setResearch] = useState<Research[]>([]);
+  const [filteredResearch, setFilteredResearch] = useState<Research[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [approvalModal, setApprovalModal] = useState<{
     research: Research;
     action: 'approve' | 'reject';
@@ -21,14 +27,39 @@ export function ChairResearch() {
     loadResearch();
   }, []);
 
+  useEffect(() => {
+    // Apply filters
+    let filtered = research;
+    
+    if (search) {
+      filtered = filtered.filter(item =>
+        item.title.toLowerCase().includes(search.toLowerCase()) ||
+        item.abstract?.toLowerCase().includes(search.toLowerCase()) ||
+        item.authors.some(a => a.name.toLowerCase().includes(search.toLowerCase()))
+      );
+    }
+    
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(item => item.status === statusFilter);
+    }
+    
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(item => item.researchType === typeFilter);
+    }
+    
+    setFilteredResearch(filtered);
+  }, [research, search, statusFilter, typeFilter]);
+
   const loadResearch = async () => {
     try {
       setLoading(true);
       const response = await chairResearchService.getResearch();
       setResearch(response.data || []);
+      setFilteredResearch(response.data || []);
     } catch (err) {
       // Show empty state instead of error for 404
       setResearch([]);
+      setFilteredResearch([]);
     } finally {
       setLoading(false);
     }
@@ -58,13 +89,66 @@ export function ChairResearch() {
   return (
     <MainLayout title="Research Management" variant="chair">
       <div className="space-y-6">
+        {/* Search and Filters */}
+        <Card className="p-6">
+          <div className="space-y-4">
+            <SearchBar
+              placeholder="Search research by title, abstract, or author..."
+              onChange={setSearch}
+              value={search}
+            />
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">All Status</option>
+                <option value="ongoing">Ongoing</option>
+                <option value="completed">Completed</option>
+                <option value="published">Published</option>
+              </select>
+              
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">All Types</option>
+                <option value="thesis">Thesis</option>
+                <option value="capstone">Capstone</option>
+                <option value="journal">Journal</option>
+                <option value="conference">Conference</option>
+              </select>
+              
+              <Button
+                onClick={() => {
+                  setSearch('');
+                  setStatusFilter('all');
+                  setTypeFilter('all');
+                }}
+                variant="outline"
+              >
+                Reset Filters
+              </Button>
+            </div>
+          </div>
+        </Card>
+
         {loading ? (
           <div className="flex justify-center py-12">
             <Spinner size="lg" />
           </div>
+        ) : filteredResearch.length === 0 ? (
+          <Card className="p-12">
+            <p className="text-center text-gray-500">
+              {research.length === 0 ? 'No research projects found' : 'No research matches your filters'}
+            </p>
+          </Card>
         ) : (
           <div className="grid gap-4">
-            {research.map((item) => (
+            {filteredResearch.map((item) => (
               <Card key={item.id} className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -100,18 +184,22 @@ export function ChairResearch() {
                   </div>
                   {item.approvalStatus === 'pending' && (
                     <div className="flex gap-2">
-                      <button
+                      <Button
                         onClick={() => setApprovalModal({ research: item, action: 'approve' })}
-                        className="p-2 hover:bg-green-50 rounded text-green-600"
-                      >
-                        <Check className="w-5 h-5" />
-                      </button>
-                      <button
+                        variant="ghost"
+                        size="sm"
+                        icon={<Check className="w-5 h-5" />}
+                        className="text-blue-600 hover:bg-blue-50"
+                        title="Approve"
+                      />
+                      <Button
                         onClick={() => setApprovalModal({ research: item, action: 'reject' })}
-                        className="p-2 hover:bg-red-50 rounded text-red-600"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
+                        variant="ghost"
+                        size="sm"
+                        icon={<X className="w-5 h-5" />}
+                        className="text-red-600 hover:bg-red-50"
+                        title="Reject"
+                      />
                     </div>
                   )}
                 </div>
@@ -140,21 +228,23 @@ export function ChairResearch() {
                 placeholder="Notes..."
               />
               <div className="flex gap-3">
-                <button
+                <Button
                   onClick={() => setApprovalModal(null)}
-                  className="flex-1 px-4 py-2 border rounded-lg"
+                  disabled={processing}
+                  variant="outline"
+                  fullWidth
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleApproval}
                   disabled={processing}
-                  className={`flex-1 px-4 py-2 text-white rounded-lg ${
-                    approvalModal.action === 'approve' ? 'bg-green-600' : 'bg-red-600'
-                  }`}
+                  variant={approvalModal.action === 'approve' ? 'primary' : 'secondary'}
+                  loading={processing}
+                  fullWidth
                 >
-                  {processing ? 'Processing...' : approvalModal.action === 'approve' ? 'Approve' : 'Reject'}
-                </button>
+                  {approvalModal.action === 'approve' ? 'Approve' : 'Reject'}
+                </Button>
               </div>
             </div>
           )}

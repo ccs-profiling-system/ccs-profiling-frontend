@@ -4,12 +4,17 @@ import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
+import { SearchBar } from '@/components/ui/SearchBar';
 import chairEventsService, { type Event } from '@/services/api/chair/chairEventsService';
 import { Check, X, Users } from 'lucide-react';
 
 export function ChairEvents() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [approvalModal, setApprovalModal] = useState<{
     event: Event;
     action: 'approve' | 'reject';
@@ -21,14 +26,35 @@ export function ChairEvents() {
     loadEvents();
   }, []);
 
+  useEffect(() => {
+    // Apply filters
+    let filtered = events;
+    
+    if (search) {
+      filtered = filtered.filter(event =>
+        event.eventName.toLowerCase().includes(search.toLowerCase()) ||
+        event.description?.toLowerCase().includes(search.toLowerCase()) ||
+        event.location?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(event => event.status === statusFilter);
+    }
+    
+    setFilteredEvents(filtered);
+  }, [events, search, statusFilter]);
+
   const loadEvents = async () => {
     try {
       setLoading(true);
       const response = await chairEventsService.getEvents();
       setEvents(response.data || []);
+      setFilteredEvents(response.data || []);
     } catch (err) {
       // Show empty state instead of error for 404
       setEvents([]);
+      setFilteredEvents([]);
     } finally {
       setLoading(false);
     }
@@ -58,13 +84,53 @@ export function ChairEvents() {
   return (
     <MainLayout title="Events Management" variant="chair">
       <div className="space-y-6">
+        {/* Search and Filters */}
+        <Card className="p-6">
+          <div className="space-y-4">
+            <SearchBar
+              placeholder="Search events by name, description, or location..."
+              onChange={setSearch}
+              value={search}
+            />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              
+              <Button
+                onClick={() => {
+                  setSearch('');
+                  setStatusFilter('all');
+                }}
+                variant="outline"
+              >
+                Reset Filters
+              </Button>
+            </div>
+          </div>
+        </Card>
+
         {loading ? (
           <div className="flex justify-center py-12">
             <Spinner size="lg" />
           </div>
+        ) : filteredEvents.length === 0 ? (
+          <Card className="p-12">
+            <p className="text-center text-gray-500">
+              {events.length === 0 ? 'No events found' : 'No events match your filters'}
+            </p>
+          </Card>
         ) : (
           <div className="grid gap-4">
-            {events.map((event) => (
+            {filteredEvents.map((event) => (
               <Card key={event.id} className="p-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -98,20 +164,22 @@ export function ChairEvents() {
                   </div>
                   {event.status === 'pending' && (
                     <div className="flex gap-2">
-                      <button
+                      <Button
                         onClick={() => setApprovalModal({ event, action: 'approve' })}
-                        className="p-2 hover:bg-green-50 rounded text-green-600"
+                        variant="ghost"
+                        size="sm"
+                        icon={<Check className="w-5 h-5" />}
+                        className="text-blue-600 hover:bg-blue-50"
                         title="Approve"
-                      >
-                        <Check className="w-5 h-5" />
-                      </button>
-                      <button
+                      />
+                      <Button
                         onClick={() => setApprovalModal({ event, action: 'reject' })}
-                        className="p-2 hover:bg-red-50 rounded text-red-600"
+                        variant="ghost"
+                        size="sm"
+                        icon={<X className="w-5 h-5" />}
+                        className="text-red-600 hover:bg-red-50"
                         title="Reject"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
+                      />
                     </div>
                   )}
                 </div>
@@ -140,21 +208,23 @@ export function ChairEvents() {
                 placeholder="Notes..."
               />
               <div className="flex gap-3">
-                <button
+                <Button
                   onClick={() => setApprovalModal(null)}
-                  className="flex-1 px-4 py-2 border rounded-lg"
+                  disabled={processing}
+                  variant="outline"
+                  fullWidth
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleApproval}
                   disabled={processing}
-                  className={`flex-1 px-4 py-2 text-white rounded-lg ${
-                    approvalModal.action === 'approve' ? 'bg-green-600' : 'bg-red-600'
-                  }`}
+                  variant={approvalModal.action === 'approve' ? 'primary' : 'secondary'}
+                  loading={processing}
+                  fullWidth
                 >
-                  {processing ? 'Processing...' : approvalModal.action === 'approve' ? 'Approve' : 'Reject'}
-                </button>
+                  {approvalModal.action === 'approve' ? 'Approve' : 'Reject'}
+                </Button>
               </div>
             </div>
           )}
