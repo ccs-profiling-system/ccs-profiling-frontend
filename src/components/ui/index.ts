@@ -16,6 +16,7 @@ export { FileUpload } from './FileUpload';
 export { Pagination } from './Pagination';
 export { ProfileLayout } from './ProfileLayout';
 export { TagInput } from './TagInput';
+export { LoadingState, ErrorState, EmptyState } from './PageStates';
 export type { SearchResult } from './SearchBar';
 export type { Column } from './Table';
 export type { ButtonProps } from './Button';

@@ -146,10 +146,14 @@ export interface FinancialRecord {
   studentId: string;
   balance: number;
   tuitionCharges: number;
-  fees: number;
+  miscFees: number;
+  labFees: number;
+  outstandingAmount: number;
   payments: {
+    id: string;
     amount: number;
     date: string;
+    referenceNumber: string;
     method: string;
   }[];
   dueDate: string;
@@ -179,9 +183,24 @@ export interface Assignment {
 
 export interface DegreeRequirement {
   id: string;
+  category: string;
   title: string;
   credits: number;
   completed: boolean;
   completedDate?: string;
+  completedCourses?: string[];
   suggestedCourses: string[];
+}
+
+export interface AcademicProgress {
+  studentId: string;
+  program: string;
+  totalRequiredCredits: number;
+  completedCredits: number;
+  remainingCredits: number;
+  requirements: DegreeRequirement[];
+  estimatedGraduation: string;
+  isAtRisk: boolean;
+  atRiskReasons?: string[];
+  completionPercentage: number;
 }

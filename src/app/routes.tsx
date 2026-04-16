@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AdminDashboard } from '@/features/admin/dashboard';
 import { Login } from '@/features/auth/Login';
+import { Register } from '@/features/auth/Register';
 import { StudentLogin } from '@/features/student/pages/StudentLogin';
 import { EventsPage } from '@/features/admin/events';
 import { EventsErrorBoundary } from '@/features/admin/events/EventsErrorBoundary';
@@ -18,11 +19,26 @@ import { facultyRoutes } from '@/features/faculty/routes';
 import { ResearchPage, ResearchDetailPage } from '@/features/admin/research';
 import { studentRoutes } from '@/features/student/routes';
 
+// Chair Portal Imports
+import { ChairDashboard } from '@/features/chair/dashboard';
+import { ChairStudents } from '@/features/chair/students';
+import { ChairFaculty } from '@/features/chair/faculty';
+import { ChairSchedules } from '@/features/chair/schedules';
+import { ChairEvents } from '@/features/chair/events';
+import { ChairResearch } from '@/features/chair/research';
+import { ChairReports } from '@/features/chair/reports';
+
 export function AppRoutes() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/student/login" element={<StudentLogin />} />
         <Route path="/faculty/login" element={<FacultyLogin />} />
         <Route
@@ -133,6 +149,66 @@ export function AppRoutes() {
           />
         ))}
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        
+        {/* Chair Portal Routes - Protected with Authentication */}
+        <Route
+          path="/chair/dashboard"
+          element={
+            <ProtectedRoute>
+              <ChairDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chair/students"
+          element={
+            <ProtectedRoute>
+              <ChairStudents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chair/faculty"
+          element={
+            <ProtectedRoute>
+              <ChairFaculty />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chair/schedules"
+          element={
+            <ProtectedRoute>
+              <ChairSchedules />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chair/events"
+          element={
+            <ProtectedRoute>
+              <ChairEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chair/research"
+          element={
+            <ProtectedRoute>
+              <ChairResearch />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chair/reports"
+          element={
+            <ProtectedRoute>
+              <ChairReports />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/chair" element={<Navigate to="/chair/dashboard" replace />} />
+        
         <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
     </BrowserRouter>

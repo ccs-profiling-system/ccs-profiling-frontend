@@ -24,7 +24,7 @@ describe('StudentLogin', () => {
 
     expect(screen.getByText('Welcome, Student')).toBeInTheDocument();
     expect(screen.getByText('Sign in to your student account')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('student@ccs.edu.ph')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('e.g. 2201671')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument();
   });
 
@@ -73,11 +73,11 @@ describe('StudentLogin', () => {
       </BrowserRouter>
     );
 
-    const emailInput = screen.getByPlaceholderText('student@ccs.edu.ph');
+    const emailInput = screen.getByPlaceholderText('e.g. 2201671');
     const passwordInput = screen.getByPlaceholderText('••••••••');
     const submitButton = screen.getByRole('button', { name: /Sign In/i });
 
-    fireEvent.change(emailInput, { target: { value: 'student@ccs.edu.ph' } });
+    fireEvent.change(emailInput, { target: { value: '2201671' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
     fireEvent.click(submitButton);
 

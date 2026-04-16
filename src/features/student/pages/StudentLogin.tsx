@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import authService from '@/services/api/authService';
 import { BookOpen } from 'lucide-react';
-import type { LoginResponse } from '@/types/auth';
 
 export function StudentLogin() {
   const navigate = useNavigate();
   const { isAuthenticated, login } = useAuth();
 
-  const [email, setEmail] = useState('');
+  const [studentNumber, setStudentNumber] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +16,7 @@ export function StudentLogin() {
   // Redirect already-authenticated users
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/student/dashboard', { replace: true });
+      navigate('/student/profile', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -26,26 +25,16 @@ export function StudentLogin() {
     setError(null);
     setLoading(true);
     try {
-      const response = await authService.login({ email, password });
-      
-      // For mock authentication, set role to student
-      const loginResponse: LoginResponse = {
-        ...response,
-        user: {
-          ...response.user,
-          role: 'student', // Force student role for student portal
-        },
-      };
+      const response = await authService.login({ email: studentNumber, password, role: 'student' });
 
-      // Use AuthContext to handle login - this updates both context and localStorage
-      login(loginResponse);
-      
+      // Role is already 'student' from the service call
+      login(response);
+
       // Store student token separately for backward compatibility
-      localStorage.setItem('studentToken', loginResponse.tokens.access.token);
+      localStorage.setItem('studentToken', response.tokens.access.token);
 
-      // Use setTimeout to ensure state update completes before navigation
       setTimeout(() => {
-        navigate('/student/dashboard', { replace: true });
+        navigate('/student/profile', { replace: true });
       }, 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
@@ -67,8 +56,8 @@ export function StudentLogin() {
         style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.85) 0%, rgba(37,99,235,0.75) 100%)' }}
       />
 
-      {/* Left branding */}
-      <div className="relative z-10 flex-1 flex flex-col justify-between p-12">
+      {/* Left branding - hidden on mobile */}
+      <div className="relative z-10 hidden md:flex flex-1 flex-col justify-between p-12" aria-hidden="true">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <BookOpen className="w-8 h-8 text-white" />
@@ -79,27 +68,32 @@ export function StudentLogin() {
         <p className="text-white/60 text-sm">© 2026 CCS System</p>
       </div>
 
-      {/* Login panel - right side */}
-      <div className="relative z-10 w-[30rem] bg-white flex items-center justify-center p-10">
-        <div className="w-full">
+      {/* Login panel - full width on mobile, fixed width on desktop */}
+      <div className="relative z-10 w-full md:w-[30rem] bg-white flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-sm md:max-w-none">
+          {/* Mobile branding */}
+          <div className="flex items-center gap-3 mb-6 md:hidden">
+            <BookOpen className="w-7 h-7 text-blue-600" />
+          </div>
+
           <div className="p-2">
             <h2 className="text-xl font-bold text-gray-900 mb-1">Welcome, Student</h2>
             <p className="text-gray-500 text-sm mb-6">Sign in to your student account</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
+                <label htmlFor="studentNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                  Student Number
                 </label>
                 <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="student@ccs.edu.ph"
+                  id="studentNumber"
+                  type="text"
+                  value={studentNumber}
+                  onChange={(e) => setStudentNumber(e.target.value)}
+                  placeholder="e.g. 2201671"
                   required
-                  autoComplete="email"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  autoComplete="username"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                 />
               </div>
 
@@ -115,7 +109,7 @@ export function StudentLogin() {
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                 />
               </div>
 
@@ -154,6 +148,12 @@ export function StudentLogin() {
                 Not a student?{' '}
                 <a href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
                   Admin Login
+                </a>
+              </div>
+              <div className="text-center text-sm text-gray-600">
+                Don't have an account?{' '}
+                <a href="/student/register" className="text-blue-600 hover:text-blue-700 font-medium">
+                  Register
                 </a>
               </div>
             </form>

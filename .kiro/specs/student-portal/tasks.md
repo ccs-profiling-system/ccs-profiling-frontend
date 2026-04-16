@@ -41,6 +41,11 @@
   - **Validates: Requirements 1.2**
 
 - [ ] 6. Build profile page
+
+
+
+
+
   - Display: name, student ID, email, phone, program, year level, section, enrollment date, status
   - Edit contact info (phone, email)
   - Notification preferences
@@ -63,13 +68,26 @@
   - **Property 3: Schedule Completeness**
   - **Validates: Requirements 2.1, 2.3**
 
+
 - [ ] 8. Build schedule page
+
+
+
+
+
+
+
   - Weekly calendar view of enrolled courses
   - Course meeting times and room locations
   - Instructor consultation hours
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 9. Build grades page
+
+- [x] 9. Build grades page
+
+
+
+
   - Current semester grades: course code, title, units, final grade, GPA equivalent
   - Semester GPA and cumulative GPA display
   - Historical grades by semester
@@ -79,7 +97,10 @@
   - **Property 2: Grade Display Accuracy**
   - **Validates: Requirements 3.1, 3.2**
 
-- [ ] 10. Build transcript page
+- [x] 10. Build transcript page
+
+
+
   - Complete academic record: all courses, final grades, units, GPA equivalents
   - Cumulative GPA and academic standing
   - Graduation requirements progress
@@ -91,7 +112,9 @@
   - **Property 8: Transcript Completeness**
   - **Validates: Requirements 4.1**
 
-- [ ] 11. Build academic progress page
+- [x] 11. Build academic progress page
+
+
   - CCS degree requirements checklist
   - Completed vs remaining courses and units
   - Estimated graduation term
@@ -102,11 +125,23 @@
   - **Property 10: Academic Progress Calculation**
   - **Validates: Requirements 11.2, 11.3**
 
-- [ ] 12. Checkpoint — ensure all tests pass
+- [x] 12. Checkpoint — ensure all tests pass
+
+
+
+
 
 ## Phase 4: Research & Events
 
-- [ ] 13. Build research opportunities page
+- [x] 13. Build research opportunities page
+
+
+
+
+
+
+
+
   - Available CCS research projects list
   - Filter by area, faculty, status
   - Project detail modal: description, required skills, deadline, faculty
@@ -118,7 +153,12 @@
   - **Property 4: Research Application State Transition**
   - **Validates: Requirements 5.4, 5.5**
 
-- [ ] 14. Build events page
+- [x] 14. Build events page
+
+
+
+
+
   - Upcoming CCS events, seminars, workshops
   - Event details: date, time, venue, available slots
   - Event registration with slot count update
@@ -129,17 +169,48 @@
   - **Property 5: Event Registration Idempotence**
   - **Validates: Requirements 6.3**
 
-- [ ] 15. Checkpoint — ensure all tests pass
+- [x] 15. Checkpoint — ensure all tests pass
+
+
+
+
 
 ## Phase 5: Communication & Notifications
 
-- [ ] 16. Build advisor page
+- [x] 16. Build advisor page
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   - Assigned advisor: name, email, phone, office location, consultation schedule
   - Messaging interface with conversation history
   - Appointment booking with available time slots
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 17. Build notifications page
+- [x] 17. Build notifications page
+
+
+
+
+
+
+
+
   - All notifications with timestamps and read/unread status
   - Filter by type (grade, announcement, event, message)
   - Mark as read functionality
@@ -151,7 +222,12 @@
 
 ## Phase 6: Financial Records
 
-- [ ] 18. Build financial page (view-only)
+- [x] 18. Build financial page (view-only)
+
+
+
+
+
   - Current balance and outstanding amount
   - Fee breakdown: tuition, miscellaneous, lab fees
   - Payment history: date, amount, reference number
@@ -162,26 +238,49 @@
   - **Property 9: Financial Record Accuracy**
   - **Validates: Requirements 10.1, 10.5**
 
-- [ ] 19. Checkpoint — ensure all tests pass
+- [x] 19. Checkpoint — ensure all tests pass
+
+
+
+
+
 
 ## Phase 7: Polish & Quality
 
-- [ ] 20. Responsive design review
+- [x] 20. Responsive design review
+
+
+
+
+
   - Test on mobile, tablet, desktop
   - Ensure sidebar collapses properly on mobile
   - Touch-friendly interactions
   - _Requirements: All_
 
-- [ ] 21. Error states and loading states
+- [x] 21. Error states and loading states
+
+
+
+
   - Loading skeletons or spinners on all data-fetching pages
   - Error messages with retry options
   - Empty state illustrations
   - _Requirements: All_
 
-- [ ] 22. Final integration testing
+- [x] 22. Final integration testing
+
+
+
+
   - All student portal routes accessible after login
   - Logout clears session and redirects to `/student/login`
   - Mock data fallback works when backend is unavailable
   - _Requirements: All_
 
-- [ ] 23. Final checkpoint — ensure all tests pass
+- [x] 23. Final checkpoint — ensure all tests pass
+
+
+
+
+

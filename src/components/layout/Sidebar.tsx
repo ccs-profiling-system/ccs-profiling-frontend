@@ -1,15 +1,17 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, GraduationCap, Users, Calendar, FileText, BookOpen, Clock, FlaskConical,
+  LayoutDashboard, GraduationCap, Users, FileText, BookOpen, Clock, FlaskConical,
+  Calendar, Briefcase,
 } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  variant?: 'admin' | 'chair';
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const navLinks = [
+export function Sidebar({ isOpen, onClose, variant = 'admin' }: SidebarProps) {
+  const adminLinks = [
     { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { to: '/admin/students', label: 'Students', icon: GraduationCap },
     { to: '/admin/faculty', label: 'Faculty', icon: Users },
@@ -19,6 +21,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { to: '/admin/reports', label: 'Reports', icon: FileText },
     { to: '/admin/instructions', label: 'Instructions', icon: BookOpen },
   ];
+
+  const chairLinks = [
+    { to: '/chair/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/chair/students', label: 'Students', icon: GraduationCap },
+    { to: '/chair/faculty', label: 'Faculty', icon: Users },
+    { to: '/chair/schedules', label: 'Schedules', icon: Calendar },
+    { to: '/chair/events', label: 'Events', icon: Briefcase },
+    { to: '/chair/research', label: 'Research', icon: FlaskConical },
+    { to: '/chair/reports', label: 'Reports', icon: FileText },
+  ];
+
+  const navLinks = variant === 'chair' ? chairLinks : adminLinks;
+  const portalName = variant === 'chair' ? 'Chair Portal' : 'Admin Portal';
 
   return (
     <>
@@ -40,18 +55,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         `}
       >
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-primary-dark/30 bg-gradient-to-br from-primary to-primary-dark">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/15 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/30 hover:bg-white/20 transition-colors">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-bold tracking-tight truncate">CCS Profiling</h1>
-              <p className="text-xs text-white/70 truncate">Admin Portal</p>
-            </div>
-          </div>
+        <div className="p-6 border-b border-primary-dark/30">
+          <h1 className="text-xl font-bold">CCS Profiling</h1>
+          <p className="text-sm text-white/80 mt-1">Admin Portal</p>
         </div>
 
         {/* Navigation */}
