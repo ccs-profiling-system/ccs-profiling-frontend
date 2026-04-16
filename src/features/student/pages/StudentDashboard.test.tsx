@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { StudentDashboard } from './StudentDashboard';
+import { AuthProvider } from '@/context/AuthContext';
 import studentService from '@/services/api/studentService';
 import courseService from '@/services/api/courseService';
 import { AuthProvider } from '@/context/AuthContext';
