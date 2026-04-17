@@ -25,6 +25,14 @@ import { ChairEvents } from '@/features/chair/events';
 import { ChairResearch } from '@/features/chair/research';
 import { ChairReports } from '@/features/chair/reports';
 
+// Secretary Portal Imports
+import { SecretaryDashboard } from '@/features/secretary/dashboard';
+import { SecretaryStudents } from '@/features/secretary/students';
+import { SecretaryFaculty } from '@/features/secretary/faculty';
+import { SecretarySchedules } from '@/features/secretary/schedules';
+import { SecretaryDocuments } from '@/features/secretary/documents';
+import { SecretaryReports } from '@/features/secretary/reports';
+
 export function AppRoutes() {
   return (
     <BrowserRouter
@@ -192,6 +200,15 @@ export function AppRoutes() {
           }
         />
         <Route path="/chair" element={<Navigate to="/chair/dashboard" replace />} />
+        
+        {/* Secretary Portal Routes - No Authentication Required */}
+        <Route path="/secretary/dashboard" element={<SecretaryDashboard />} />
+        <Route path="/secretary/students" element={<SecretaryStudents />} />
+        <Route path="/secretary/faculty" element={<SecretaryFaculty />} />
+        <Route path="/secretary/schedules" element={<SecretarySchedules />} />
+        <Route path="/secretary/documents" element={<SecretaryDocuments />} />
+        <Route path="/secretary/reports" element={<SecretaryReports />} />
+        <Route path="/secretary" element={<Navigate to="/secretary/dashboard" replace />} />
         
         <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>

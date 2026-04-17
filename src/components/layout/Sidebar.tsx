@@ -7,7 +7,7 @@ import {
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  variant?: 'admin' | 'chair';
+  variant?: 'admin' | 'chair' | 'secretary';
 }
 
 export function Sidebar({ isOpen, onClose, variant = 'admin' }: SidebarProps) {
@@ -32,8 +32,17 @@ export function Sidebar({ isOpen, onClose, variant = 'admin' }: SidebarProps) {
     { to: '/chair/reports', label: 'Reports', icon: FileText },
   ];
 
-  const navLinks = variant === 'chair' ? chairLinks : adminLinks;
-  const portalName = variant === 'chair' ? 'Chair Portal' : 'Admin Portal';
+  const secretaryLinks = [
+    { to: '/secretary/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/secretary/students', label: 'Student Records', icon: GraduationCap },
+    { to: '/secretary/faculty', label: 'Faculty Records', icon: Users },
+    { to: '/secretary/schedules', label: 'Schedules', icon: Calendar },
+    { to: '/secretary/documents', label: 'Documents', icon: FileText },
+    { to: '/secretary/reports', label: 'Reports', icon: BookOpen },
+  ];
+
+  const navLinks = variant === 'secretary' ? secretaryLinks : variant === 'chair' ? chairLinks : adminLinks;
+  const portalName = variant === 'secretary' ? 'Secretary Portal' : variant === 'chair' ? 'Chair Portal' : 'Admin Portal';
 
   return (
     <>

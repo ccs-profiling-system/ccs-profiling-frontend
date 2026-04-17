@@ -1,0 +1,6 @@
+export { SecretaryDashboard } from './dashboard';
+export { SecretaryStudents } from './students';
+export { SecretaryFaculty } from './faculty';
+export { SecretarySchedules } from './schedules';
+export { SecretaryDocuments } from './documents';
+export { SecretaryReports } from './reports';

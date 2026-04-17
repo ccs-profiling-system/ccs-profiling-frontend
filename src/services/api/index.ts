@@ -4,6 +4,7 @@ export { default as reportsService } from './reportsService';
 export { default as instructionsService } from './instructionsService';
 export { default as searchService } from './searchService';
 export { default as analyticsService } from './analyticsService';
+export { default as secretaryService } from './secretaryService';
 
 export type { DashboardStats, EnrollmentData, ProgramDistribution, DashboardData } from './dashboardService';
 export type { 
