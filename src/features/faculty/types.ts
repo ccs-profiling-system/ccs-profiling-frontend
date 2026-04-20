@@ -118,3 +118,38 @@ export interface EventParticipation {
   eventDate: string; // ISO date string
   status: 'registered' | 'attended' | 'absent';
 }
+
+/** A skill entry on the faculty's profile */
+export interface FacultyPortalSkill {
+  skillName: string;
+  category: 'technical' | 'soft' | 'language' | 'other';
+  proficiencyLevel: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+}
+
+/** An affiliation entry on the faculty's profile */
+export interface FacultyPortalAffiliation {
+  organizationName: string;
+  type: 'professional' | 'academic' | 'community' | 'other';
+  role: string;
+  joinDate: string; // ISO date string
+}
+
+/** A student participation record for a class session */
+export interface StudentParticipationRecord {
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  participationScore: number;
+  remarks: string;
+  date: string; // ISO date string
+}
+
+/** Payload for submitting participation records */
+export interface ParticipationSubmission {
+  date: string;
+  records: {
+    studentId: string;
+    participationScore: number;
+    remarks: string;
+  }[];
+}
