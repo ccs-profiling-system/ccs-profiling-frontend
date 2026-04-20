@@ -13,6 +13,10 @@ import type {
   CourseMaterial,
   ResearchSubmissionPayload,
   EventParticipation,
+  FacultyPortalSkill,
+  FacultyPortalAffiliation,
+  StudentParticipationRecord,
+  ParticipationSubmission,
 } from '@/features/faculty/types';
 
 class FacultyPortalService {
@@ -442,6 +446,115 @@ class FacultyPortalService {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock getMyParticipation');
         return [];
+      }
+      throw error;
+    }
+  }
+
+  // ── Skills ────────────────────────────────────────────────────────────────
+
+  async getSkills(): Promise<FacultyPortalSkill[]> {
+    try {
+      const response = await api.get<FacultyPortalSkill[] | { data: FacultyPortalSkill[] }>(
+        '/faculty/profile/skills',
+        { headers: this.getAuthHeader() }
+      );
+      const raw = response.data;
+      return Array.isArray(raw) ? raw : (raw as { data: FacultyPortalSkill[] }).data ?? [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable, using mock getSkills');
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  async updateSkills(skills: FacultyPortalSkill[]): Promise<FacultyPortalSkill[]> {
+    try {
+      const response = await api.put<FacultyPortalSkill[] | { data: FacultyPortalSkill[] }>(
+        '/faculty/profile/skills',
+        { skills },
+        { headers: this.getAuthHeader() }
+      );
+      const raw = response.data;
+      return Array.isArray(raw) ? raw : (raw as { data: FacultyPortalSkill[] }).data ?? [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable, using mock updateSkills');
+        return skills;
+      }
+      throw error;
+    }
+  }
+
+  // ── Affiliations ──────────────────────────────────────────────────────────
+
+  async getAffiliations(): Promise<FacultyPortalAffiliation[]> {
+    try {
+      const response = await api.get<FacultyPortalAffiliation[] | { data: FacultyPortalAffiliation[] }>(
+        '/faculty/profile/affiliations',
+        { headers: this.getAuthHeader() }
+      );
+      const raw = response.data;
+      return Array.isArray(raw) ? raw : (raw as { data: FacultyPortalAffiliation[] }).data ?? [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable, using mock getAffiliations');
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  async updateAffiliations(affiliations: FacultyPortalAffiliation[]): Promise<FacultyPortalAffiliation[]> {
+    try {
+      const response = await api.put<FacultyPortalAffiliation[] | { data: FacultyPortalAffiliation[] }>(
+        '/faculty/profile/affiliations',
+        { affiliations },
+        { headers: this.getAuthHeader() }
+      );
+      const raw = response.data;
+      return Array.isArray(raw) ? raw : (raw as { data: FacultyPortalAffiliation[] }).data ?? [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable, using mock updateAffiliations');
+        return affiliations;
+      }
+      throw error;
+    }
+  }
+
+  // ── Student Participation ─────────────────────────────────────────────────
+
+  async getParticipation(subjectId: string, date?: string): Promise<StudentParticipationRecord[]> {
+    try {
+      const response = await api.get<StudentParticipationRecord[] | { data: StudentParticipationRecord[] }>(
+        `/faculty/courses/${subjectId}/participation`,
+        { params: date ? { date } : {}, headers: this.getAuthHeader() }
+      );
+      const raw = response.data;
+      return Array.isArray(raw) ? raw : (raw as { data: StudentParticipationRecord[] }).data ?? [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable, using mock getParticipation');
+        return [];
+      }
+      throw error;
+    }
+  }
+
+  async submitParticipation(subjectId: string, payload: ParticipationSubmission): Promise<void> {
+    try {
+      await api.post(
+        `/faculty/courses/${subjectId}/participation`,
+        payload,
+        { headers: this.getAuthHeader() }
+      );
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable, skipping submitParticipation');
+        return;
       }
       throw error;
     }
