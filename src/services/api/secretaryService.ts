@@ -12,6 +12,8 @@ import type {
   ClassScheduleInput,
   DocumentUpload,
   PaginationParams,
+  Event,
+  EventInput,
 } from '@/types/secretary';
 
 const BASE_URL = '/api/secretary';
@@ -151,6 +153,17 @@ export const getReportHistory = async (): Promise<any[]> => {
   return response.data;
 };
 
+export const exportReportPDF = async (params: {
+  type: string;
+  search?: string;
+  status?: string;
+}): Promise<Blob> => {
+  const response = await api.post(`${BASE_URL}/reports/export-pdf`, params, {
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
 // Filter Options
 export const getPrograms = async (): Promise<string[]> => {
   const response = await api.get(`${BASE_URL}/filters/programs`);
@@ -164,6 +177,36 @@ export const getDepartments = async (): Promise<string[]> => {
 
 export const getInstructors = async (): Promise<Array<{ id: string; name: string }>> => {
   const response = await api.get(`${BASE_URL}/filters/instructors`);
+  return response.data;
+};
+
+// Events
+export const getEvents = async (params: PaginationParams): Promise<PaginatedResponse<Event>> => {
+  const response = await api.get(`${BASE_URL}/events`, { params });
+  return response.data;
+};
+
+export const getEventById = async (id: string): Promise<Event> => {
+  const response = await api.get(`${BASE_URL}/events/${id}`);
+  return response.data;
+};
+
+export const createEvent = async (data: EventInput): Promise<Event> => {
+  const response = await api.post(`${BASE_URL}/events`, data);
+  return response.data;
+};
+
+export const updateEvent = async (id: string, data: Partial<EventInput>): Promise<Event> => {
+  const response = await api.put(`${BASE_URL}/events/${id}`, data);
+  return response.data;
+};
+
+export const deleteEvent = async (id: string): Promise<void> => {
+  await api.delete(`${BASE_URL}/events/${id}`);
+};
+
+export const submitEventForApproval = async (id: string): Promise<Event> => {
+  const response = await api.post(`${BASE_URL}/events/${id}/submit`);
   return response.data;
 };
 
@@ -199,9 +242,18 @@ const secretaryService = {
   deleteDocument,
   downloadDocument,
   
+  // Events
+  getEvents,
+  getEventById,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  submitEventForApproval,
+  
   // Reports
   generateReport,
   getReportHistory,
+  exportReportPDF,
   
   // Filters
   getPrograms,

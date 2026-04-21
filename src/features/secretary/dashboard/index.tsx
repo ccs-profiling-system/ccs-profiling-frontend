@@ -18,7 +18,6 @@ import {
   Briefcase,
   FolderOpen,
   ArrowRight,
-  ClipboardList,
 } from 'lucide-react';
 
 export function SecretaryDashboard() {
@@ -228,52 +227,67 @@ export function SecretaryDashboard() {
 
         {/* Right Column - Aside */}
         <div className="lg:col-span-4 space-y-4 sm:space-y-6">
-          {/* Pending Tasks */}
+          {/* Upcoming Events */}
           <Card className="p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-primary" />
-              Pending Tasks
+              <Calendar className="w-5 h-5 text-primary" />
+              Upcoming Events
             </h3>
             <div className="space-y-3">
-              <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <AlertCircle className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Upload Student Documents</p>
-                    <p className="text-xs text-gray-600 mt-1">5 students pending</p>
-                    <span className="inline-block text-xs px-2 py-0.5 rounded bg-yellow-100 text-yellow-700 mt-2">
-                      High Priority
+                    <p className="text-sm font-medium text-gray-900">Web Development Workshop</p>
+                    <p className="text-xs text-gray-600 mt-1">May 15, 2026 • 9:00 AM</p>
+                    <span className="inline-block text-xs px-2 py-0.5 rounded bg-green-100 text-green-700 mt-2">
+                      Approved
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Update Class Schedules</p>
-                    <p className="text-xs text-gray-600 mt-1">3 schedules to encode</p>
-                    <span className="inline-block text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700 mt-2">
-                      Normal
+                    <p className="text-sm font-medium text-gray-900">AI & ML Seminar</p>
+                    <p className="text-xs text-gray-600 mt-1">May 20, 2026 • 2:00 PM</p>
+                    <span className="inline-block text-xs px-2 py-0.5 rounded bg-yellow-100 text-yellow-700 mt-2">
+                      Pending Approval
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Briefcase className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">Programming Competition</p>
+                    <p className="text-xs text-gray-600 mt-1">June 1, 2026 • 8:00 AM</p>
+                    <span className="inline-block text-xs px-2 py-0.5 rounded bg-green-100 text-green-700 mt-2">
+                      Approved
                     </span>
                   </div>
                 </div>
               </div>
 
               <Button
-                onClick={() => navigate('/secretary/documents')}
+                onClick={() => navigate('/secretary/events')}
                 variant="ghost"
                 size="sm"
                 fullWidth
                 icon={<ArrowRight className="w-4 h-4" />}
                 iconPosition="right"
               >
-                View All Tasks
+                View All Events
               </Button>
             </div>
           </Card>

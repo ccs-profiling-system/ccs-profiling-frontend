@@ -39,7 +39,7 @@ export function useDocumentsData({ initialPage = 1, initialLimit = 12, category 
       console.error('Failed to fetch documents:', err);
       setError(err.response?.data?.message || 'Failed to load documents');
       
-      // Mock data for development
+      // Mock data for development (backend search is handled by API)
       const mockData: Document[] = [
         { 
           id: '1', 
@@ -81,16 +81,44 @@ export function useDocumentsData({ initialPage = 1, initialLimit = 12, category 
           uploadedBy: 'Secretary', 
           uploadedAt: '2026-04-12T16:45:00Z'
         },
+        { 
+          id: '5', 
+          name: 'Enrollment_Form_2026.pdf', 
+          category: 'forms', 
+          fileUrl: '/uploads/doc5.pdf',
+          fileSize: 1200000,
+          fileType: 'PDF',
+          uploadedBy: 'Secretary', 
+          uploadedAt: '2026-04-11T11:20:00Z'
+        },
+        { 
+          id: '6', 
+          name: 'Department_Budget_2026.xlsx', 
+          category: 'department', 
+          fileUrl: '/uploads/doc6.xlsx',
+          fileSize: 850000,
+          fileType: 'XLSX',
+          uploadedBy: 'Secretary', 
+          uploadedAt: '2026-04-10T09:30:00Z'
+        },
       ];
       
-      const filtered = cat && cat !== 'all' 
+      // Apply category filter (search is handled by backend when available)
+      let filtered = cat && cat !== 'all' 
         ? mockData.filter(d => d.category === cat)
         : mockData;
+      
+      // Apply search filter for mock data only
+      if (searchQuery) {
+        filtered = filtered.filter(d => 
+          d.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
       
       setDocuments(filtered);
       setPagination({
         currentPage: page,
-        totalPages: 1,
+        totalPages: Math.ceil(filtered.length / limit),
         totalItems: filtered.length,
         itemsPerPage: limit,
       });

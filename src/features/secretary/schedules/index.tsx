@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, Button, SearchBar, Table, Pagination, Modal, Spinner, ErrorAlert } from '@/components/ui';
-import { Calendar, Plus } from 'lucide-react';
+import { Calendar, Plus, Filter } from 'lucide-react';
 import { useSchedulesData } from './useSchedulesData';
 import secretaryService from '@/services/api/secretaryService';
+import facultyService from '@/services/api/facultyService';
 import type { ClassScheduleInput, ClassSchedule } from '@/types/secretary';
+import type { Faculty } from '@/types/faculty';
 import type { Column } from '@/components/ui/Table';
 
 export function SecretarySchedules() {
@@ -23,6 +25,9 @@ export function SecretarySchedules() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<ClassSchedule | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [facultyList, setFacultyList] = useState<Faculty[]>([]);
+  const [loadingFaculty, setLoadingFaculty] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [formData, setFormData] = useState<ClassScheduleInput>({
     courseCode: '',
     courseName: '',
@@ -35,6 +40,30 @@ export function SecretarySchedules() {
     academicYear: '2025-2026',
     section: '',
   });
+
+  // Filters
+  const [filters, setFilters] = useState({
+    day: [] as string[],
+    room: [] as string[],
+    semester: [] as string[],
+  });
+
+  // Fetch faculty list when component mounts
+  useEffect(() => {
+    fetchFacultyList();
+  }, []);
+
+  const fetchFacultyList = async () => {
+    try {
+      setLoadingFaculty(true);
+      const response = await facultyService.getFaculty({}, 1, 1000);
+      setFacultyList(response.data);
+    } catch (err) {
+      console.error('Failed to fetch faculty list:', err);
+    } finally {
+      setLoadingFaculty(false);
+    }
+  };
 
   const columns: Column<ClassSchedule>[] = [
     { key: 'courseCode', header: 'Course Code' },
@@ -153,33 +182,143 @@ export function SecretarySchedules() {
         )}
 
         {/* Search and Filters */}
-        <Card className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <SearchBar
-                value={search}
-                onChange={setSearch}
-                placeholder="Search by course code or instructor..."
-              />
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">Filters</h3>
+              {(filters.day.length > 0 || filters.room.length > 0 || filters.semester.length > 0) && (
+                <p className="text-sm text-gray-500 mt-0.5">
+                  {(filters.day.length > 0 ? 1 : 0) + (filters.room.length > 0 ? 1 : 0) + (filters.semester.length > 0 ? 1 : 0)} filter(s) active
+                </p>
+              )}
             </div>
-            <div className="flex gap-2">
-              <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                <option value="">All Days</option>
-                <option value="Monday">Monday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Wednesday">Wednesday</option>
-                <option value="Thursday">Thursday</option>
-                <option value="Friday">Friday</option>
-                <option value="Saturday">Saturday</option>
-              </select>
-              <select className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                <option value="">All Rooms</option>
-                <option value="301">Room 301</option>
-                <option value="302">Room 302</option>
-                <option value="303">Room 303</option>
-              </select>
-            </div>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            >
+              <Filter className="w-4 h-4" />
+              {showFilters ? 'Hide' : 'Show'} Filters
+            </button>
           </div>
+
+          {/* Search Bar - Always Visible */}
+          <div className="mb-4">
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              placeholder="Search by course code or instructor..."
+            />
+          </div>
+
+          {/* Advanced Filters - Collapsible */}
+          {showFilters && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Day
+                </label>
+                <select
+                  value={filters.day?.[0] ?? ''}
+                  onChange={(e) => setFilters({ ...filters, day: e.target.value ? [e.target.value] : [] })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">All Days</option>
+                  <option value="Monday">Monday</option>
+                  <option value="Tuesday">Tuesday</option>
+                  <option value="Wednesday">Wednesday</option>
+                  <option value="Thursday">Thursday</option>
+                  <option value="Friday">Friday</option>
+                  <option value="Saturday">Saturday</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Room
+                </label>
+                <select
+                  value={filters.room?.[0] ?? ''}
+                  onChange={(e) => setFilters({ ...filters, room: e.target.value ? [e.target.value] : [] })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">All Rooms</option>
+                  <option value="301">Room 301</option>
+                  <option value="302">Room 302</option>
+                  <option value="303">Room 303</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Semester
+                </label>
+                <select
+                  value={filters.semester?.[0] ?? ''}
+                  onChange={(e) => setFilters({ ...filters, semester: e.target.value ? [e.target.value] : [] })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">All Semesters</option>
+                  <option value="1st Semester">1st Semester</option>
+                  <option value="2nd Semester">2nd Semester</option>
+                  <option value="Summer">Summer</option>
+                </select>
+              </div>
+
+              <div className="md:col-span-3">
+                <button
+                  onClick={() => {
+                    setFilters({ day: [], room: [], semester: [] });
+                    setSearch('');
+                  }}
+                  className="w-full md:w-auto px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Reset All Filters
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Active Filters Summary */}
+          {(filters.day.length > 0 || filters.room.length > 0 || filters.semester.length > 0) && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-sm font-medium text-gray-700">Active filters:</span>
+                {filters.day.length > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                    Day: {filters.day[0]}
+                    <button
+                      onClick={() => setFilters({ ...filters, day: [] })}
+                      className="hover:text-blue-900"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {filters.room.length > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
+                    Room: {filters.room[0]}
+                    <button
+                      onClick={() => setFilters({ ...filters, room: [] })}
+                      className="hover:text-green-900"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {filters.semester.length > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+                    Semester: {filters.semester[0]}
+                    <button
+                      onClick={() => setFilters({ ...filters, semester: [] })}
+                      className="hover:text-purple-900"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Table */}
@@ -247,19 +386,31 @@ export function SecretarySchedules() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Instructor ID *
+                Instructor *
               </label>
-              <input
-                type="text"
+              <select
                 required
                 value={formData.instructorId}
                 onChange={(e) => setFormData({ ...formData, instructorId: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Enter instructor ID"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Note: In production, this would be a dropdown of available instructors
-              </p>
+                disabled={loadingFaculty}
+              >
+                <option value="">
+                  {loadingFaculty ? 'Loading faculty...' : 'Select an instructor'}
+                </option>
+                {facultyList
+                  .filter(f => f.status === 'active')
+                  .map((faculty) => (
+                    <option key={faculty.id} value={faculty.id}>
+                      {faculty.firstName} {faculty.lastName} ({faculty.facultyId})
+                    </option>
+                  ))}
+              </select>
+              {facultyList.length === 0 && !loadingFaculty && (
+                <p className="text-xs text-amber-600 mt-1">
+                  No active faculty members found
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div>

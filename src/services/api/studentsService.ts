@@ -149,40 +149,92 @@ class StudentsService {
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock student data');
-        // Return mock data instead of throwing
+        // Return mock data with frontend filtering
+        let mockData = [
+          {
+            id: '1',
+            studentId: 'CS-001',
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john@ccs.edu.ph',
+            program: 'BS Computer Science',
+            yearLevel: 3,
+            section: 'A',
+            status: 'active',
+            enrollmentDate: '2022-06-01',
+            createdAt: '2022-06-01',
+            updatedAt: '2024-04-12',
+          },
+          {
+            id: '2',
+            studentId: 'CS-002',
+            firstName: 'Jane',
+            lastName: 'Smith',
+            email: 'jane@ccs.edu.ph',
+            program: 'BS Information Technology',
+            yearLevel: 2,
+            section: 'B',
+            status: 'active',
+            enrollmentDate: '2023-06-01',
+            createdAt: '2023-06-01',
+            updatedAt: '2024-04-12',
+          },
+          {
+            id: '3',
+            studentId: 'CS-003',
+            firstName: 'Bob',
+            lastName: 'Johnson',
+            email: 'bob@ccs.edu.ph',
+            program: 'BS Computer Science',
+            yearLevel: 1,
+            section: 'A',
+            status: 'inactive',
+            enrollmentDate: '2024-06-01',
+            createdAt: '2024-06-01',
+            updatedAt: '2024-04-12',
+          },
+          {
+            id: '4',
+            studentId: 'IT-001',
+            firstName: 'Alice',
+            lastName: 'Williams',
+            email: 'alice@ccs.edu.ph',
+            program: 'BS Information Technology',
+            yearLevel: 4,
+            section: 'C',
+            status: 'graduated',
+            enrollmentDate: '2020-06-01',
+            createdAt: '2020-06-01',
+            updatedAt: '2024-04-12',
+          },
+        ];
+
+        // Apply frontend filters
+        if (filters) {
+          if (filters.status) {
+            mockData = mockData.filter(s => s.status === filters.status);
+          }
+          if (filters.program) {
+            mockData = mockData.filter(s => s.program === filters.program);
+          }
+          if (filters.yearLevel) {
+            mockData = mockData.filter(s => s.yearLevel === Number(filters.yearLevel));
+          }
+          if (filters.search) {
+            const searchLower = filters.search.toLowerCase();
+            mockData = mockData.filter(s => 
+              s.firstName.toLowerCase().includes(searchLower) ||
+              s.lastName.toLowerCase().includes(searchLower) ||
+              s.studentId.toLowerCase().includes(searchLower) ||
+              s.email.toLowerCase().includes(searchLower)
+            );
+          }
+        }
+
         return {
           success: true,
-          data: [
-            {
-              id: '1',
-              studentId: 'CS-001',
-              firstName: 'John',
-              lastName: 'Doe',
-              email: 'john@ccs.edu.ph',
-              program: 'BS Computer Science',
-              yearLevel: 3,
-              section: 'A',
-              status: 'active',
-              enrollmentDate: '2022-06-01',
-              createdAt: '2022-06-01',
-              updatedAt: '2024-04-12',
-            },
-            {
-              id: '2',
-              studentId: 'CS-002',
-              firstName: 'Jane',
-              lastName: 'Smith',
-              email: 'jane@ccs.edu.ph',
-              program: 'BS Information Technology',
-              yearLevel: 2,
-              section: 'B',
-              status: 'active',
-              enrollmentDate: '2023-06-01',
-              createdAt: '2023-06-01',
-              updatedAt: '2024-04-12',
-            },
-          ],
-          meta: { total: 2, page, limit, totalPages: 1 },
+          data: mockData,
+          meta: { total: mockData.length, page, limit, totalPages: Math.ceil(mockData.length / limit) },
         };
       }
       throw error;
@@ -323,9 +375,17 @@ class StudentsService {
   }
 
   async getStudentViolations(studentId: string): Promise<Violation[]> {
-    return handleRequest(() =>
-      api.get<Violation[] | ApiResponse<Violation[]>>(`/admin/students/${studentId}/violations`).then((r) => unwrap(r.data) as Violation[])
-    );
+    try {
+      const response = await api.get<Violation[] | ApiResponse<Violation[]>>(`/admin/students/${studentId}/violations`);
+      const data = unwrap(response.data);
+      return Array.isArray(data) ? data : [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable for student violations');
+        return [];
+      }
+      throw error;
+    }
   }
 
   async addStudentViolation(studentId: string, data: Omit<Violation, 'id'>): Promise<Violation> {
@@ -360,10 +420,17 @@ class StudentsService {
   }
 
   async getStudentSkills(studentId: string): Promise<StudentSkill[]> {
-    return handleRequest(() =>
-      api.get<StudentSkill[] | ApiResponse<StudentSkill[]>>(`/admin/students/${studentId}/skills`)
-        .then((r) => (unwrap(r.data) as any[]).map(mapSkill))
-    );
+    try {
+      const response = await api.get<StudentSkill[] | ApiResponse<StudentSkill[]>>(`/admin/students/${studentId}/skills`);
+      const data = unwrap(response.data);
+      return Array.isArray(data) ? data.map(mapSkill) : [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable for student skills');
+        return [];
+      }
+      throw error;
+    }
   }
 
   async getAllSkills(): Promise<StudentSkill[]> {
@@ -420,10 +487,17 @@ class StudentsService {
   }
 
   async getStudentAffiliations(studentId: string): Promise<StudentAffiliation[]> {
-    return handleRequest(() =>
-      api.get<StudentAffiliation[] | ApiResponse<StudentAffiliation[]>>(`/admin/students/${studentId}/affiliations`)
-        .then((r) => (unwrap(r.data) as any[]).map(mapAffiliation))
-    );
+    try {
+      const response = await api.get<StudentAffiliation[] | ApiResponse<StudentAffiliation[]>>(`/admin/students/${studentId}/affiliations`);
+      const data = unwrap(response.data);
+      return Array.isArray(data) ? data.map(mapAffiliation) : [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable for student affiliations');
+        return [];
+      }
+      throw error;
+    }
   }
 
   async addStudentAffiliation(studentId: string, data: { organization_name: string; role?: string; start_date: string; end_date?: string }): Promise<StudentAffiliation> {

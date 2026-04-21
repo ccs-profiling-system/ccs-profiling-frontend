@@ -62,7 +62,7 @@ export interface ClassSchedule {
 export interface Document {
   id: string;
   name: string;
-  category: 'student' | 'faculty' | 'event' | 'research';
+  category: 'student' | 'faculty' | 'event' | 'research' | 'forms' | 'department';
   fileUrl: string;
   fileSize: number;
   fileType: string;
@@ -134,7 +134,42 @@ export interface ClassScheduleInput {
 
 export interface DocumentUpload {
   file: File;
-  category: 'student' | 'faculty' | 'event' | 'research';
+  category: 'student' | 'faculty' | 'event' | 'research' | 'forms' | 'department';
   relatedEntityId?: string;
   description?: string;
+}
+
+export interface Event {
+  id: string;
+  title: string;
+  description: string;
+  eventType: 'seminar' | 'workshop' | 'conference' | 'competition' | 'meeting' | 'other';
+  startDate: string;
+  endDate: string;
+  location: string;
+  organizer: string;
+  targetAudience: string[];
+  maxParticipants?: number;
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'completed' | 'cancelled';
+  submittedBy?: string;
+  submittedByName?: string;
+  submittedAt?: string;
+  reviewedBy?: string;
+  reviewedByName?: string;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EventInput {
+  title: string;
+  description: string;
+  eventType: 'seminar' | 'workshop' | 'conference' | 'competition' | 'meeting' | 'other';
+  startDate: string;
+  endDate: string;
+  location: string;
+  organizer: string;
+  targetAudience: string[];
+  maxParticipants?: number;
 }
