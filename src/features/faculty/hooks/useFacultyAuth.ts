@@ -15,19 +15,6 @@ export function useFacultyAuth() {
       navigate('/faculty/login');
       return;
     }
-
-    // Use cached profile from localStorage if available (avoids backend dependency)
-    const cached = localStorage.getItem('faculty');
-    if (cached) {
-      try {
-        setFaculty(JSON.parse(cached));
-        setLoading(false);
-        return;
-      } catch {
-        // cached data malformed, fall through to fetch
-      }
-    }
-
     fetchFacultyProfile();
   }, [navigate]);
 
@@ -49,6 +36,7 @@ export function useFacultyAuth() {
 
   const logout = () => {
     localStorage.removeItem('facultyToken');
+    localStorage.removeItem('faculty');
     localStorage.removeItem('auth_user');
     navigate('/faculty/login');
   };
