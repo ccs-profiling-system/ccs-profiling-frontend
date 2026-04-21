@@ -17,6 +17,7 @@ export function FacultyLogin() {
     setLoading(true);
     try {
       const result = await facultyPortalService.login(email, password);
+      localStorage.removeItem('faculty');
       localStorage.setItem('facultyToken', result.token);
       navigate('/faculty/dashboard', { replace: true });
     } catch (err: unknown) {

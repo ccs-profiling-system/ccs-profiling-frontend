@@ -16,8 +16,8 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Add auth token if available
-    const token = localStorage.getItem('auth_token');
+    // Add auth token if available — check both admin and faculty tokens
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('facultyToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     } else if (DEV_MODE && BYPASS_AUTH) {

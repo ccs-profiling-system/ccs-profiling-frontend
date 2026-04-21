@@ -27,154 +27,185 @@ class FacultyPortalService {
 
   // ── Auth ──────────────────────────────────────────────────────────────────
 
-  async login(
-    email: string,
-    password: string
-  ): Promise<{ token: string; user: FacultyPortalProfile }> {
+  async login(email: string, password: string): Promise<{ token: string; user: FacultyPortalProfile }> {
     try {
-      const response = await api.post<{ token: string; user: FacultyPortalProfile }>(
-        '/auth/login',
+      const response = await api.post<any>(
+        '/v1/auth/login',
         { email, password }
       );
-      return response.data;
+      const d = response.data?.data ?? response.data;
+      // Backend returns nested tokens: data.tokens.access.token
+      const token = d?.tokens?.access?.token ?? d?.token;
+      const user = d?.user ?? {};
+      return {
+        token,
+        user: this.mapProfile(user),
+      };
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        console.warn('Backend unavailable, using mock login');
+        // Only fall back to mock if backend is unreachable (no response)
+        // If backend responded with 4xx, surface the real error
+        if (!error.response) {
+          console.warn('Backend unavailable, using mock login');
+          return {
+            token: 'mock-faculty-token',
+            user: {
+              id: '1', facultyId: 'FAC-001', firstName: 'Maria', lastName: 'Garcia',
+              email, department: 'Computer Science', position: 'Associate Professor',
+              specialization: 'Artificial Intelligence', status: 'active',
+            },
+          };
+        }
+        const message = (error.response.data as any)?.error?.message
+          || (error.response.data as any)?.message
+          || 'Invalid email or password';
+        throw new Error(message);
+      }
+      throw error;
+    }
+  }
+
+  // ── Profile ───────────────────────────────────────────────────────────────
+
+  async getProfile(): Promise<FacultyPortalProfile> {
+    try {
+      const response = await api.get<{ success: boolean; data: any }>(
+        '/faculty/profile',
+        { headers: this.getAuthHeader() }
+      );
+      return this.mapProfile(response.data.data ?? response.data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable, using mock profile');
+        const cached = localStorage.getItem('faculty');
+        if (cached) return JSON.parse(cached);
         return {
-          token: 'mock-faculty-token',
-          user: {
-            id: '1',
-            facultyId: 'FAC-001',
-            firstName: 'Maria',
-            lastName: 'Garcia',
-            email,
-            department: 'Computer Science',
-            position: 'Associate Professor',
-            specialization: 'Artificial Intelligence',
-            status: 'active',
-          },
+          id: '1', facultyId: 'FAC-001', firstName: 'Maria', lastName: 'Garcia',
+          email: 'maria@ccs.edu.ph', department: 'Computer Science',
+          position: 'Associate Professor', specialization: 'Artificial Intelligence', status: 'active',
         };
       }
       throw error;
     }
   }
 
-  async getProfile(): Promise<FacultyPortalProfile> {
+  async updateProfile(_facultyId: string, data: ProfileUpdatePayload): Promise<FacultyPortalProfile> {
     try {
-      const response = await api.get<FacultyPortalProfile>('/faculty/profile', {
-        headers: this.getAuthHeader(),
-      });
-      return response.data;
+      const response = await api.put<{ success: boolean; data: any }>(
+        '/faculty/profile',
+        {
+          email: data.email,
+          specialization: data.specialization,
+          // Map frontend fields to backend-accepted fields
+          ...(data.position && { office_location: data.position }),
+        },
+        { headers: this.getAuthHeader() }
+      );
+      return this.mapProfile(response.data.data ?? response.data);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        console.warn('Backend unavailable, using mock profile');
-        return {
-          id: '1',
-          facultyId: 'FAC-001',
-          firstName: 'Maria',
-          lastName: 'Garcia',
-          email: 'maria@ccs.edu.ph',
-          department: 'Computer Science',
-          position: 'Associate Professor',
-          specialization: 'Artificial Intelligence',
-          status: 'active',
-        };
+        console.warn('Backend unavailable, using mock updateProfile');
+        return { id: _facultyId, facultyId: _facultyId, ...data, status: 'active' };
       }
       throw error;
     }
+  }
+
+  private mapProfile(raw: any): FacultyPortalProfile {
+    return {
+      id: raw.id,
+      facultyId: raw.facultyId ?? raw.faculty_id,
+      firstName: raw.firstName ?? raw.first_name,
+      lastName: raw.lastName ?? raw.last_name,
+      email: raw.email,
+      department: raw.department,
+      position: raw.position ?? raw.office_location,
+      specialization: raw.specialization,
+      status: raw.status ?? 'active',
+    };
   }
 
   // ── Courses & Teaching Load ───────────────────────────────────────────────
 
-  async getCourses(facultyId: string): Promise<FacultyCourse[]> {
+  async getCourses(_facultyId: string): Promise<FacultyCourse[]> {
     try {
-      const response = await api.get<FacultyCourse[] | { data: FacultyCourse[] }>(
-        `/admin/faculty/${facultyId}/subjects`,
+      const response = await api.get<{ success: boolean; data: any[] }>(
+        '/faculty/courses',
         { headers: this.getAuthHeader() }
       );
-      const raw = response.data;
-      return Array.isArray(raw) ? raw : (raw as { data: FacultyCourse[] }).data ?? [];
+      return (response.data.data ?? []).map(this.mapCourse).filter(
+        (course, index, self) => index === self.findIndex((c) => c.subjectId === course.subjectId)
+      );
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock courses');
         return [
-          {
-            subjectId: 'subj-1',
-            subjectCode: 'CS101',
-            subjectName: 'Introduction to Programming',
-            section: 'A',
-            semester: '1st',
-            year: 2024,
-            schedule: 'MWF 8:00-9:00 AM',
-          },
-          {
-            subjectId: 'subj-2',
-            subjectCode: 'CS201',
-            subjectName: 'Data Structures',
-            section: 'B',
-            semester: '1st',
-            year: 2024,
-            schedule: 'TTh 10:00-11:30 AM',
-          },
+          { subjectId: 'subj-1', subjectCode: 'CS101', subjectName: 'Introduction to Programming', section: 'A', semester: '1st', year: 2024, schedule: 'MWF 8:00-9:00 AM' },
+          { subjectId: 'subj-2', subjectCode: 'CS201', subjectName: 'Data Structures', section: 'B', semester: '1st', year: 2024, schedule: 'TTh 10:00-11:30 AM' },
         ];
       }
       throw error;
     }
   }
 
-  async getTeachingLoad(facultyId: string): Promise<TeachingLoadSummary> {
+  async getTeachingLoad(_facultyId: string): Promise<TeachingLoadSummary> {
     try {
-      const response = await api.get<TeachingLoadSummary | { data: TeachingLoadSummary }>(
-        `/admin/faculty/${facultyId}/teaching-load`,
+      const response = await api.get<{ success: boolean; data: any }>(
+        '/faculty/teaching-load',
         { headers: this.getAuthHeader() }
       );
-      const raw = response.data;
-      return (raw as { data: TeachingLoadSummary }).data ?? (raw as TeachingLoadSummary);
+      const d = response.data.data ?? response.data;
+      return {
+        totalUnits: d.total_units ?? d.totalUnits ?? 0,
+        totalClasses: d.total_courses ?? d.totalClasses ?? 0,
+        currentSemester: d.academic_year
+          ? `${d.semester ?? ''} ${d.academic_year}`.trim()
+          : d.currentSemester ?? '',
+      };
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock teaching load');
-        return {
-          totalUnits: 18,
-          totalClasses: 3,
-          currentSemester: '1st Semester 2024-2025',
-        };
+        return { totalUnits: 18, totalClasses: 3, currentSemester: '1st Semester 2024-2025' };
       }
       throw error;
     }
   }
 
+  private mapCourse(raw: any): FacultyCourse {
+    return {
+      subjectId: raw.id ?? raw.subjectId,
+      subjectCode: raw.subject_code ?? raw.subjectCode,
+      subjectName: raw.subject_name ?? raw.subjectName,
+      section: raw.section,
+      semester: raw.semester,
+      year: raw.academic_year ? parseInt(raw.academic_year.split('-')[0]) : raw.year,
+      schedule: raw.schedule,
+    };
+  }
+
   // ── Class Roster ──────────────────────────────────────────────────────────
 
-  async getRoster(facultyId: string, subjectId: string): Promise<RosterStudent[]> {
+  async getRoster(_facultyId: string, subjectId: string): Promise<RosterStudent[]> {
     try {
-      const response = await api.get<RosterStudent[] | { data: RosterStudent[] }>(
+      const response = await api.get<{ success: boolean; data: any[] }>(
         `/faculty/courses/${subjectId}/roster`,
         { headers: this.getAuthHeader() }
       );
-      const raw = response.data;
-      return Array.isArray(raw) ? raw : (raw as { data: RosterStudent[] }).data ?? [];
+      return (response.data.data ?? []).map((s: any) => ({
+        id: s.student_id ?? s.id,
+        studentId: s.student_number ?? s.studentId,
+        firstName: s.first_name ?? s.firstName,
+        lastName: s.last_name ?? s.lastName,
+        program: s.program ?? '',
+        yearLevel: s.year_level ?? s.yearLevel ?? 1,
+        section: s.section ?? '',
+      }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock roster');
         return [
-          {
-            id: 'stu-1',
-            studentId: 'CS-001',
-            firstName: 'John',
-            lastName: 'Doe',
-            program: 'BS Computer Science',
-            yearLevel: 2,
-            section: 'A',
-          },
-          {
-            id: 'stu-2',
-            studentId: 'CS-002',
-            firstName: 'Jane',
-            lastName: 'Smith',
-            program: 'BS Information Technology',
-            yearLevel: 2,
-            section: 'A',
-          },
+          { id: 'stu-1', studentId: 'CS-001', firstName: 'John', lastName: 'Doe', program: 'BS Computer Science', yearLevel: 2, section: 'A' },
+          { id: 'stu-2', studentId: 'CS-002', firstName: 'Jane', lastName: 'Smith', program: 'BS Information Technology', yearLevel: 2, section: 'A' },
         ];
       }
       throw error;
@@ -185,15 +216,14 @@ class FacultyPortalService {
 
   async getAttendance(courseId: string, date: string): Promise<AttendanceRecord[]> {
     try {
-      const response = await api.get<AttendanceRecord[] | { data: AttendanceRecord[] }>(
-        '/faculty/attendance',
-        {
-          params: { courseId, date },
-          headers: this.getAuthHeader(),
-        }
+      const response = await api.get<{ success: boolean; data: any[] }>(
+        `/faculty/courses/${courseId}/attendance`,
+        { params: { date }, headers: this.getAuthHeader() }
       );
-      const raw = response.data;
-      return Array.isArray(raw) ? raw : (raw as { data: AttendanceRecord[] }).data ?? [];
+      return (response.data.data ?? []).map((r: any) => ({
+        studentId: r.student_number ?? r.studentId ?? r.student_id,
+        status: r.status,
+      }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock attendance');
@@ -205,9 +235,17 @@ class FacultyPortalService {
 
   async submitAttendance(payload: AttendanceSubmission): Promise<void> {
     try {
-      await api.post('/faculty/attendance', payload, {
-        headers: this.getAuthHeader(),
-      });
+      await api.post(
+        `/faculty/courses/${payload.courseId}/attendance`,
+        {
+          date: payload.date,
+          attendance_records: payload.records.map((r) => ({
+            student_id: r.studentId,
+            status: r.status,
+          })),
+        },
+        { headers: this.getAuthHeader() }
+      );
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, skipping attendance submission');
@@ -219,100 +257,179 @@ class FacultyPortalService {
 
   // ── Research ──────────────────────────────────────────────────────────────
 
-  async getResearchProjects(facultyId: string): Promise<FacultyResearchProject[]> {
+  async getResearchProjects(_facultyId: string): Promise<FacultyResearchProject[]> {
     try {
-      const response = await api.get<FacultyResearchProject[] | { data: FacultyResearchProject[] }>(
-        `/admin/faculty/${facultyId}/research`,
+      const response = await api.get<{ success: boolean; data: any[] }>(
+        '/faculty/research',
         { headers: this.getAuthHeader() }
       );
-      const raw = response.data;
-      return Array.isArray(raw) ? raw : (raw as { data: FacultyResearchProject[] }).data ?? [];
+      return (response.data.data ?? []).map(this.mapResearch);
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock research projects');
-        return [
-          {
-            id: 'res-1',
-            title: 'AI-Assisted Learning Systems',
-            description: 'Research on applying machine learning to adaptive educational platforms.',
-            status: 'ongoing',
-            role: 'Principal Investigator',
-          },
-        ];
+        return [{ id: 'res-1', title: 'AI-Assisted Learning Systems', description: 'Research on applying machine learning to adaptive educational platforms.', status: 'ongoing', role: 'Principal Investigator' }];
       }
       throw error;
     }
+  }
+
+  async createResearchProject(_facultyId: string, data: ResearchSubmissionPayload): Promise<FacultyResearchProject> {
+    try {
+      const response = await api.post<{ success: boolean; data: any }>(
+        '/faculty/research',
+        {
+          title: data.title,
+          description: data.description,
+          research_type: 'thesis',
+          status: data.status === 'proposed' ? 'draft' : data.status,
+        },
+        { headers: this.getAuthHeader() }
+      );
+      return this.mapResearch(response.data.data ?? response.data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable, using mock createResearchProject');
+        return { id: `res-${Date.now()}`, title: data.title, description: data.description, status: data.status, role: data.role };
+      }
+      throw error;
+    }
+  }
+
+  async updateResearchProject(_facultyId: string, projectId: string, data: ResearchSubmissionPayload): Promise<FacultyResearchProject> {
+    try {
+      const response = await api.put<{ success: boolean; data: any }>(
+        `/faculty/research/${projectId}`,
+        {
+          title: data.title,
+          description: data.description,
+          status: data.status === 'proposed' ? 'draft' : data.status,
+        },
+        { headers: this.getAuthHeader() }
+      );
+      return this.mapResearch(response.data.data ?? response.data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable, using mock updateResearchProject');
+        return { id: projectId, title: data.title, description: data.description, status: data.status, role: data.role };
+      }
+      throw error;
+    }
+  }
+
+  private mapResearch(raw: any): FacultyResearchProject {
+    // Determine faculty's role from advisers array if present
+    const adviserRole = raw.advisers?.[0]?.adviser_role ?? raw.role ?? 'researcher';
+    return {
+      id: raw.id,
+      title: raw.title,
+      description: raw.description,
+      status: raw.status === 'draft' ? 'proposed' : raw.status,
+      role: adviserRole,
+    };
   }
 
   // ── Events ────────────────────────────────────────────────────────────────
 
   async getEvents(): Promise<FacultyEvent[]> {
     try {
-      const response = await api.get<FacultyEvent[] | { data: FacultyEvent[] }>(
-        '/admin/events',
+      const response = await api.get<{ success: boolean; data: any[] }>(
+        '/faculty/events',
         { headers: this.getAuthHeader() }
       );
-      const raw = response.data;
-      return Array.isArray(raw) ? raw : (raw as { data: FacultyEvent[] }).data ?? [];
+      return (response.data.data ?? []).map(this.mapEvent).filter(
+        (event, index, self) => index === self.findIndex((e) => e.id === event.id)
+      );
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock events');
-        return [
-          {
-            id: 'evt-1',
-            title: 'Faculty Development Seminar',
-            date: '2024-08-15',
-            startTime: '09:00',
-            endTime: '12:00',
-            location: 'CCS Auditorium',
-            category: 'Seminar',
-            status: 'upcoming',
-            description: 'Annual faculty development and training seminar.',
-          },
-        ];
+        return [{ id: 'evt-1', title: 'Faculty Development Seminar', date: '2024-08-15', startTime: '09:00', endTime: '12:00', location: 'CCS Auditorium', category: 'Seminar', status: 'upcoming', description: 'Annual faculty development and training seminar.' }];
       }
       throw error;
     }
   }
-  // ── Profile ───────────────────────────────────────────────────────────────
 
-  async updateProfile(facultyId: string, data: ProfileUpdatePayload): Promise<FacultyPortalProfile> {
+  async getMyParticipation(): Promise<EventParticipation[]> {
     try {
-      const response = await api.put<FacultyPortalProfile>(
-        `/admin/faculty/${facultyId}`,
-        data,
+      const response = await api.get<{ success: boolean; data: any[] }>(
+        '/faculty/events/my-participation',
         { headers: this.getAuthHeader() }
       );
-      return response.data;
+      return (response.data.data ?? []).map((p: any) => ({
+        id: p.event_id ?? p.id,
+        eventId: p.event_id ?? p.eventId,
+        eventTitle: p.event_name ?? p.eventTitle,
+        eventDate: p.event_date ?? p.eventDate,
+        status: p.attendance_status ?? p.status ?? 'registered',
+      }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        console.warn('Backend unavailable, using mock updateProfile');
-        return {
-          id: facultyId,
-          facultyId,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          department: data.department,
-          position: data.position,
-          specialization: data.specialization,
-          status: 'active',
-        };
+        console.warn('Backend unavailable, using mock getMyParticipation');
+        return [];
       }
       throw error;
     }
+  }
+
+  async registerEventParticipation(eventId: string): Promise<EventParticipation> {
+    try {
+      const response = await api.post<{ success: boolean; data: any }>(
+        `/faculty/events/${eventId}/register`,
+        {},
+        { headers: this.getAuthHeader() }
+      );
+      const d = response.data.data ?? response.data;
+      return {
+        id: d.event_id ?? d.id ?? `part-${Date.now()}`,
+        eventId: d.event_id ?? eventId,
+        eventTitle: d.event_name ?? d.eventTitle ?? '',
+        eventDate: d.event_date ?? d.eventDate ?? new Date().toISOString(),
+        status: d.attendance_status ?? d.status ?? 'registered',
+      };
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable, using mock registerEventParticipation');
+        return { id: `part-${Date.now()}`, eventId, eventTitle: '', eventDate: new Date().toISOString(), status: 'registered' };
+      }
+      throw error;
+    }
+  }
+
+  private mapEvent(raw: any): FacultyEvent {
+    // Backend returns event_date, event_type; frontend expects date, category, status
+    const eventDate = raw.event_date ?? raw.date ?? '';
+    const now = new Date().toISOString().split('T')[0];
+    let status: FacultyEvent['status'] = raw.status ?? 'upcoming';
+    if (!raw.status) {
+      status = eventDate >= now ? 'upcoming' : 'completed';
+    }
+    return {
+      id: raw.id,
+      title: raw.title,
+      date: eventDate,
+      startTime: raw.startTime ?? raw.start_time ?? '',
+      endTime: raw.endTime ?? raw.end_time ?? '',
+      location: raw.location ?? '',
+      category: raw.event_type ?? raw.category ?? '',
+      status,
+      description: raw.description,
+    };
   }
 
   // ── Materials ─────────────────────────────────────────────────────────────
 
   async getMaterials(courseId: string): Promise<CourseMaterial[]> {
     try {
-      const response = await api.get<CourseMaterial[] | { data: CourseMaterial[] }>(
+      const response = await api.get<{ success: boolean; data: any[] }>(
         `/faculty/courses/${courseId}/materials`,
         { headers: this.getAuthHeader() }
       );
-      const raw = response.data;
-      return Array.isArray(raw) ? raw : (raw as { data: CourseMaterial[] }).data ?? [];
+      return (response.data.data ?? []).map((m: any) => ({
+        id: m.id,
+        fileName: m.file_name ?? m.fileName,
+        fileType: m.file_type ?? m.fileType,
+        uploadDate: m.uploaded_at ?? m.uploadDate,
+        downloadUrl: m.download_url ?? m.downloadUrl ?? '',
+      }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock getMaterials');
@@ -326,22 +443,23 @@ class FacultyPortalService {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await api.post<CourseMaterial>(
+      const response = await api.post<{ success: boolean; data: any }>(
         `/faculty/courses/${courseId}/materials`,
         formData,
         { headers: { ...this.getAuthHeader(), 'Content-Type': 'multipart/form-data' } }
       );
-      return response.data;
+      const d = response.data.data ?? response.data;
+      return {
+        id: d.id,
+        fileName: d.file_name ?? d.fileName ?? file.name,
+        fileType: d.file_type ?? d.fileType ?? file.type,
+        uploadDate: d.uploaded_at ?? d.uploadDate ?? new Date().toISOString(),
+        downloadUrl: d.download_url ?? d.downloadUrl ?? '',
+      };
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock uploadMaterial');
-        return {
-          id: `mat-${Date.now()}`,
-          fileName: file.name,
-          fileType: file.type,
-          uploadDate: new Date().toISOString(),
-          downloadUrl: '',
-        };
+        return { id: `mat-${Date.now()}`, fileName: file.name, fileType: file.type, uploadDate: new Date().toISOString(), downloadUrl: '' };
       }
       throw error;
     }
@@ -361,106 +479,19 @@ class FacultyPortalService {
     }
   }
 
-  // ── Research (write) ──────────────────────────────────────────────────────
-
-  async createResearchProject(facultyId: string, data: ResearchSubmissionPayload): Promise<FacultyResearchProject> {
-    try {
-      const response = await api.post<FacultyResearchProject>(
-        `/admin/faculty/${facultyId}/research`,
-        data,
-        { headers: this.getAuthHeader() }
-      );
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        console.warn('Backend unavailable, using mock createResearchProject');
-        return {
-          id: `res-${Date.now()}`,
-          title: data.title,
-          description: data.description,
-          status: data.status,
-          role: data.role,
-        };
-      }
-      throw error;
-    }
-  }
-
-  async updateResearchProject(facultyId: string, projectId: string, data: ResearchSubmissionPayload): Promise<FacultyResearchProject> {
-    try {
-      const response = await api.put<FacultyResearchProject>(
-        `/admin/faculty/${facultyId}/research/${projectId}`,
-        data,
-        { headers: this.getAuthHeader() }
-      );
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        console.warn('Backend unavailable, using mock updateResearchProject');
-        return {
-          id: projectId,
-          title: data.title,
-          description: data.description,
-          status: data.status,
-          role: data.role,
-        };
-      }
-      throw error;
-    }
-  }
-
-  // ── Event Participation ───────────────────────────────────────────────────
-
-  async registerEventParticipation(eventId: string): Promise<EventParticipation> {
-    try {
-      const response = await api.post<EventParticipation>(
-        `/faculty/events/${eventId}/participate`,
-        {},
-        { headers: this.getAuthHeader() }
-      );
-      return response.data;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        console.warn('Backend unavailable, using mock registerEventParticipation');
-        return {
-          id: `part-${Date.now()}`,
-          eventId,
-          eventTitle: '',
-          eventDate: new Date().toISOString(),
-          status: 'registered',
-        };
-      }
-      throw error;
-    }
-  }
-
-  async getMyParticipation(): Promise<EventParticipation[]> {
-    try {
-      const response = await api.get<EventParticipation[] | { data: EventParticipation[] }>(
-        '/faculty/events/participation',
-        { headers: this.getAuthHeader() }
-      );
-      const raw = response.data;
-      return Array.isArray(raw) ? raw : (raw as { data: EventParticipation[] }).data ?? [];
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        console.warn('Backend unavailable, using mock getMyParticipation');
-        return [];
-      }
-      throw error;
-    }
-  }
-
   // ── Skills ────────────────────────────────────────────────────────────────
 
   async getSkills(): Promise<FacultyPortalSkill[]> {
     try {
-      const response = await api.get<FacultyPortalSkill[] | { data: FacultyPortalSkill[] }>(
+      const response = await api.get<{ success: boolean; data: any[] }>(
         '/faculty/profile/skills',
         { headers: this.getAuthHeader() }
       );
-      const raw = response.data;
-      return Array.isArray(raw) ? raw : (raw as { data: FacultyPortalSkill[] }).data ?? [];
+      return (response.data.data ?? []).map((s: any) => ({
+        skillName: s.skillName ?? s.skill_name,
+        category: s.category ?? 'technical',
+        proficiencyLevel: s.proficiencyLevel ?? s.proficiency_level ?? 'intermediate',
+      }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock getSkills');
@@ -472,13 +503,16 @@ class FacultyPortalService {
 
   async updateSkills(skills: FacultyPortalSkill[]): Promise<FacultyPortalSkill[]> {
     try {
-      const response = await api.put<FacultyPortalSkill[] | { data: FacultyPortalSkill[] }>(
+      const response = await api.put<{ success: boolean; data: any[] }>(
         '/faculty/profile/skills',
-        { skills },
+        { skills: skills.map((s) => ({ skillName: s.skillName, category: s.category, proficiencyLevel: s.proficiencyLevel })) },
         { headers: this.getAuthHeader() }
       );
-      const raw = response.data;
-      return Array.isArray(raw) ? raw : (raw as { data: FacultyPortalSkill[] }).data ?? [];
+      return (response.data.data ?? skills).map((s: any) => ({
+        skillName: s.skillName ?? s.skill_name,
+        category: s.category ?? 'technical',
+        proficiencyLevel: s.proficiencyLevel ?? s.proficiency_level ?? 'intermediate',
+      }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock updateSkills');
@@ -492,12 +526,16 @@ class FacultyPortalService {
 
   async getAffiliations(): Promise<FacultyPortalAffiliation[]> {
     try {
-      const response = await api.get<FacultyPortalAffiliation[] | { data: FacultyPortalAffiliation[] }>(
+      const response = await api.get<{ success: boolean; data: any[] }>(
         '/faculty/profile/affiliations',
         { headers: this.getAuthHeader() }
       );
-      const raw = response.data;
-      return Array.isArray(raw) ? raw : (raw as { data: FacultyPortalAffiliation[] }).data ?? [];
+      return (response.data.data ?? []).map((a: any) => ({
+        organizationName: a.organizationName ?? a.organization_name,
+        type: a.type ?? 'other',
+        role: a.role,
+        joinDate: a.joinDate ?? a.join_date ?? a.start_date ?? '',
+      }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock getAffiliations');
@@ -509,13 +547,24 @@ class FacultyPortalService {
 
   async updateAffiliations(affiliations: FacultyPortalAffiliation[]): Promise<FacultyPortalAffiliation[]> {
     try {
-      const response = await api.put<FacultyPortalAffiliation[] | { data: FacultyPortalAffiliation[] }>(
+      const response = await api.put<{ success: boolean; data: any[] }>(
         '/faculty/profile/affiliations',
-        { affiliations },
+        {
+          affiliations: affiliations.map((a) => ({
+            organizationName: a.organizationName,
+            type: a.type,
+            role: a.role,
+            joinDate: a.joinDate,
+          })),
+        },
         { headers: this.getAuthHeader() }
       );
-      const raw = response.data;
-      return Array.isArray(raw) ? raw : (raw as { data: FacultyPortalAffiliation[] }).data ?? [];
+      return (response.data.data ?? affiliations).map((a: any) => ({
+        organizationName: a.organizationName ?? a.organization_name,
+        type: a.type ?? 'other',
+        role: a.role,
+        joinDate: a.joinDate ?? a.join_date ?? a.start_date ?? '',
+      }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock updateAffiliations');
@@ -529,12 +578,18 @@ class FacultyPortalService {
 
   async getParticipation(subjectId: string, date?: string): Promise<StudentParticipationRecord[]> {
     try {
-      const response = await api.get<StudentParticipationRecord[] | { data: StudentParticipationRecord[] }>(
+      const response = await api.get<{ success: boolean; data: any[] }>(
         `/faculty/courses/${subjectId}/participation`,
         { params: date ? { date } : {}, headers: this.getAuthHeader() }
       );
-      const raw = response.data;
-      return Array.isArray(raw) ? raw : (raw as { data: StudentParticipationRecord[] }).data ?? [];
+      return (response.data.data ?? []).map((r: any) => ({
+        studentId: r.student_number ?? r.studentId ?? r.student_id,
+        firstName: r.student_name?.split(' ')[0] ?? r.firstName ?? '',
+        lastName: r.student_name?.split(' ').slice(1).join(' ') ?? r.lastName ?? '',
+        participationScore: r.participation_score ?? r.participationScore ?? 3,
+        remarks: r.remarks ?? '',
+        date: r.date ?? date ?? '',
+      }));
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock getParticipation');
@@ -548,7 +603,14 @@ class FacultyPortalService {
     try {
       await api.post(
         `/faculty/courses/${subjectId}/participation`,
-        payload,
+        {
+          date: payload.date,
+          records: payload.records.map((r) => ({
+            studentId: r.studentId,
+            participationScore: r.participationScore,
+            remarks: r.remarks,
+          })),
+        },
         { headers: this.getAuthHeader() }
       );
     } catch (error: unknown) {
