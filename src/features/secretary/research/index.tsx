@@ -7,7 +7,7 @@ import { SearchBar } from '@/components/ui/SearchBar';
 import { Spinner } from '@/components/ui/Spinner';
 import { ErrorAlert } from '@/components/ui/ErrorAlert';
 import { FlaskConical, Filter, Eye, Plus, Edit2, Send } from 'lucide-react';
-import adminResearchService from '@/services/api/adminResearchService';
+import secretaryResearchService from '@/services/api/secretaryResearchService';
 import { ResearchFormModal } from './ResearchFormModal';
 import { studentsService, facultyService } from '@/services/api';
 
@@ -64,15 +64,28 @@ export function SecretaryResearch() {
         category: filters.category.length > 0 ? filters.category[0] : undefined,
       };
 
-      // Use the same endpoint as admin - /api/research
-      const response = await adminResearchService.getResearch(filterParams);
+      // Use secretary research service
+      const response = await secretaryResearchService.getResearch(filterParams, 1, 1000);
       
-      // Secretary can see all research, including those with approval statuses
-      // The backend should return research with approval_status field
-      setResearch(response.data as ResearchData[] || []);
+      // Map response to ResearchData format
+      const mappedData: ResearchData[] = response.data.map((r) => ({
+        id: r.id,
+        title: r.title,
+        abstract: r.abstract,
+        category: r.category,
+        program: r.program,
+        status: r.approval_status as ResearchStatus, // Use approval_status for secretary view
+        authors: r.authors,
+        adviser: r.adviser,
+        approvalStatus: r.approval_status,
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt,
+      }));
+      
+      setResearch(mappedData);
     } catch (err: any) {
       console.error('Failed to fetch research:', err);
-      setError('Failed to load research data. Please ensure the backend is running.');
+      setError(err.response?.data?.message || 'Failed to load research data. Please ensure the backend is running.');
       setResearch([]);
     } finally {
       setLoading(false);
@@ -128,10 +141,15 @@ export function SecretaryResearch() {
 
   const handleCreateResearch = async (payload: any) => {
     try {
-      // Call API to create research (will be in draft/pending status)
-      // await secretaryService.createResearch(payload);
-      console.log('Creating research:', payload);
-      alert('Research project submitted for approval!');
+      await secretaryResearchService.createResearch({
+        title: payload.title,
+        abstract: payload.abstract,
+        category: payload.category,
+        program: payload.program,
+        authors: payload.authors,
+        adviser: payload.adviser,
+        files: payload.files,
+      });
       fetchResearch();
     } catch (err: any) {
       throw new Error(err.response?.data?.message || 'Failed to create research');
@@ -141,9 +159,15 @@ export function SecretaryResearch() {
   const handleUpdateResearch = async (payload: any) => {
     if (!editTarget) return;
     try {
-      // await secretaryService.updateResearch(editTarget.id, payload);
-      console.log('Updating research:', editTarget.id, payload);
-      alert('Research project updated!');
+      await secretaryResearchService.updateResearch(editTarget.id, {
+        title: payload.title,
+        abstract: payload.abstract,
+        category: payload.category,
+        program: payload.program,
+        authors: payload.authors,
+        adviser: payload.adviser,
+        files: payload.files,
+      });
       fetchResearch();
     } catch (err: any) {
       throw new Error(err.response?.data?.message || 'Failed to update research');
@@ -153,8 +177,7 @@ export function SecretaryResearch() {
   const handleSubmitForApproval = async (id: string) => {
     if (!confirm('Submit this research for approval?')) return;
     try {
-      // await secretaryService.submitResearchForApproval(id);
-      console.log('Submitting research for approval:', id);
+      await secretaryResearchService.submitForApproval(id);
       alert('Research submitted for approval!');
       fetchResearch();
     } catch (err: any) {
