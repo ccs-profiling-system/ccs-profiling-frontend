@@ -5,7 +5,6 @@ import { StudentDashboard } from './StudentDashboard';
 import { AuthProvider } from '@/context/AuthContext';
 import studentService from '@/services/api/studentService';
 import courseService from '@/services/api/courseService';
-import { AuthProvider } from '@/context/AuthContext';
 import type { StudentProfile, Course } from '../types';
 
 // Mock the services
