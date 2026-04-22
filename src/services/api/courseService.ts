@@ -4,7 +4,7 @@ import type { Course } from '@/features/student/types';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const courseAPI = axios.create({
-  baseURL: `${API_BASE}/courses`,
+  baseURL: `${API_BASE}/student/courses`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -47,12 +47,8 @@ export const courseService = {
   },
 
   async getCourseById(courseId: string): Promise<Course> {
-    try {
-      const response = await courseAPI.get(`/${courseId}`);
-      return response.data;
-    } catch (error) {
-      throw new Error('Failed to fetch course');
-    }
+    const response = await courseAPI.get(`/${courseId}`);
+    return response.data;
   },
 
   async getSchedule() {

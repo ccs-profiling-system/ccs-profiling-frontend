@@ -6,12 +6,14 @@ import { BarChart3, BookOpen, Clock, AlertCircle, ArrowRight, Loader } from 'luc
 import { useNavigate } from 'react-router-dom';
 import studentService from '@/services/api/studentService';
 import courseService from '@/services/api/courseService';
-import type { StudentProfile, Course, Notification } from '../types';
+import type { StudentProfile, Course } from '../types';
 
 interface DashboardData {
   profile: StudentProfile | null;
   courses: Course[];
-  notifications: Notification[];
+  enrolledCount: number;
+  upcomingDeadlines: number;
+  creditsCompleted: number;
   loading: boolean;
   error: string | null;
 }
@@ -21,7 +23,9 @@ export function StudentDashboard() {
   const [data, setData] = useState<DashboardData>({
     profile: null,
     courses: [],
-    notifications: [],
+    enrolledCount: 0,
+    upcomingDeadlines: 0,
+    creditsCompleted: 0,
     loading: true,
     error: null,
   });
@@ -30,22 +34,20 @@ export function StudentDashboard() {
     try {
       setData((prev) => ({ ...prev, loading: true, error: null }));
 
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Request timeout')), 5000)
-      );
-
-      const [profile, courses] = await Promise.race([
-        Promise.all([
-          studentService.getProfile(),
-          courseService.getEnrolledCourses(),
-        ]),
-        timeoutPromise,
-      ]) as [StudentProfile, Course[]];
+      // Use the dedicated dashboard endpoint first, fall back to separate calls
+      const [dashboardSummary, profile, courses] = await Promise.all([
+        studentService.getDashboardData(),
+        studentService.getProfile(),
+        courseService.getEnrolledCourses(),
+      ]);
 
       setData((prev) => ({
         ...prev,
         profile,
         courses,
+        enrolledCount: dashboardSummary.enrolledCourses ?? courses.length,
+        upcomingDeadlines: dashboardSummary.upcomingDeadlines ?? 0,
+        creditsCompleted: dashboardSummary.creditsCompleted ?? 0,
         loading: false,
       }));
     } catch (error) {
@@ -62,7 +64,7 @@ export function StudentDashboard() {
     fetchDashboardData();
   }, []);
 
-  const { profile, courses, loading, error } = data;
+  const { profile, courses, enrolledCount, upcomingDeadlines: deadlineCount, creditsCompleted, loading, error } = data;
 
   // Mock upcoming deadlines - in production, this would come from an API
   const upcomingDeadlines = [
@@ -153,7 +155,7 @@ export function StudentDashboard() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Enrolled Courses</p>
-                <p className="text-3xl font-bold text-gray-900">{courses.length}</p>
+                <p className="text-3xl font-bold text-gray-900">{enrolledCount}</p>
                 <p className="text-xs text-gray-500 mt-1">This semester</p>
               </div>
               <BookOpen className="w-8 h-8 text-primary" />
@@ -164,7 +166,7 @@ export function StudentDashboard() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Upcoming Deadlines</p>
-                <p className="text-3xl font-bold text-gray-900">{upcomingDeadlines.length}</p>
+                <p className="text-3xl font-bold text-gray-900">{deadlineCount || upcomingDeadlines.length}</p>
                 <p className="text-xs text-gray-500 mt-1">Next 30 days</p>
               </div>
               <Clock className="w-8 h-8 text-primary" />
@@ -175,7 +177,7 @@ export function StudentDashboard() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Credits Completed</p>
-                <p className="text-3xl font-bold text-gray-900">{profile?.yearLevel ? profile.yearLevel * 30 : 0}</p>
+                <p className="text-3xl font-bold text-gray-900">{creditsCompleted || (profile?.yearLevel ? profile.yearLevel * 30 : 0)}</p>
                 <p className="text-xs text-gray-500 mt-1">Year {profile?.yearLevel}</p>
               </div>
               <AlertCircle className="w-8 h-8 text-primary" />

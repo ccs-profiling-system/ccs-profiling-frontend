@@ -4,7 +4,7 @@ import type { Event } from '@/features/student/types';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const eventAPI = axios.create({
-  baseURL: `${API_BASE}/events`,
+  baseURL: `${API_BASE}/student/events`,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -25,15 +25,6 @@ export const eventService = {
       return response.data;
     } catch (error) {
       return [];
-    }
-  },
-
-  async getEventById(eventId: string): Promise<Event> {
-    try {
-      const response = await eventAPI.get(`/${eventId}`);
-      return response.data;
-    } catch (error) {
-      throw new Error('Failed to fetch event');
     }
   },
 

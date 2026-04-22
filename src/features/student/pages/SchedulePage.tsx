@@ -46,7 +46,16 @@ export function SchedulePage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await courseService.getEnrolledCourses();
+      // Try the dedicated schedule endpoint first, fall back to enrolled courses
+      let data: Course[] = [];
+      try {
+        data = await courseService.getSchedule();
+        if (!data || data.length === 0) {
+          data = await courseService.getEnrolledCourses();
+        }
+      } catch {
+        data = await courseService.getEnrolledCourses();
+      }
       setCourses(data.filter(c => c.status === 'enrolled'));
     } catch (error) {
       console.error('Failed to load courses:', error);

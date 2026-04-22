@@ -54,17 +54,47 @@ export function ResearchPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedOpp, setSelectedOpp] = useState<ResearchOpportunity | null>(null);
+  const [applicationStatuses, setApplicationStatuses] = useState<Record<string, string>>({});
+  const [applying, setApplying] = useState<string | null>(null);
 
   const load = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await researchService.getOpportunities();
-      setOpportunities(data.filter(o => o.status === 'open'));
+      const open = data.filter(o => o.status === 'open');
+      setOpportunities(open);
+
+      // Check application status for each opportunity
+      const statuses: Record<string, string> = {};
+      await Promise.all(
+        open.map(async (opp) => {
+          try {
+            const status = await researchService.getApplicationStatus(opp.id);
+            if (status) statuses[opp.id] = status.status ?? 'applied';
+          } catch {
+            // no application for this opportunity
+          }
+        })
+      );
+      setApplicationStatuses(statuses);
     } catch {
       setError('Failed to load research data. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApply = async (opp: ResearchOpportunity) => {
+    setApplying(opp.id);
+    try {
+      await researchService.applyForOpportunity(opp.id, {});
+      setApplicationStatuses(prev => ({ ...prev, [opp.id]: 'applied' }));
+      setSelectedOpp(null);
+    } catch {
+      // silently handle — user can retry
+    } finally {
+      setApplying(null);
     }
   };
 
@@ -183,7 +213,13 @@ export function ResearchPage() {
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="font-semibold text-gray-900">{opp.title}</h3>
-                      <span className="px-2.5 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full flex-shrink-0">Open</span>
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        {applicationStatuses[opp.id] ? (
+                          <span className="px-2.5 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">Applied</span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">Open</span>
+                        )}
+                      </div>
                     </div>
                     <p className="text-sm text-gray-600 line-clamp-2">{opp.description}</p>
                     <div className="flex flex-wrap gap-3 text-xs text-gray-500">
@@ -201,8 +237,7 @@ export function ResearchPage() {
                         )}
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400" />
-                    </div>
-                  </div>
+                    </div>                  </div>
                 </Card>
                 </div>
               ))}            </div>
@@ -257,6 +292,20 @@ export function ResearchPage() {
                   <button onClick={() => setSelectedOpp(null)} className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition">
                     Close
                   </button>
+                  {!applicationStatuses[selectedOpp.id] && (
+                    <button
+                      onClick={() => handleApply(selectedOpp)}
+                      disabled={applying === selectedOpp.id}
+                      className="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition disabled:opacity-60"
+                    >
+                      {applying === selectedOpp.id ? 'Applying...' : 'Apply Now'}
+                    </button>
+                  )}
+                  {applicationStatuses[selectedOpp.id] && (
+                    <span className="flex-1 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg font-medium text-center border border-purple-200">
+                      Application Submitted
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

@@ -4,7 +4,7 @@ import type { ResearchOpportunity } from '@/features/student/types';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const researchAPI = axios.create({
-  baseURL: `${API_BASE}/research`,
+  baseURL: `${API_BASE}/student/research`,
   headers: {
     'Content-Type': 'application/json',
   },

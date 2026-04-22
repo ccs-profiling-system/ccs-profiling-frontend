@@ -4,7 +4,7 @@ import type { Grade } from '@/features/student/types';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 const gradeAPI = axios.create({
-  baseURL: `${API_BASE}/grades`,
+  baseURL: `${API_BASE}/student/grades`,
   headers: {
     'Content-Type': 'application/json',
   },

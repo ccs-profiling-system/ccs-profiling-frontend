@@ -37,6 +37,14 @@ export function GradesPage() {
         const profile = await studentService.getProfile();
         setCumulativeGPA(profile.cumulativeGpa || 0);
 
+        // Also fetch GPA from the dedicated endpoint and prefer it
+        try {
+          const calculatedGPA = await gradeService.calculateGPA();
+          if (calculatedGPA > 0) setCumulativeGPA(calculatedGPA);
+        } catch {
+          // keep profile GPA as fallback
+        }
+
         // Load grades based on selected semester
         let gradesData: Grade[] = [];
         if (selectedSemester === 'current') {
