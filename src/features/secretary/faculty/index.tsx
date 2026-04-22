@@ -8,6 +8,7 @@ import { SlidePanel } from '@/components/ui/SlidePanel';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { Users, Plus, Filter } from 'lucide-react';
+import type { Faculty, FacultyFilters } from '@/types/faculty';
 import { ProfileLayout } from '@/components/ui/ProfileLayout';
 import { TagInput } from '@/components/ui/TagInput';
 import { FacultyForm } from '@/features/admin/faculty/FacultyForm';
@@ -287,8 +288,8 @@ export function SecretaryFaculty() {
       setLoading(true);
       setError(null);
 
-      const filterParams = {
-        status: filters.status.length > 0 ? filters.status[0] : undefined,
+      const filterParams: FacultyFilters = {
+        status: filters.status.length > 0 ? (filters.status[0] as Faculty['status']) : undefined,
         position: filters.position.length > 0 ? filters.position[0] : undefined,
         employmentType: filters.employmentType.length > 0 ? filters.employmentType[0] : undefined,
         search: search || undefined,

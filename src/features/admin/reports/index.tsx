@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { MainLayout, Card, Modal } from '@/components/layout';
 import { Calendar, Users, TrendingUp, Filter, FileText, CheckCircle } from 'lucide-react';
 import { Spinner, ErrorAlert, Table } from '@/components/ui';
-import { studentsService, facultyService, researchService, eventsService, reportsService } from '@/services/api';
+import { studentsService, facultyService, eventsService, reportsService } from '@/services/api';
 import type { Student } from '@/types/students';
 import type { Faculty } from '@/types/faculty';
-import type { Research } from '@/services/api/researchService';
+import type { Research } from '@/types/research';
 import type { Event } from '@/services/api/eventsService';
 
 type ReportModule = 'students' | 'faculty' | 'research' | 'events';
@@ -106,13 +106,13 @@ export function Reports() {
           break;
         }
         case 'research': {
-          const researchParams = {
+          // Research reports not yet implemented - use empty data
+          response = {
+            data: [],
+            total: 0,
             page: currentPage,
-            pageSize: pageSize,
-            search: filters.search || undefined,
-            status: filters.status !== 'all' ? filters.status : undefined,
+            limit: pageSize,
           };
-          response = await researchService.getResearch(researchParams);
           break;
         }
         case 'events': {

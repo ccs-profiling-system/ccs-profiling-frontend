@@ -150,7 +150,7 @@ class StudentsService {
       if (axios.isAxiosError(error)) {
         console.warn('Backend unavailable, using mock student data');
         // Return mock data with frontend filtering
-        let mockData = [
+        let mockData: Student[] = [
           {
             id: '1',
             studentId: 'CS-001',

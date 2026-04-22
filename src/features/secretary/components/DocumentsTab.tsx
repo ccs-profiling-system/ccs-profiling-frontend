@@ -69,7 +69,6 @@ export function DocumentsTab({ entityId, entityType, onDocumentChange }: Documen
       setUploading(true);
       await secretaryService.uploadDocument({
         file: uploadData.file,
-        name: uploadData.name,
         category: entityType,
         relatedEntityId: entityId,
       });

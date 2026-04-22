@@ -58,7 +58,7 @@ export function ParticipationPage() {
       // Registered/attended events come from the registered events endpoint
       const registered = await eventService.getRegisteredEvents();
       // Show only completed events as "attended"
-      const attended = registered.filter(e => e.status === 'completed' || e.status === 'upcoming');
+      const attended = registered.filter((e: any) => e.status === 'completed' || e.status === 'upcoming');
       setAttendedEvents(attended);
     } catch {
       setError('Failed to load participation records. Please try again.');
