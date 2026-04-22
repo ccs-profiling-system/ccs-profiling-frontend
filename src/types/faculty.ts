@@ -47,6 +47,7 @@ export interface FacultyFilters {
   department?: string;
   position?: string;
   status?: Faculty['status'];
+  employmentType?: string;
   search?: string;
 }
 

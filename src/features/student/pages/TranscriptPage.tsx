@@ -98,6 +98,7 @@ export function TranscriptPage() {
       {
         id: '1',
         title: 'Total Credits',
+        category: 'total',
         credits: totalCreditsRequired,
         completed: totalCreditsCompleted >= totalCreditsRequired,
         completedDate: totalCreditsCompleted >= totalCreditsRequired ? new Date().toISOString() : undefined,
@@ -106,6 +107,7 @@ export function TranscriptPage() {
       {
         id: '2',
         title: 'Core Computer Science Courses',
+        category: 'core',
         credits: 60,
         completed: totalCreditsCompleted >= 60,
         completedDate: totalCreditsCompleted >= 60 ? new Date().toISOString() : undefined,
@@ -114,6 +116,7 @@ export function TranscriptPage() {
       {
         id: '3',
         title: 'Mathematics Requirements',
+        category: 'mathematics',
         credits: 18,
         completed: totalCreditsCompleted >= 18,
         completedDate: totalCreditsCompleted >= 18 ? new Date().toISOString() : undefined,
@@ -122,6 +125,7 @@ export function TranscriptPage() {
       {
         id: '4',
         title: 'General Education',
+        category: 'general',
         credits: 24,
         completed: totalCreditsCompleted >= 24,
         completedDate: totalCreditsCompleted >= 24 ? new Date().toISOString() : undefined,
@@ -130,6 +134,7 @@ export function TranscriptPage() {
       {
         id: '5',
         title: 'Electives',
+        category: 'electives',
         credits: 18,
         completed: totalCreditsCompleted >= 18,
         completedDate: totalCreditsCompleted >= 18 ? new Date().toISOString() : undefined,

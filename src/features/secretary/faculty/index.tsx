@@ -8,13 +8,12 @@ import { SlidePanel } from '@/components/ui/SlidePanel';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { Users, Plus, Filter } from 'lucide-react';
-import type { Faculty, FacultyFilters } from '@/types/faculty';
+import type { Faculty, FacultyFilters, FacultySubject, FacultySkill, FacultyAffiliation, TeachingLoad } from '@/types/faculty';
 import { ProfileLayout } from '@/components/ui/ProfileLayout';
 import { TagInput } from '@/components/ui/TagInput';
 import { FacultyForm } from '@/features/admin/faculty/FacultyForm';
 import { DocumentsTab } from '../components/DocumentsTab';
 import facultyService from '@/services/api/facultyService';
-import type { Faculty, FacultySubject, FacultySkill, FacultyAffiliation, TeachingLoad } from '@/types/faculty';
 import type { Tag } from '@/components/ui/TagInput';
 import type { Column } from '@/components/ui/Table';
 
