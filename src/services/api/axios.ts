@@ -7,7 +7,7 @@ const BYPASS_AUTH = import.meta.env.VITE_BYPASS_AUTH === 'true';
 // Create Axios instance with default config
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api',
-  timeout: 10000,
+  timeout: import.meta.env.DEV ? 3000 : 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -16,8 +16,8 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Add auth token if available
-    const token = localStorage.getItem('auth_token');
+    // Add auth token if available — check both admin and faculty tokens
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('facultyToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     } else if (DEV_MODE && BYPASS_AUTH) {

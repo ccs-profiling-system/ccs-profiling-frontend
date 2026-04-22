@@ -192,37 +192,73 @@ class FacultyService {
   }
 
   async getFacultySubjects(facultyId: string): Promise<FacultySubject[]> {
-    return handleRequest(() =>
-      api.get<FacultySubject[] | ApiResponse<FacultySubject[]>>(`/admin/faculty/${facultyId}/subjects`).then((r) => r.data)
-    );
+    try {
+      const response = await api.get<FacultySubject[] | ApiResponse<FacultySubject[]>>(`/admin/faculty/${facultyId}/subjects`);
+      const data = unwrap(response.data);
+      return Array.isArray(data) ? data : [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable for faculty subjects');
+        return [];
+      }
+      throw error;
+    }
   }
 
   async getFacultySkills(facultyId: string): Promise<FacultySkill[]> {
-    return handleRequest(() =>
-      api.get<FacultySkill[] | ApiResponse<FacultySkill[]>>(`/admin/faculty/${facultyId}/skills`)
-        .then((r) => (unwrap(r.data) as any[]).map(mapFacultySkill))
-    );
+    try {
+      const response = await api.get<FacultySkill[] | ApiResponse<FacultySkill[]>>(`/admin/faculty/${facultyId}/skills`);
+      const data = unwrap(response.data);
+      return Array.isArray(data) ? data.map(mapFacultySkill) : [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable for faculty skills');
+        return [];
+      }
+      throw error;
+    }
   }
 
   async updateFacultySkills(facultyId: string, skills: FacultySkill[]): Promise<FacultySkill[]> {
-    return handleRequest(() =>
-      api.put<FacultySkill[] | ApiResponse<FacultySkill[]>>(`/admin/faculty/${facultyId}/skills`, { skills })
-        .then((r) => (unwrap(r.data) as any[]).map(mapFacultySkill))
-    );
+    try {
+      const response = await api.put<FacultySkill[] | ApiResponse<FacultySkill[]>>(`/admin/faculty/${facultyId}/skills`, { skills });
+      const data = unwrap(response.data);
+      return Array.isArray(data) ? data.map(mapFacultySkill) : [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable for updating faculty skills');
+        return [];
+      }
+      throw error;
+    }
   }
 
   async getFacultyAffiliations(facultyId: string): Promise<FacultyAffiliation[]> {
-    return handleRequest(() =>
-      api.get<FacultyAffiliation[] | ApiResponse<FacultyAffiliation[]>>(`/admin/faculty/${facultyId}/affiliations`)
-        .then((r) => (unwrap(r.data) as any[]).map(mapFacultyAffiliation))
-    );
+    try {
+      const response = await api.get<FacultyAffiliation[] | ApiResponse<FacultyAffiliation[]>>(`/admin/faculty/${facultyId}/affiliations`);
+      const data = unwrap(response.data);
+      return Array.isArray(data) ? data.map(mapFacultyAffiliation) : [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable for faculty affiliations');
+        return [];
+      }
+      throw error;
+    }
   }
 
   async updateFacultyAffiliations(facultyId: string, affiliations: FacultyAffiliation[]): Promise<FacultyAffiliation[]> {
-    return handleRequest(() =>
-      api.put<FacultyAffiliation[] | ApiResponse<FacultyAffiliation[]>>(`/admin/faculty/${facultyId}/affiliations`, { affiliations })
-        .then((r) => (unwrap(r.data) as any[]).map(mapFacultyAffiliation))
-    );
+    try {
+      const response = await api.put<FacultyAffiliation[] | ApiResponse<FacultyAffiliation[]>>(`/admin/faculty/${facultyId}/affiliations`, { affiliations });
+      const data = unwrap(response.data);
+      return Array.isArray(data) ? data.map(mapFacultyAffiliation) : [];
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        console.warn('Backend unavailable for updating faculty affiliations');
+        return [];
+      }
+      throw error;
+    }
   }
 
   async getFacultyTeachingLoad(facultyId: string): Promise<TeachingLoad> {

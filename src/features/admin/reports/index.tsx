@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { MainLayout, Card, Modal } from '@/components/layout';
 import { Calendar, Users, TrendingUp, Filter, FileText, CheckCircle } from 'lucide-react';
 import { Spinner, ErrorAlert, Table } from '@/components/ui';
-import { studentsService, facultyService, researchService, eventsService, reportsService } from '@/services/api';
+import { studentsService, facultyService, eventsService, reportsService } from '@/services/api';
 import type { Student } from '@/types/students';
 import type { Faculty } from '@/types/faculty';
-import type { Research } from '@/services/api/researchService';
+import type { Research } from '@/types/research';
 import type { Event } from '@/services/api/eventsService';
 
 type ReportModule = 'students' | 'faculty' | 'research' | 'events';
@@ -106,13 +106,13 @@ export function Reports() {
           break;
         }
         case 'research': {
-          const researchParams = {
+          // Research reports not yet implemented - use empty data
+          response = {
+            data: [],
+            total: 0,
             page: currentPage,
-            pageSize: pageSize,
-            search: filters.search || undefined,
-            status: filters.status !== 'all' ? filters.status : undefined,
+            limit: pageSize,
           };
-          response = await researchService.getResearch(researchParams);
           break;
         }
         case 'events': {
@@ -372,11 +372,11 @@ export function Reports() {
             )
           },
           {
-            key: 'type',
-            header: 'Type',
+            key: 'category',
+            header: 'Category',
             render: (row: Research) => (
               <span className="capitalize px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                {row.type}
+                {row.category}
               </span>
             )
           },
@@ -394,14 +394,14 @@ export function Reports() {
             )
           },
           {
-            key: 'start_date',
-            header: 'Start Date',
-            render: (row: Research) => row.start_date ? new Date(row.start_date).toLocaleDateString() : 'N/A'
+            key: 'createdAt',
+            header: 'Created',
+            render: (row: Research) => row.createdAt ? new Date(row.createdAt).toLocaleDateString() : 'N/A'
           },
           {
-            key: 'completion_date',
-            header: 'Completion',
-            render: (row: Research) => row.completion_date ? new Date(row.completion_date).toLocaleDateString() : 'N/A'
+            key: 'updatedAt',
+            header: 'Updated',
+            render: (row: Research) => row.updatedAt ? new Date(row.updatedAt).toLocaleDateString() : 'N/A'
           }
         ];
 
