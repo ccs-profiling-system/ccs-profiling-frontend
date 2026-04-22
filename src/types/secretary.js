@@ -1,0 +1,2 @@
+// Secretary Portal Types
+export {};

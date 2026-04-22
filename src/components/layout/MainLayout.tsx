@@ -5,7 +5,7 @@ import { Navbar } from './Navbar';
 interface MainLayoutProps {
   children: ReactNode;
   title?: string;
-  variant?: 'admin' | 'chair';
+  variant?: 'admin' | 'chair' | 'secretary';
 }
 
 export function MainLayout({ children, title, variant = 'admin' }: MainLayoutProps) {

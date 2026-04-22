@@ -1,0 +1,4 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+export function StatCard({ title, value, icon: Icon, trend, color = 'text-primary' }) {
+    return (_jsx("div", { className: "bg-white rounded-lg shadow p-6", children: _jsxs("div", { className: "flex items-center justify-between", children: [_jsxs("div", { children: [_jsx("p", { className: "text-sm font-medium text-gray-600", children: title }), _jsx("p", { className: "text-2xl font-bold text-gray-900 mt-2", children: value }), trend && (_jsxs("p", { className: `text-sm mt-2 ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`, children: [trend.isPositive ? '↑' : '↓', " ", Math.abs(trend.value), "%"] }))] }), _jsx("div", { className: `p-3 rounded-full bg-gray-100 ${color}`, children: _jsx(Icon, { className: "w-6 h-6" }) })] }) }));
+}

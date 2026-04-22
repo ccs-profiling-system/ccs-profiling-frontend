@@ -27,6 +27,20 @@ import { ChairSchedules } from '@/features/chair/schedules';
 import { ChairEvents } from '@/features/chair/events';
 import { ChairResearch } from '@/features/chair/research';
 import { ChairReports } from '@/features/chair/reports';
+import { ChairApprovals } from '@/features/chair/approvals';
+
+// Secretary Portal Imports
+import { SecretaryDashboard } from '@/features/secretary/dashboard';
+import { SecretaryStudents } from '@/features/secretary/students';
+import { StudentProfileView } from '@/features/secretary/students/StudentProfileView';
+import { SecretaryFaculty } from '@/features/secretary/faculty/index';
+import { FacultyProfileView } from '@/features/secretary/faculty/FacultyProfileView';
+import { SecretarySchedules } from '@/features/secretary/schedules';
+import { SecretaryEvents } from '@/features/secretary/events';
+import { SecretaryDocuments } from '@/features/secretary/documents';
+import { SecretaryReports } from '@/features/secretary/reports';
+import { SecretaryPendingChanges } from '@/features/secretary/pending-changes';
+import { SecretaryResearch } from '@/features/secretary/research';
 
 export function AppRoutes() {
   return (
@@ -207,7 +221,29 @@ export function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/chair/approvals"
+          element={
+            <ProtectedRoute>
+              <ChairApprovals />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/chair" element={<Navigate to="/chair/dashboard" replace />} />
+        
+        {/* Secretary Portal Routes - No Authentication Required */}
+        <Route path="/secretary/dashboard" element={<SecretaryDashboard />} />
+        <Route path="/secretary/students" element={<SecretaryStudents />} />
+        <Route path="/secretary/students/:id" element={<StudentProfileView />} />
+        <Route path="/secretary/faculty" element={<SecretaryFaculty />} />
+        <Route path="/secretary/faculty/:id" element={<FacultyProfileView />} />
+        <Route path="/secretary/schedules" element={<SecretarySchedules />} />
+        <Route path="/secretary/events" element={<SecretaryEvents />} />
+        <Route path="/secretary/documents" element={<SecretaryDocuments />} />
+        <Route path="/secretary/reports" element={<SecretaryReports />} />
+        <Route path="/secretary/research" element={<SecretaryResearch />} />
+        <Route path="/secretary/pending-changes" element={<SecretaryPendingChanges />} />
+        <Route path="/secretary" element={<Navigate to="/secretary/dashboard" replace />} />
         
         <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
