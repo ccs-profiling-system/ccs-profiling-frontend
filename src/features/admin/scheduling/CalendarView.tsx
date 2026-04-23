@@ -1,4 +1,5 @@
 import type { Schedule, CalendarViewMode, DateRange } from './types';
+import { safeFilter, ensureArray } from '@/utils/typeGuards';
 import { CalendarCell } from './CalendarCell';
 
 interface CalendarViewProps {
@@ -47,6 +48,9 @@ export function CalendarView({
   onEdit,
   onDelete,
 }: CalendarViewProps) {
+  // Defensive check: ensure schedules is always an array
+  const displayed = ensureArray<Schedule>(schedules, []);
+  
   const days = getDaysInRange(dateRange.start, dateRange.end);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -109,7 +113,7 @@ export function CalendarView({
         {weeks.map((wk, wi) => (
           <div key={wi} className="grid grid-cols-7 gap-2">
             {wk.map((day) => {
-              const daySchedules = schedules.filter((s) => isSameDay(day, s.startTime));
+              const daySchedules = safeFilter<Schedule>(displayed, (s) => isSameDay(day, s.startTime), []);
               const isTodayDate = isToday(day);
               return (
                 <div 
@@ -179,7 +183,7 @@ export function CalendarView({
         style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}
       >
         {days.map((day) => {
-          const daySchedules = schedules.filter((s) => isSameDay(day, s.startTime));
+          const daySchedules = safeFilter<Schedule>(displayed, (s) => isSameDay(day, s.startTime), []);
           const isTodayDate = isToday(day);
           return (
             <div key={day.toISOString()} className="space-y-2">

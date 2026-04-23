@@ -89,7 +89,6 @@ export function StudentTableExample() {
       <Table
         data={students}
         columns={columns}
-        onRowClick={(student) => console.log('Clicked:', student)}
         hoverable
         emptyMessage="No students found"
       />

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/layout';
+import { safeMap, safeFilter, ensureArray } from '@/utils/typeGuards';
 import {
   Calendar,
   Clock,
@@ -54,30 +55,31 @@ function isUpcoming(iso: string) {
 export function SchedulingAside({ schedules, loading }: SchedulingAsideProps) {
   const navigate = useNavigate();
 
+  // Defensive check: ensure schedules is always an array
+  const displayed = ensureArray<Schedule>(schedules, []);
+
   const todaySchedules = useMemo(
     () =>
-      schedules
-        .filter((s) => isToday(s.startTime))
+      safeFilter<Schedule>(displayed, (s) => isToday(s.startTime), [])
         .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
-    [schedules]
+    [displayed]
   );
 
   const upcomingSchedules = useMemo(
     () =>
-      schedules
-        .filter((s) => isUpcoming(s.startTime))
+      safeFilter<Schedule>(displayed, (s) => isUpcoming(s.startTime), [])
         .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
         .slice(0, 4),
-    [schedules]
+    [displayed]
   );
 
   const stats = useMemo(() => {
-    const classes = schedules.filter((s) => s.type === 'class').length;
-    const exams = schedules.filter((s) => s.type === 'exam').length;
-    const uniqueRooms = new Set(schedules.map((s) => s.room)).size;
-    const uniqueInstructors = new Set(schedules.map((s) => s.instructor)).size;
+    const classes = safeFilter<Schedule>(displayed, (s) => s.type === 'class', []).length;
+    const exams = safeFilter<Schedule>(displayed, (s) => s.type === 'exam', []).length;
+    const uniqueRooms = new Set(safeMap<Schedule, string>(displayed, (s) => s.room, [])).size;
+    const uniqueInstructors = new Set(safeMap<Schedule, string>(displayed, (s) => s.instructor, [])).size;
     return { classes, exams, uniqueRooms, uniqueInstructors };
-  }, [schedules]);
+  }, [displayed]);
 
   if (loading) {
     return (

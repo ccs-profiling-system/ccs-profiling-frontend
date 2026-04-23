@@ -1,3 +1,2 @@
-export function Research() {
-  return <div>Research Management</div>;
-}
+export { ResearchPage } from './ResearchPage';
+export { ResearchDetailPage } from './ResearchDetailPage';

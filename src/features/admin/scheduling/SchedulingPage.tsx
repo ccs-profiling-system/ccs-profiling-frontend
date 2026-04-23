@@ -9,6 +9,7 @@ import { VALID_CALENDAR_VIEWS } from './validation';
 import { MainLayout, Card } from '@/components/layout';
 import { Calendar, Plus, Filter, X } from 'lucide-react';
 import { SchedulingAside } from './SchedulingAside';
+import { safeMap, safeFilter, ensureArray } from '@/utils/typeGuards';
 
 // ---------------------------------------------------------------------------
 // Date range helpers
@@ -59,6 +60,10 @@ function navigate(viewMode: CalendarViewMode, anchor: Date, direction: 'prev' | 
 export function SchedulingPage() {
   const { schedules, loading, error, fetchSchedules, deleteSchedule } = useSchedules();
 
+  // Defensive check: ensure schedules is always an array (like EventsPage does)
+  const displayed = Array.isArray(schedules) ? schedules : [];
+  const schedulesLength = displayed.length;
+
   const [viewMode, setViewMode] = useState<CalendarViewMode>('weekly');
   const [anchor, setAnchor] = useState<Date>(new Date());
   const [dateRange, setDateRange] = useState<DateRange>(() => buildRange('weekly', new Date()));
@@ -77,36 +82,36 @@ export function SchedulingPage() {
 
   // Derive unique instructors and subjects from loaded schedules for the form
   const instructors = useMemo(() => {
-    const fromSchedules = [...new Set(schedules.map((s) => s.instructor))];
+    const fromSchedules = [...new Set(safeMap<Schedule, string>(displayed, (s) => s.instructor, []))];
     if (fromSchedules.length === 0) {
       return ['Dr. Smith', 'Prof. Johnson', 'Dr. Williams', 'Prof. Brown', 'Dr. Davis'];
     }
     return fromSchedules;
-  }, [schedules]);
+  }, [displayed]);
   
   const subjects = useMemo(() => {
-    const fromSchedules = [...new Set(schedules.map((s) => s.subject))];
+    const fromSchedules = [...new Set(safeMap<Schedule, string>(displayed, (s) => s.subject, []))];
     if (fromSchedules.length === 0) {
       return ['Computer Science 101', 'Mathematics 201', 'Physics 301', 'Chemistry 101', 'Biology 201'];
     }
     return fromSchedules;
-  }, [schedules]);
+  }, [displayed]);
   
   const roomNames = useMemo(() => {
-    const fromSchedules = [...new Set(schedules.map((s) => s.room))];
+    const fromSchedules = [...new Set(safeMap<Schedule, string>(displayed, (s) => s.room, []))];
     return fromSchedules;
-  }, [schedules]);
+  }, [displayed]);
 
   // Apply filters
   const filteredSchedules = useMemo(() => {
-    return schedules.filter((schedule) => {
+    return safeFilter<Schedule>(displayed, (schedule) => {
       if (filterInstructor && schedule.instructor !== filterInstructor) return false;
       if (filterSubject && schedule.subject !== filterSubject) return false;
       if (filterRoom && schedule.room !== filterRoom) return false;
       if (filterType && schedule.type !== filterType) return false;
       return true;
-    });
-  }, [schedules, filterInstructor, filterSubject, filterRoom, filterType]);
+    }, []);
+  }, [displayed, filterInstructor, filterSubject, filterRoom, filterType]);
 
   const hasActiveFilters = filterInstructor || filterSubject || filterRoom || filterType;
 
@@ -319,7 +324,7 @@ export function SchedulingPage() {
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-sm text-gray-600">
                       Showing <span className="font-semibold text-gray-900">{filteredSchedules.length}</span> of{' '}
-                      <span className="font-semibold text-gray-900">{schedules.length}</span> schedules
+                      <span className="font-semibold text-gray-900">{schedulesLength}</span> schedules
                     </span>
                     <button
                       type="button"
@@ -340,7 +345,7 @@ export function SchedulingPage() {
         <div className="flex items-center justify-between text-sm text-gray-600">
           <span>
             Showing <span className="font-semibold text-gray-900">{filteredSchedules.length}</span> of{' '}
-            <span className="font-semibold text-gray-900">{schedules.length}</span> schedules
+            <span className="font-semibold text-gray-900">{schedulesLength}</span> schedules
           </span>
           {hasActiveFilters && (
             <span className="text-primary font-medium">Filters active</span>

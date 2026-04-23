@@ -1,9 +1,13 @@
 import axios from 'axios';
 
+// Development mode bypass
+const DEV_MODE = import.meta.env.DEV;
+const BYPASS_AUTH = import.meta.env.VITE_BYPASS_AUTH === 'true';
+
 // Create Axios instance with default config
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
-  timeout: 10000,
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api',
+  timeout: import.meta.env.DEV ? 3000 : 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -12,10 +16,13 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Add auth token if available
-    const token = localStorage.getItem('auth_token');
+    // Add auth token if available — check both admin and faculty tokens
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('facultyToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else if (DEV_MODE && BYPASS_AUTH) {
+      // Development bypass - use a mock token
+      config.headers.Authorization = 'Bearer dev-bypass-token';
     }
     return config;
   },
@@ -35,8 +42,10 @@ api.interceptors.response.use(
       switch (error.response.status) {
         case 401:
           // Unauthorized - clear token and redirect to login
-          localStorage.removeItem('auth_token');
-          window.location.href = '/login';
+          // Skip redirect in development bypass mode
+          if (!(DEV_MODE && BYPASS_AUTH)) {
+            localStorage.removeItem('auth_token');
+          }
           break;
         case 403:
           console.error('Access forbidden');
@@ -51,7 +60,7 @@ api.interceptors.response.use(
           console.error('API Error:', error.response.data);
       }
     } else if (error.request) {
-      console.error('Network error - no response received');
+      console.warn('Network error - backend unavailable, using mock data');
     } else {
       console.error('Error:', error.message);
     }

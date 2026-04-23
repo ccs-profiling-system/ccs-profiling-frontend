@@ -1,13 +1,14 @@
-import { ReactNode, useState } from 'react';
+﻿import { ReactNode, useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
 
 interface MainLayoutProps {
   children: ReactNode;
   title?: string;
+  variant?: 'admin' | 'chair' | 'secretary';
 }
 
-export function MainLayout({ children, title }: MainLayoutProps) {
+export function MainLayout({ children, title, variant = 'admin' }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -16,7 +17,7 @@ export function MainLayout({ children, title }: MainLayoutProps) {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} variant={variant} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden w-full lg:w-auto">

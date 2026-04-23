@@ -28,9 +28,9 @@ export function AdminDashboard() {
 
   return (
     <MainLayout title="Dashboard">
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6">
-        {/* Main Content */}
-        <div className="xl:col-span-8 space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+        {/* Main Content - Left Column */}
+        <div className="lg:col-span-8 space-y-4 sm:space-y-6">
           {/* Welcome Section */}
           <div className="welcome-banner animate-fade-in">
             <div className="relative z-10">
@@ -80,117 +80,116 @@ export function AdminDashboard() {
               <Zap className="w-5 h-5 text-primary" />
               Quick Actions
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-            <button onClick={() => navigate('/students/add')} className="action-card group">
-              <div className="action-icon bg-blue-100 group-hover:bg-blue-200 transition-colors">
-                <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+              <button onClick={() => navigate('/students/add')} className="action-card group">
+                <div className="action-icon bg-blue-100 group-hover:bg-blue-200 transition-colors">
+                  <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Add Student</h4>
+              </button>
+              <button onClick={() => navigate('/events/create')} className="action-card group">
+                <div className="action-icon bg-purple-100 group-hover:bg-purple-200 transition-colors">
+                  <CalendarPlus className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">New Event</h4>
+              </button>
+              <button onClick={() => navigate('/reports')} className="action-card group">
+                <div className="action-icon bg-green-100 group-hover:bg-green-200 transition-colors">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Reports</h4>
+              </button>
+              <button onClick={() => navigate('/students')} className="action-card group">
+                <div className="action-icon bg-orange-100 group-hover:bg-orange-200 transition-colors">
+                  <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                </div>
+                <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Students</h4>
+              </button>
+              <button onClick={() => navigate('/faculty')} className="action-card group">
+                <div className="action-icon bg-teal-100 group-hover:bg-teal-200 transition-colors">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-teal-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Faculty</h4>
+              </button>
+              <button onClick={() => navigate('/research')} className="action-card group">
+                <div className="action-icon bg-pink-100 group-hover:bg-pink-200 transition-colors">
+                  <FlaskConical className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600" />
+                </div>
+                <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Research</h4>
+              </button>
+            </div>
+          </div>
+
+          {/* Key Metrics - Clickable */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <button onClick={() => navigate('/students')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '0ms' }}>
+              <div className="flex items-start justify-between mb-2">
+                <div className="stat-icon stat-icon-blue">
+                  <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Add Student</h4>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Students</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{stats.totalStudents.toLocaleString()}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-green-600 font-medium">↑ 12%</span>
+                <span className="text-xs text-gray-500">vs last month</span>
+              </div>
             </button>
-            <button onClick={() => navigate('/events/create')} className="action-card group">
-              <div className="action-icon bg-purple-100 group-hover:bg-purple-200 transition-colors">
-                <CalendarPlus className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+
+            <button onClick={() => navigate('/faculty')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '100ms' }}>
+              <div className="flex items-start justify-between mb-2">
+                <div className="stat-icon stat-icon-green">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">New Event</h4>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Faculty</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{stats.totalFaculty}</p>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-green-600 font-medium">+3</span>
+                <span className="text-xs text-gray-500">new this month</span>
+              </div>
             </button>
-            <button onClick={() => navigate('/reports')} className="action-card group">
-              <div className="action-icon bg-green-100 group-hover:bg-green-200 transition-colors">
-                <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+
+            <button onClick={() => navigate('/events')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '200ms' }}>
+              <div className="flex items-start justify-between mb-2">
+                <div className="stat-icon stat-icon-purple">
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Reports</h4>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">This Week</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{stats.activeEvents}</p>
+              <div className="flex items-center gap-1">
+                <Clock className="w-3 h-3 text-blue-600" />
+                <span className="text-xs text-blue-600 font-medium">Next: Tomorrow 9AM</span>
+              </div>
             </button>
-            <button onClick={() => navigate('/students')} className="action-card group">
-              <div className="action-icon bg-orange-100 group-hover:bg-orange-200 transition-colors">
-                <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+
+            <button onClick={() => navigate('/research')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '300ms' }}>
+              <div className="flex items-start justify-between mb-2">
+                <div className="stat-icon stat-icon-orange">
+                  <FlaskConical className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Students</h4>
-            </button>
-            <button onClick={() => navigate('/faculty')} className="action-card group">
-              <div className="action-icon bg-teal-100 group-hover:bg-teal-200 transition-colors">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-teal-600" />
+              <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Active Research</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{stats.researchProjects}</p>
+              <div className="flex items-center gap-2">
+                <Award className="w-3 h-3 text-purple-600" />
+                <span className="text-xs text-purple-600 font-medium">5 published</span>
               </div>
-              <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Faculty</h4>
-            </button>
-            <button onClick={() => navigate('/research')} className="action-card group">
-              <div className="action-icon bg-pink-100 group-hover:bg-pink-200 transition-colors">
-                <FlaskConical className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600" />
-              </div>
-              <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Research</h4>
             </button>
           </div>
-        </div>
 
-        {/* Key Metrics - Clickable */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <button onClick={() => navigate('/students')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '0ms' }}>
-            <div className="flex items-start justify-between mb-2">
-              <div className="stat-icon stat-icon-blue">
-                <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <ArrowRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Students</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{stats.totalStudents.toLocaleString()}</p>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-green-600 font-medium">↑ 12%</span>
-              <span className="text-xs text-gray-500">vs last month</span>
-            </div>
-          </button>
-
-          <button onClick={() => navigate('/faculty')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '100ms' }}>
-            <div className="flex items-start justify-between mb-2">
-              <div className="stat-icon stat-icon-green">
-                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <ArrowRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Faculty</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{stats.totalFaculty}</p>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-green-600 font-medium">+3</span>
-              <span className="text-xs text-gray-500">new this month</span>
-            </div>
-          </button>
-
-          <button onClick={() => navigate('/events')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '200ms' }}>
-            <div className="flex items-start justify-between mb-2">
-              <div className="stat-icon stat-icon-purple">
-                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <ArrowRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">This Week</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{stats.activeEvents}</p>
-            <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3 text-blue-600" />
-              <span className="text-xs text-blue-600 font-medium">Next: Tomorrow 9AM</span>
-            </div>
-          </button>
-
-          <button onClick={() => navigate('/research')} className="stat-card animate-slide-in-up text-left hover:shadow-xl transition-all group" style={{ animationDelay: '300ms' }}>
-            <div className="flex items-start justify-between mb-2">
-              <div className="stat-icon stat-icon-orange">
-                <FlaskConical className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <ArrowRight className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Active Research</p>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{stats.researchProjects}</p>
-            <div className="flex items-center gap-2">
-              <Award className="w-3 h-3 text-purple-600" />
-              <span className="text-xs text-purple-600 font-medium">5 published</span>
-            </div>
-          </button>
-        </div>
-
-        {/* Upcoming Events & Recent Activity */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+          {/* Upcoming Events */}
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-primary" /> Upcoming Events
               </h3>
-              <button onClick={() => navigate('/events')} className="text-sm text-primary hover:text-primary-dark font-medium">
+              <button onClick={() => navigate('/admin/events')} className="text-sm text-primary hover:text-primary-dark font-medium">
                 View All
               </button>
             </div>
@@ -296,8 +295,58 @@ export function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Analytics Charts */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+        {/* Aside - Priority Alerts, Upcoming Events, Status Cards & Analytics - Right Column */}
+        <div className="lg:col-span-4 space-y-4 sm:space-y-6 overflow-y-auto scrollbar-hide max-h-screen">
+          <DashboardAside />
+          
+          {/* Status Overview - 2x2 Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <GraduationCap className="w-6 h-6 text-white" />
+                </div>
+                <p className="text-xs text-gray-600 mb-1">Active Students</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.activeStudentsToday?.toLocaleString() || '0'}</p>
+                <p className="text-xs text-gray-500 mt-1">Today's active</p>
+              </div>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <p className="text-xs text-gray-600 mb-1">Faculty Members</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalFaculty || 0}</p>
+                <p className="text-xs text-gray-500 mt-1">Total faculty</p>
+              </div>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <FlaskConical className="w-6 h-6 text-white" />
+                </div>
+                <p className="text-xs text-gray-600 mb-1">Research Projects</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.researchProjects || 0}</p>
+                <p className="text-xs text-gray-500 mt-1">Active projects</p>
+              </div>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <p className="text-xs text-gray-600 mb-1">Active Events</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.activeEvents || 0}</p>
+                <p className="text-xs text-gray-500 mt-1">This week</p>
+              </div>
+            </Card>
+          </div>
+          
+          {/* Analytics Charts */}
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -320,60 +369,7 @@ export function AdminDashboard() {
             </div>
           </Card>
         </div>
-
-        {/* Status Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                <GraduationCap className="w-6 h-6 text-white" />
-              </div>
-              <p className="text-sm text-gray-600 mb-1">Active Students</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.activeStudentsToday?.toLocaleString() || '0'}</p>
-              <p className="text-xs text-gray-500 mt-2">Today's active count</p>
-            </div>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <p className="text-sm text-gray-600 mb-1">Faculty Members</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalFaculty || 0}</p>
-              <p className="text-xs text-gray-500 mt-2">Total faculty count</p>
-            </div>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                <FlaskConical className="w-6 h-6 text-white" />
-              </div>
-              <p className="text-sm text-gray-600 mb-1">Research Projects</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.researchProjects || 0}</p>
-              <p className="text-xs text-gray-500 mt-2">Active projects</p>
-            </div>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
-                <Award className="w-6 h-6 text-white" />
-              </div>
-              <p className="text-sm text-gray-600 mb-1">Active Events</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.activeEvents || 0}</p>
-              <p className="text-xs text-gray-500 mt-2">This week's events</p>
-            </div>
-          </Card>
-        </div>
       </div>
-
-      {/* Aside - Priority Alerts & Upcoming Events */}
-      <div className="xl:col-span-4">
-        <DashboardAside />
-      </div>
-    </div>
     </MainLayout>
   );
 }

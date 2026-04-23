@@ -27,9 +27,11 @@ export function useSchedules(): UseSchedulesReturn {
     setError(null);
     try {
       const data = await getSchedules(params);
-      setSchedules(data);
+      // Ensure data is always an array
+      setSchedules(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch schedules');
+      setSchedules([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -82,5 +84,8 @@ export function useSchedules(): UseSchedulesReturn {
     }
   }, []);
 
-  return { schedules, loading, error, fetchSchedules, createSchedule, updateSchedule, deleteSchedule };
+  // Safety check: ensure schedules is always an array (like useResearch does)
+  const safeSchedules = Array.isArray(schedules) ? schedules : [];
+
+  return { schedules: safeSchedules, loading, error, fetchSchedules, createSchedule, updateSchedule, deleteSchedule };
 }

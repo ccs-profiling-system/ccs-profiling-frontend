@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 
 export interface Column<T> {
   key: string;
-  header: string;
+  header: string | ReactNode;
   render?: (item: T) => ReactNode;
   width?: string;
   align?: 'left' | 'center' | 'right';
@@ -41,9 +41,9 @@ export function Table<T extends Record<string, any>>({
       <table className="w-full">
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
-            {columns.map((column) => (
+            {columns.map((column, index) => (
               <th
-                key={column.key}
+                key={`${column.key}-${index}`}
                 className={`px-6 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider ${getAlignClass(
                   column.align
                 )}`}
@@ -66,9 +66,9 @@ export function Table<T extends Record<string, any>>({
                   ${onRowClick ? 'cursor-pointer' : ''}
                 `}
               >
-                {columns.map((column) => (
+                {columns.map((column, colIndex) => (
                   <td
-                    key={column.key}
+                    key={`${column.key}-${colIndex}`}
                     className={`px-6 py-4 text-sm text-gray-900 ${getAlignClass(
                       column.align
                     )}`}
