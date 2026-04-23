@@ -2,7 +2,7 @@
 
 export interface PendingChange {
   id: string;
-  entityType: 'student' | 'faculty' | 'event';
+  entityType: 'student' | 'faculty' | 'event' | 'research' | 'profile';
   entityId: string;
   entityName: string; // Name of student/faculty/event for display
   changeType: 'create' | 'update' | 'delete';
@@ -16,6 +16,7 @@ export interface PendingChange {
   reviewedByName?: string;
   reviewedAt?: string;
   reviewNotes?: string;
+  category?: 'research' | 'event' | 'profile' | 'general';
 }
 
 export interface ApprovalStats {
@@ -26,10 +27,11 @@ export interface ApprovalStats {
 }
 
 export interface SubmitChangeRequest {
-  entityType: 'student' | 'faculty' | 'event';
+  entityType: 'student' | 'faculty' | 'event' | 'research' | 'profile';
   entityId: string;
   changes: Record<string, any>;
   originalData?: Record<string, any>;
+  category?: 'research' | 'event' | 'profile' | 'general';
 }
 
 export interface ReviewChangeRequest {

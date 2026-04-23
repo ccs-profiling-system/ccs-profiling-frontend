@@ -7,7 +7,7 @@ import approvalsService from '@/services/api/approvalsService';
 import type { PendingChange, ApprovalStats } from '@/types/approvals';
 import type { Column } from '@/components/ui/Table';
 
-export function ChairApprovals() {
+export function AdminApprovals() {
   const [approvals, setApprovals] = useState<PendingChange[]>([]);
   const [stats, setStats] = useState<ApprovalStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,10 +43,10 @@ export function ChairApprovals() {
       
       // Mock data for development
       setStats({
-        pending: 6,
-        approved: 18,
-        rejected: 4,
-        total: 28,
+        pending: 8,
+        approved: 24,
+        rejected: 5,
+        total: 37,
       });
       
       setApprovals([
@@ -54,16 +54,15 @@ export function ChairApprovals() {
           id: '1',
           entityType: 'research',
           entityId: 'research-1',
-          entityName: 'Quantum Computing Research Initiative',
+          entityName: 'AI in Healthcare Research Project',
           changeType: 'create',
           category: 'research',
           changes: {
-            title: 'Quantum Computing Research Initiative',
-            description: 'Investigating quantum algorithms for optimization problems',
-            status: 'proposed',
-            startDate: '2026-05-01',
-            researchers: ['Dr. Chen', 'Dr. Patel'],
-            budget: 50000,
+            title: 'AI in Healthcare Research Project',
+            description: 'Exploring machine learning applications in medical diagnosis',
+            status: 'ongoing',
+            startDate: '2026-01-15',
+            researchers: ['Dr. Smith', 'Dr. Johnson'],
           },
           submittedBy: 'sec-1',
           submittedByName: 'Jane Secretary',
@@ -74,16 +73,15 @@ export function ChairApprovals() {
           id: '2',
           entityType: 'event',
           entityId: 'event-1',
-          entityName: 'Department Research Symposium',
+          entityName: 'Annual Tech Conference 2026',
           changeType: 'create',
           category: 'event',
           changes: {
-            title: 'Department Research Symposium',
-            description: 'Annual showcase of faculty and student research',
-            date: '2026-06-10',
-            location: 'Conference Hall A',
-            expectedParticipants: 200,
-            budget: 15000,
+            title: 'Annual Tech Conference 2026',
+            description: 'Department-wide technology conference',
+            date: '2026-05-15',
+            location: 'Main Auditorium',
+            participants: 150,
           },
           submittedBy: 'sec-1',
           submittedByName: 'Jane Secretary',
@@ -94,18 +92,18 @@ export function ChairApprovals() {
           id: '3',
           entityType: 'faculty',
           entityId: 'faculty-1',
-          entityName: 'Dr. Sarah Johnson',
+          entityName: 'Dr. Maria Garcia',
           changeType: 'update',
           category: 'profile',
           changes: {
-            position: 'Department Chair',
-            specialization: 'Software Engineering, Agile Methodologies',
-            officeHours: 'Mon-Wed 2-4 PM',
+            position: 'Full Professor',
+            specialization: 'Artificial Intelligence, Machine Learning',
+            email: 'maria.garcia@university.edu',
           },
           originalData: {
             position: 'Associate Professor',
-            specialization: 'Software Engineering',
-            officeHours: 'Tue-Thu 3-5 PM',
+            specialization: 'Computer Science',
+            email: 'maria.g@university.edu',
           },
           submittedBy: 'sec-1',
           submittedByName: 'Jane Secretary',
@@ -116,24 +114,46 @@ export function ChairApprovals() {
           id: '4',
           entityType: 'student',
           entityId: 'student-1',
-          entityName: 'Emily Rodriguez',
+          entityName: 'John Michael Doe',
           changeType: 'update',
           category: 'profile',
           changes: {
-            yearLevel: 4,
+            email: 'john.doe.new@university.edu',
+            yearLevel: 3,
             section: 'A',
-            gpa: 3.85,
-            status: 'Regular',
+            contactNumber: '+1234567890',
           },
           originalData: {
-            yearLevel: 3,
+            email: 'john.doe@university.edu',
+            yearLevel: 2,
             section: 'B',
-            gpa: 3.75,
-            status: 'Regular',
+            contactNumber: '+0987654321',
+          },
+          submittedBy: 'sec-1',
+          submittedByName: 'Jane Secretary',
+          submittedAt: '2026-04-20T16:45:00Z',
+          status: 'pending',
+        },
+        {
+          id: '5',
+          entityType: 'research',
+          entityId: 'research-2',
+          entityName: 'Blockchain Security Analysis',
+          changeType: 'update',
+          category: 'research',
+          changes: {
+            status: 'completed',
+            endDate: '2026-04-15',
+            findings: 'Comprehensive security analysis completed with recommendations',
+          },
+          originalData: {
+            status: 'ongoing',
+            endDate: null,
+            findings: null,
           },
           submittedBy: 'sec-2',
           submittedByName: 'Robert Secretary',
-          submittedAt: '2026-04-20T16:45:00Z',
+          submittedAt: '2026-04-19T11:20:00Z',
           status: 'pending',
         },
       ]);
@@ -267,7 +287,7 @@ export function ChairApprovals() {
   ], []);
 
   return (
-    <MainLayout title="Approvals" variant="chair">
+    <MainLayout title="Approvals" variant="admin">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -428,4 +448,4 @@ export function ChairApprovals() {
   );
 }
 
-export { ApprovalReviewModal } from './ApprovalReviewModal';
+export default AdminApprovals;

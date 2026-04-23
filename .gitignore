@@ -141,3 +141,10 @@ dist
 .vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Prevent compiled JS files in src directory (TypeScript project)
+# Only TypeScript source files (.ts, .tsx) should be committed
+src/**/*.js
+!src/**/*.test.js
+!src/**/*.spec.js
+!src/**/*.config.js
