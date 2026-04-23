@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, GraduationCap, Users, FileText, BookOpen, Clock, FlaskConical,
-  Calendar, Briefcase,
+  Calendar, Briefcase, CheckCircle,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -21,6 +21,7 @@ export function Sidebar({ isOpen, onClose, variant = 'admin' }: SidebarProps) {
     { to: '/admin/events', label: 'Events', icon: Calendar },
     // { to: '/admin/scheduling', label: 'Scheduling', icon: Clock }, // Disabled - data type issues
     { to: '/admin/research', label: 'Research', icon: FlaskConical },
+    { to: '/admin/approvals', label: 'Approvals', icon: CheckCircle },
     { to: '/admin/reports', label: 'Reports', icon: FileText },
     { to: '/admin/instructions', label: 'Instructions', icon: BookOpen },
   ];
@@ -32,8 +33,8 @@ export function Sidebar({ isOpen, onClose, variant = 'admin' }: SidebarProps) {
     { to: '/chair/schedules', label: 'Schedules', icon: Calendar },
     { to: '/chair/events', label: 'Events', icon: Briefcase },
     { to: '/chair/research', label: 'Research', icon: FlaskConical },
+    { to: '/chair/approvals', label: 'Approvals', icon: CheckCircle },
     { to: '/chair/reports', label: 'Reports', icon: FileText },
-    { to: '/chair/approvals', label: 'Approvals', icon: FileText },
   ];
 
   const secretaryLinks = [

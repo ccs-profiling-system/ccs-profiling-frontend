@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
 import { Card, Button, SearchBar, Badge, Spinner, ErrorAlert, Table } from '@/components/ui';
-import { CheckCircle2, Clock, XCircle, FileCheck } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle, FileCheck, Filter } from 'lucide-react';
 import { ApprovalReviewModal } from './ApprovalReviewModal';
 import approvalsService from '@/services/api/approvalsService';
 import type { PendingChange, ApprovalStats } from '@/types/approvals';
@@ -14,11 +14,12 @@ export function ChairApprovals() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [filterCategory, setFilterCategory] = useState<'all' | 'research' | 'event' | 'profile'>('all');
   const [selectedApproval, setSelectedApproval] = useState<PendingChange | null>(null);
 
   useEffect(() => {
     fetchData();
-  }, [filterStatus]);
+  }, [filterStatus, filterCategory]);
 
   const fetchData = async () => {
     try {
@@ -28,6 +29,7 @@ export function ChairApprovals() {
       const [approvalsData, statsData] = await Promise.all([
         approvalsService.getPendingApprovals({
           status: filterStatus === 'all' ? undefined : filterStatus,
+          category: filterCategory === 'all' ? undefined : filterCategory,
           limit: 1000,
         }),
         approvalsService.getApprovalStats(),
@@ -41,51 +43,97 @@ export function ChairApprovals() {
       
       // Mock data for development
       setStats({
-        pending: 5,
-        approved: 12,
-        rejected: 3,
-        total: 20,
+        pending: 6,
+        approved: 18,
+        rejected: 4,
+        total: 28,
       });
       
       setApprovals([
         {
           id: '1',
-          entityType: 'student',
-          entityId: 'student-1',
-          entityName: 'John Doe',
-          changeType: 'update',
+          entityType: 'research',
+          entityId: 'research-1',
+          entityName: 'Quantum Computing Research Initiative',
+          changeType: 'create',
+          category: 'research',
           changes: {
-            email: 'john.doe.new@example.com',
-            yearLevel: 3,
-            section: 'A',
-          },
-          originalData: {
-            email: 'john.doe@example.com',
-            yearLevel: 2,
-            section: 'B',
+            title: 'Quantum Computing Research Initiative',
+            description: 'Investigating quantum algorithms for optimization problems',
+            status: 'proposed',
+            startDate: '2026-05-01',
+            researchers: ['Dr. Chen', 'Dr. Patel'],
+            budget: 50000,
           },
           submittedBy: 'sec-1',
           submittedByName: 'Jane Secretary',
-          submittedAt: '2026-04-21T10:30:00Z',
+          submittedAt: '2026-04-23T10:30:00Z',
           status: 'pending',
         },
         {
           id: '2',
-          entityType: 'faculty',
-          entityId: 'faculty-1',
-          entityName: 'Dr. Smith',
-          changeType: 'update',
+          entityType: 'event',
+          entityId: 'event-1',
+          entityName: 'Department Research Symposium',
+          changeType: 'create',
+          category: 'event',
           changes: {
-            position: 'Associate Professor',
-            specialization: 'Machine Learning',
-          },
-          originalData: {
-            position: 'Assistant Professor',
-            specialization: 'Data Science',
+            title: 'Department Research Symposium',
+            description: 'Annual showcase of faculty and student research',
+            date: '2026-06-10',
+            location: 'Conference Hall A',
+            expectedParticipants: 200,
+            budget: 15000,
           },
           submittedBy: 'sec-1',
           submittedByName: 'Jane Secretary',
-          submittedAt: '2026-04-20T14:15:00Z',
+          submittedAt: '2026-04-22T14:15:00Z',
+          status: 'pending',
+        },
+        {
+          id: '3',
+          entityType: 'faculty',
+          entityId: 'faculty-1',
+          entityName: 'Dr. Sarah Johnson',
+          changeType: 'update',
+          category: 'profile',
+          changes: {
+            position: 'Department Chair',
+            specialization: 'Software Engineering, Agile Methodologies',
+            officeHours: 'Mon-Wed 2-4 PM',
+          },
+          originalData: {
+            position: 'Associate Professor',
+            specialization: 'Software Engineering',
+            officeHours: 'Tue-Thu 3-5 PM',
+          },
+          submittedBy: 'sec-1',
+          submittedByName: 'Jane Secretary',
+          submittedAt: '2026-04-21T09:00:00Z',
+          status: 'pending',
+        },
+        {
+          id: '4',
+          entityType: 'student',
+          entityId: 'student-1',
+          entityName: 'Emily Rodriguez',
+          changeType: 'update',
+          category: 'profile',
+          changes: {
+            yearLevel: 4,
+            section: 'A',
+            gpa: 3.85,
+            status: 'Regular',
+          },
+          originalData: {
+            yearLevel: 3,
+            section: 'B',
+            gpa: 3.75,
+            status: 'Regular',
+          },
+          submittedBy: 'sec-2',
+          submittedByName: 'Robert Secretary',
+          submittedAt: '2026-04-20T16:45:00Z',
           status: 'pending',
         },
       ]);
@@ -95,27 +143,71 @@ export function ChairApprovals() {
   };
 
   const filteredApprovals = useMemo(() => {
-    if (!search) return approvals;
-    const q = search.toLowerCase();
-    return approvals.filter(
-      (a) =>
-        a.entityName.toLowerCase().includes(q) ||
-        a.submittedByName.toLowerCase().includes(q) ||
-        a.entityType.toLowerCase().includes(q)
-    );
-  }, [approvals, search]);
+    let filtered = approvals;
+
+    // Filter by category
+    if (filterCategory !== 'all') {
+      filtered = filtered.filter((a) => a.category === filterCategory);
+    }
+
+    // Filter by search
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(
+        (a) =>
+          a.entityName.toLowerCase().includes(q) ||
+          a.submittedByName.toLowerCase().includes(q) ||
+          a.entityType.toLowerCase().includes(q) ||
+          (a.category && a.category.toLowerCase().includes(q))
+      );
+    }
+
+    return filtered;
+  }, [approvals, search, filterCategory]);
 
   const handleApprove = async (id: string, notes?: string) => {
-    await approvalsService.approveChange(id, notes);
-    await fetchData();
+    try {
+      await approvalsService.approveChange(id, notes);
+      await fetchData();
+      setSelectedApproval(null);
+    } catch (error) {
+      console.error('Failed to approve:', error);
+    }
   };
 
   const handleReject = async (id: string, notes: string) => {
-    await approvalsService.rejectChange(id, notes);
-    await fetchData();
+    try {
+      await approvalsService.rejectChange(id, notes);
+      await fetchData();
+      setSelectedApproval(null);
+    } catch (error) {
+      console.error('Failed to reject:', error);
+    }
+  };
+
+  const getCategoryBadge = (category?: string) => {
+    if (!category) return null;
+    
+    const colors = {
+      research: 'bg-purple-100 text-purple-700',
+      event: 'bg-blue-100 text-blue-700',
+      profile: 'bg-green-100 text-green-700',
+      general: 'bg-gray-100 text-gray-700',
+    };
+
+    return (
+      <span className={`px-2 py-1 rounded text-xs font-medium ${colors[category as keyof typeof colors] || colors.general}`}>
+        {category}
+      </span>
+    );
   };
 
   const columns = useMemo((): Column<PendingChange>[] => [
+    {
+      key: 'category',
+      header: 'Category',
+      render: (approval) => getCategoryBadge(approval.category),
+    },
     {
       key: 'entityType',
       header: 'Type',
@@ -129,7 +221,13 @@ export function ChairApprovals() {
       key: 'entityName',
       header: 'Name',
       render: (approval) => (
-        <span className="font-medium text-gray-900">{approval.entityName}</span>
+        <div>
+          <span className="font-medium text-gray-900 block">{approval.entityName}</span>
+          <span className="text-xs text-gray-500">
+            {approval.changeType === 'create' ? 'New Entry' : 
+             approval.changeType === 'update' ? 'Update' : 'Delete'}
+          </span>
+        </div>
       ),
     },
     {
@@ -177,9 +275,9 @@ export function ChairApprovals() {
             <FileCheck className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Pending Approvals</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Approval Management</h1>
             <p className="text-sm text-gray-600 mt-0.5">
-              Review and approve profile updates from secretary
+              Review and approve research, events, and profile changes from secretary
             </p>
           </div>
         </div>
@@ -238,25 +336,56 @@ export function ChairApprovals() {
 
         {/* Filters and Search */}
         <Card className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="space-y-4">
+            {/* Search */}
             <div className="flex-1">
               <SearchBar
                 value={search}
                 onChange={setSearch}
-                placeholder="Search by name or submitter..."
+                placeholder="Search by name, submitter, or category..."
               />
             </div>
-            <div className="flex gap-2">
-              {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
-                <Button
-                  key={status}
-                  variant={filterStatus === status ? 'primary' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterStatus(status)}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </Button>
-              ))}
+            
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Status Filter */}
+              <div className="flex-1">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
+                  Status
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {(['all', 'pending', 'approved', 'rejected'] as const).map((status) => (
+                    <Button
+                      key={status}
+                      variant={filterStatus === status ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => setFilterStatus(status)}
+                    >
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Category Filter */}
+              <div className="flex-1">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
+                  <Filter className="w-3 h-3 inline mr-1" />
+                  Category
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {(['all', 'research', 'event', 'profile'] as const).map((category) => (
+                    <Button
+                      key={category}
+                      variant={filterCategory === category ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => setFilterCategory(category)}
+                    >
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </Card>
@@ -298,3 +427,5 @@ export function ChairApprovals() {
     </MainLayout>
   );
 }
+
+export { ApprovalReviewModal } from './ApprovalReviewModal';

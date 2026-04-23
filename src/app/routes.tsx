@@ -29,6 +29,9 @@ import { ChairResearch } from '@/features/chair/research';
 import { ChairReports } from '@/features/chair/reports';
 import { ChairApprovals } from '@/features/chair/approvals';
 
+// Admin Approvals
+import { AdminApprovals } from '@/features/admin/approvals';
+
 // Secretary Portal Imports
 import { SecretaryDashboard } from '@/features/secretary/dashboard';
 import { SecretaryStudents } from '@/features/secretary/students';
@@ -135,6 +138,14 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <ResearchDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/approvals"
+          element={
+            <ProtectedRoute>
+              <AdminApprovals />
             </ProtectedRoute>
           }
         />
