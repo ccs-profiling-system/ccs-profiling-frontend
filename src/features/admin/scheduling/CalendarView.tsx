@@ -23,13 +23,12 @@ function getDaysInRange(start: string, end: string): Date[] {
   return days;
 }
 
-function isSameDay(date: Date, iso: string): boolean {
-  const d = new Date(iso);
-  return (
-    date.getFullYear() === d.getFullYear() &&
-    date.getMonth() === d.getMonth() &&
-    date.getDate() === d.getDate()
-  );
+const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+function isSameDay(date: Date, schedule: import('./types').Schedule): boolean {
+  // Match by exact date first (if schedule had a date), then fall back to day-of-week
+  const scheduleDayOfWeek = DAY_NAMES[date.getDay()];
+  return schedule.day === scheduleDayOfWeek;
 }
 
 function formatDayHeader(date: Date): string {
@@ -78,20 +77,24 @@ export function CalendarView({
     return (
       <div className="space-y-4">
         {/* Navigation */}
-        <div className="flex items-center justify-between">
-          <button 
-            onClick={() => onNavigate('prev')} 
-            className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors inline-flex items-center gap-2"
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <button
+            type="button"
+            onClick={() => onNavigate('prev')}
+            className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Previous
           </button>
-          <h2 className="text-lg font-semibold text-slate-900">{formatMonthHeader(new Date(dateRange.start))}</h2>
-          <button 
-            onClick={() => onNavigate('next')} 
-            className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors inline-flex items-center gap-2"
+          <h2 className="text-center text-base font-semibold tracking-tight text-slate-900">
+            {formatMonthHeader(new Date(dateRange.start))}
+          </h2>
+          <button
+            type="button"
+            onClick={() => onNavigate('next')}
+            className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
           >
             Next
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,20 +116,22 @@ export function CalendarView({
         {weeks.map((wk, wi) => (
           <div key={wi} className="grid grid-cols-7 gap-2">
             {wk.map((day) => {
-              const daySchedules = safeFilter<Schedule>(displayed, (s) => isSameDay(day, s.startTime), []);
+              const daySchedules = safeFilter<Schedule>(displayed, (s) => isSameDay(day, s), []);
               const isTodayDate = isToday(day);
               return (
-                <div 
-                  key={day.toISOString()} 
-                  className={`border rounded-lg p-2 min-h-[120px] transition-colors ${
-                    isTodayDate 
-                      ? 'bg-blue-50 border-blue-300 shadow-sm' 
-                      : 'bg-white border-slate-200 hover:border-slate-300'
+                <div
+                  key={day.toISOString()}
+                  className={`min-h-[120px] rounded-lg border p-2 transition-colors ${
+                    isTodayDate
+                      ? 'border-primary/25 bg-primary/[0.04] shadow-sm ring-1 ring-primary/10'
+                      : 'border-slate-200 bg-white hover:border-slate-300'
                   }`}
                 >
-                  <div className={`text-sm font-semibold mb-2 ${
-                    isTodayDate ? 'text-blue-600' : 'text-slate-700'
-                  }`}>
+                  <div
+                    className={`mb-2 text-sm font-semibold tabular-nums ${
+                      isTodayDate ? 'text-primary' : 'text-slate-700'
+                    }`}
+                  >
                     {day.getDate()}
                   </div>
                   <div className="space-y-1.5">
@@ -151,24 +156,26 @@ export function CalendarView({
   return (
     <div className="space-y-4">
       {/* Navigation */}
-      <div className="flex items-center justify-between">
-        <button 
-          onClick={() => onNavigate('prev')} 
-          className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors inline-flex items-center gap-2"
+      <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <button
+          type="button"
+          onClick={() => onNavigate('prev')}
+          className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Previous
         </button>
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-center text-base font-semibold tracking-tight text-slate-900">
           {viewMode === 'daily'
             ? formatDayHeader(new Date(dateRange.start))
             : `${formatDayHeader(new Date(dateRange.start))} – ${formatDayHeader(new Date(dateRange.end))}`}
         </h2>
-        <button 
-          onClick={() => onNavigate('next')} 
-          className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors inline-flex items-center gap-2"
+        <button
+          type="button"
+          onClick={() => onNavigate('next')}
+          className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
         >
           Next
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,15 +190,17 @@ export function CalendarView({
         style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}
       >
         {days.map((day) => {
-          const daySchedules = safeFilter<Schedule>(displayed, (s) => isSameDay(day, s.startTime), []);
+          const daySchedules = safeFilter<Schedule>(displayed, (s) => isSameDay(day, s), []);
           const isTodayDate = isToday(day);
           return (
             <div key={day.toISOString()} className="space-y-2">
-              <div className={`text-sm font-semibold text-center py-2 rounded-lg border ${
-                isTodayDate 
-                  ? 'bg-blue-50 text-blue-700 border-blue-200' 
-                  : 'bg-slate-50 text-slate-700 border-slate-200'
-              }`}>
+              <div
+                className={`rounded-lg border py-2 text-center text-sm font-semibold ${
+                  isTodayDate
+                    ? 'border-primary/25 bg-primary/[0.06] text-primary'
+                    : 'border-slate-200 bg-slate-50 text-slate-800'
+                }`}
+              >
                 {formatDayHeader(day)}
               </div>
               <div className="space-y-2 min-h-[200px]">

@@ -15,7 +15,7 @@ import { StudentProtectedRoute } from '@/components/auth/StudentProtectedRoute';
 import { FacultyLogin } from '@/features/faculty/pages/FacultyLogin';
 import { FacultyProtectedRoute } from '@/components/auth/FacultyProtectedRoute';
 import { facultyRoutes } from '@/features/faculty/routes';
-// import { SchedulingPage } from '@/features/admin/scheduling'; // Disabled - data type issues
+import { SchedulingPage } from '@/features/admin/scheduling';
 import { ResearchPage, ResearchDetailPage } from '@/features/admin/research';
 import { studentRoutes } from '@/features/student/routes';
 
@@ -116,15 +116,14 @@ export function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        {/* Scheduling route disabled due to data type issues - will be fixed */}
-        {/* <Route
+        <Route
           path="/admin/scheduling"
           element={
             <ProtectedRoute>
               <SchedulingPage />
             </ProtectedRoute>
           }
-        /> */}
+        />
         <Route
           path="/admin/research"
           element={

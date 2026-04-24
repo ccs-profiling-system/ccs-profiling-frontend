@@ -2,88 +2,111 @@ import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
-import { validateScheduleForm, VALID_SCHEDULE_TYPES, VALID_CALENDAR_VIEWS, detectConflicts } from './validation';
+import {
+  validateScheduleForm,
+  VALID_SCHEDULE_TYPES,
+  VALID_CALENDAR_VIEWS,
+  detectConflicts,
+} from './validation';
 import { CalendarCell } from './CalendarCell';
 import { ScheduleTypeBadge } from './ScheduleTypeBadge';
-import type { CreateSchedulePayload, Schedule } from './types';
+import type { CreateSchedulePayload, Schedule, ScheduleType } from './types';
+
+const REQUIRED_KEYS: (keyof CreateSchedulePayload)[] = [
+  'schedule_type',
+  'room',
+  'day',
+  'start_time',
+  'end_time',
+  'semester',
+  'academic_year',
+];
+
+function minsToHHMM(m: number): string {
+  const h = Math.floor(m / 60) % 24;
+  const min = m % 60;
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+
+function baseSchedule(overrides: Partial<Schedule> = {}): Schedule {
+  return {
+    id: '00000000-0000-7000-8000-000000000001',
+    schedule_type: 'class',
+    room: 'Room A',
+    day: 'monday',
+    start_time: '09:00',
+    end_time: '10:30',
+    semester: '1st',
+    academic_year: '2025-2026',
+    created_at: '2024-01-01T00:00:00.000Z',
+    updated_at: '2024-01-01T00:00:00.000Z',
+    ...overrides,
+  };
+}
 
 // Feature: scheduling-module, Property 1: Invalid schedule payloads are rejected client-side
 
 describe('Property 1: Invalid schedule payloads are rejected client-side', () => {
-  /**
-   * Validates: Requirements 1.2, 2.1
-   *
-   * For any schedule form submission where at least one required field
-   * (subject, instructor, room, startTime, or endTime) is empty or
-   * whitespace-only, validateScheduleForm should return a non-empty errors object.
-   */
   it('returns errors when at least one required field is missing or whitespace-only', () => {
-    // Arbitrary for a non-empty, non-whitespace string (valid field value)
-    const validField = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
-
-    // Arbitrary for an empty or whitespace-only string (invalid field value)
-    const invalidField = fc.oneof(
-      fc.constant(''),
-      fc.constant('   '),
-      fc.stringMatching(/^\s+$/)
-    );
-
-    const requiredFields: (keyof Omit<CreateSchedulePayload, 'type'>)[] = [
-      'subject',
-      'instructor',
-      'room',
-      'startTime',
-      'endTime',
-    ];
+    const invalidField = fc.oneof(fc.constant(''), fc.constant('   '), fc.stringMatching(/^\s+$/));
 
     fc.assert(
-      fc.property(
-        // Pick which field(s) to make invalid — at least one
-        fc.subarray(requiredFields, { minLength: 1 }),
-        // Valid values for all fields
-        validField,
-        validField,
-        validField,
-        validField,
-        validField,
-        // Invalid value to substitute
-        invalidField,
-        (invalidKeys, s, i, r, st, et, badValue) => {
-          const payload: Partial<CreateSchedulePayload> = {
-            subject: s,
-            instructor: i,
-            room: r,
-            startTime: st,
-            endTime: et,
-            type: 'class',
-          };
-
-          // Overwrite the chosen fields with the invalid value
-          for (const key of invalidKeys) {
-            payload[key] = badValue;
-          }
-
-          const errors = validateScheduleForm(payload);
-          expect(Object.keys(errors).length).toBeGreaterThan(0);
+      fc.property(fc.subarray([...REQUIRED_KEYS], { minLength: 1 }), invalidField, (invalidKeys, badValue) => {
+        const payload: Partial<CreateSchedulePayload> = {
+          schedule_type: 'class',
+          room: 'Room 101',
+          day: 'monday',
+          start_time: '09:00',
+          end_time: '10:00',
+          semester: '1st',
+          academic_year: '2025-2026',
+        };
+        for (const key of invalidKeys) {
+          (payload as Record<string, unknown>)[key] = badValue;
         }
-      ),
+        const errors = validateScheduleForm(payload);
+        expect(Object.keys(errors).length).toBeGreaterThan(0);
+      }),
       { numRuns: 100 }
     );
   });
 
   it('returns no errors when all required fields are valid', () => {
     const validField = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
+    const dayArb = fc.constantFrom<CreateSchedulePayload['day']>(
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday'
+    );
+    const timeArb = fc
+      .integer({ min: 6 * 60, max: 12 * 60 })
+      .chain((start) =>
+        fc.integer({ min: start + 30, max: Math.min(start + 180, 22 * 60) }).map((end) => ({
+          start_time: minsToHHMM(start),
+          end_time: minsToHHMM(end),
+        }))
+      );
 
     fc.assert(
       fc.property(
         validField,
+        dayArb,
+        timeArb,
+        fc.constantFrom<CreateSchedulePayload['schedule_type']>('class', 'exam', 'consultation'),
+        fc.constantFrom<CreateSchedulePayload['semester']>('1st', '2nd', 'summer'),
         validField,
-        validField,
-        validField,
-        validField,
-        fc.constantFrom('class' as const, 'exam' as const),
-        (subject, instructor, room, startTime, endTime, type) => {
-          const errors = validateScheduleForm({ subject, instructor, room, startTime, endTime, type });
+        (room, day, times, schedule_type, semester, academic_year) => {
+          const errors = validateScheduleForm({
+            schedule_type,
+            room,
+            day,
+            start_time: times.start_time,
+            end_time: times.end_time,
+            semester,
+            academic_year,
+          });
           expect(Object.keys(errors).length).toBe(0);
         }
       ),
@@ -95,56 +118,61 @@ describe('Property 1: Invalid schedule payloads are rejected client-side', () =>
 // Feature: scheduling-module, Property 2: Schedule type is always a valid enum value
 
 describe('Property 2: Schedule type is always a valid enum value', () => {
-  /**
-   * Validates: Requirements 1.3
-   *
-   * For any arbitrary string passed as the type field, only "class" and "exam"
-   * should pass type validation; all other strings should produce a type error.
-   */
-  it('rejects any type value that is not "class" or "exam"', () => {
+  it('rejects any schedule_type value that is not a valid enum', () => {
     const validField = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
-
-    // Any string that is NOT a valid schedule type
-    const invalidType = fc.string().filter((s) => !VALID_SCHEDULE_TYPES.includes(s as 'class' | 'exam'));
+    const invalidType = fc
+      .string()
+      .filter((s) => !VALID_SCHEDULE_TYPES.includes(s as ScheduleType));
 
     fc.assert(
       fc.property(
         validField,
         validField,
+        fc.constantFrom<CreateSchedulePayload['day']>('monday', 'tuesday'),
         validField,
         validField,
-        validField,
+        fc.constantFrom<CreateSchedulePayload['semester']>('1st', '2nd', 'summer'),
         invalidType,
-        (subject, instructor, room, startTime, endTime, type) => {
+        (room, academic_year, day, start_time, end_time, semester, schedule_type) => {
           const errors = validateScheduleForm({
-            subject,
-            instructor,
+            schedule_type: schedule_type as CreateSchedulePayload['schedule_type'],
             room,
-            startTime,
-            endTime,
-            type: type as CreateSchedulePayload['type'],
+            day,
+            start_time,
+            end_time,
+            semester,
+            academic_year,
           });
-          expect(errors.type).toBeDefined();
+          expect(errors.schedule_type).toBeDefined();
         }
       ),
       { numRuns: 100 }
     );
   });
 
-  it('accepts "class" and "exam" as valid type values', () => {
+  it('accepts class, exam, and consultation as valid schedule_type values', () => {
     const validField = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
 
     fc.assert(
       fc.property(
         validField,
         validField,
+        fc.constantFrom<CreateSchedulePayload['day']>('monday', 'friday'),
         validField,
         validField,
-        validField,
-        fc.constantFrom('class' as const, 'exam' as const),
-        (subject, instructor, room, startTime, endTime, type) => {
-          const errors = validateScheduleForm({ subject, instructor, room, startTime, endTime, type });
-          expect(errors.type).toBeUndefined();
+        fc.constantFrom<CreateSchedulePayload['semester']>('1st', '2nd', 'summer'),
+        fc.constantFrom<CreateSchedulePayload['schedule_type']>('class', 'exam', 'consultation'),
+        (room, academic_year, day, start_time, end_time, semester, schedule_type) => {
+          const errors = validateScheduleForm({
+            schedule_type,
+            room,
+            day,
+            start_time,
+            end_time,
+            semester,
+            academic_year,
+          });
+          expect(errors.schedule_type).toBeUndefined();
         }
       ),
       { numRuns: 100 }
@@ -155,33 +183,16 @@ describe('Property 2: Schedule type is always a valid enum value', () => {
 // Feature: scheduling-module, Property 4: Class and exam schedules render differently
 
 describe('Property 4: Class and exam schedules render differently', () => {
-  /**
-   * Validates: Requirements 2.2
-   *
-   * For any schedule entry, the rendered type badge for "class" should be
-   * visually distinct (different text/color class) from the rendered type badge
-   * for "exam".
-   */
   it('renders a different badge for "class" than for "exam"', () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom('class' as const, 'exam' as const),
-        (type) => {
-          const classBadge = renderToStaticMarkup(createElement(ScheduleTypeBadge, { type: 'class' }));
-          const examBadge = renderToStaticMarkup(createElement(ScheduleTypeBadge, { type: 'exam' }));
+      fc.property(fc.constantFrom('class' as const, 'exam' as const), () => {
+        const classBadge = renderToStaticMarkup(createElement(ScheduleTypeBadge, { type: 'class' }));
+        const examBadge = renderToStaticMarkup(createElement(ScheduleTypeBadge, { type: 'exam' }));
 
-          // The two badges must not be identical
-          expect(classBadge).not.toBe(examBadge);
-
-          // Each badge must contain its own type label
-          expect(classBadge).toContain('class');
-          expect(examBadge).toContain('exam');
-
-          // The badge for the given type must contain that type's label
-          const rendered = renderToStaticMarkup(createElement(ScheduleTypeBadge, { type }));
-          expect(rendered).toContain(type);
-        }
-      ),
+        expect(classBadge).not.toBe(examBadge);
+        expect(classBadge).toContain('class');
+        expect(examBadge).toContain('exam');
+      }),
       { numRuns: 100 }
     );
   });
@@ -190,63 +201,46 @@ describe('Property 4: Class and exam schedules render differently', () => {
 // Feature: scheduling-module, Property 5: Overlap detection — room conflict
 
 describe('Property 5: Overlap detection — room conflict', () => {
-  /**
-   * Validates: Requirements 3.4, 5.1, 5.3
-   *
-   * For any two schedule entries sharing the same room whose time slots overlap,
-   * detectConflicts should return hasConflict: true and include a conflict detail
-   * with reason: 'room'.
-   */
   it('detects a room conflict when two schedules share the same room and overlap in time', () => {
-    // Generate a base start time as a timestamp offset from epoch
-    const baseTimeArb = fc.integer({ min: 0, max: 1_000_000 }).map((n) => n * 60_000); // minutes in ms
-
-    // Duration: 30–480 minutes
-    const durationArb = fc.integer({ min: 30, max: 480 }).map((m) => m * 60_000);
-
-    // Non-empty, non-whitespace string
     const nameArb = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
 
     fc.assert(
       fc.property(
-        nameArb,        // shared room
-        nameArb,        // instructor A
-        nameArb,        // instructor B (may differ)
-        nameArb,        // subject A
-        nameArb,        // subject B
-        baseTimeArb,    // start of existing schedule (ms)
-        durationArb,    // duration of existing schedule
-        fc.integer({ min: 1, max: 29 }).map((m) => m * 60_000), // overlap offset (< 30 min into existing)
-        durationArb,    // duration of new schedule
-        (room, instructorA, instructorB, subjectA, subjectB, existingStart, existingDuration, overlapOffset, newDuration) => {
-          const existingEnd = existingStart + existingDuration;
+        fc.uuid(),
+        nameArb,
+        fc.uuid(),
+        fc.uuid(),
+        fc.integer({ min: 8 * 60, max: 14 * 60 }),
+        fc.integer({ min: 60, max: 120 }),
+        fc.integer({ min: 5, max: 45 }),
+        fc.integer({ min: 60, max: 120 }),
+        (existingId, room, fA, fB, existingStartMin, existingDurMin, overlapMin, newDurMin) => {
+          fc.pre(fA !== fB);
+          const existingEndMin = existingStartMin + existingDurMin;
+          const newStartMin = existingStartMin + overlapMin;
+          const newEndMin = newStartMin + newDurMin;
+          fc.pre(newStartMin < existingEndMin && newEndMin > existingStartMin);
 
-          // New schedule starts inside the existing one
-          const newStart = existingStart + overlapOffset;
-          const newEnd = newStart + newDuration;
-
-          const toISO = (ms: number) => new Date(ms).toISOString();
-
-          const existing: import('./types').Schedule = {
-            id: 'existing-1',
-            subject: subjectA,
-            instructor: instructorA,
+          const existing = baseSchedule({
+            id: existingId,
             room,
-            startTime: toISO(existingStart),
-            endTime: toISO(existingEnd),
-            type: 'class',
-            createdAt: toISO(existingStart),
-            updatedAt: toISO(existingStart),
-          };
+            faculty_id: fA,
+            day: 'monday',
+            start_time: minsToHHMM(existingStartMin),
+            end_time: minsToHHMM(existingEndMin),
+            subject_code: 'SUBJ-A',
+          });
 
-          const payload = {
-            room,                          // same room → should trigger room conflict
-            instructor: instructorB,       // different instructor to isolate room conflict
-            startTime: toISO(newStart),
-            endTime: toISO(newEnd),
-          };
-
-          const result = detectConflicts(payload, [existing]);
+          const result = detectConflicts(
+            {
+              room,
+              day: 'monday',
+              start_time: minsToHHMM(newStartMin),
+              end_time: minsToHHMM(newEndMin),
+              faculty_id: fB,
+            },
+            [existing]
+          );
 
           expect(result.hasConflict).toBe(true);
           expect(result.conflicts.some((c) => c.reason === 'room')).toBe(true);
@@ -260,58 +254,47 @@ describe('Property 5: Overlap detection — room conflict', () => {
 // Feature: scheduling-module, Property 6: Overlap detection — instructor conflict
 
 describe('Property 6: Overlap detection — instructor conflict', () => {
-  /**
-   * Validates: Requirements 5.2, 5.3
-   *
-   * For any two schedule entries sharing the same instructor whose time slots overlap,
-   * detectConflicts should return hasConflict: true and include a conflict detail
-   * with reason: 'instructor'.
-   */
-  it('detects an instructor conflict when two schedules share the same instructor and overlap in time', () => {
-    const baseTimeArb = fc.integer({ min: 0, max: 1_000_000 }).map((n) => n * 60_000);
-    const durationArb = fc.integer({ min: 30, max: 480 }).map((m) => m * 60_000);
+  it('detects an instructor conflict when two schedules share the same faculty and overlap in time', () => {
     const nameArb = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
+    const fid = fc.uuid();
 
     fc.assert(
       fc.property(
-        nameArb,        // shared instructor
-        nameArb,        // room A (for existing schedule)
-        nameArb,        // room B (different room, to isolate instructor conflict)
-        nameArb,        // subject A
-        baseTimeArb,    // start of existing schedule (ms)
-        durationArb,    // duration of existing schedule
-        fc.integer({ min: 1, max: 29 }).map((m) => m * 60_000), // overlap offset
-        durationArb,    // duration of new schedule
-        (instructor, roomA, roomB, subjectA, existingStart, existingDuration, overlapOffset, newDuration) => {
-          // Ensure rooms are different to isolate the instructor conflict
+        fc.uuid(),
+        fid,
+        nameArb,
+        nameArb,
+        fc.integer({ min: 9 * 60, max: 15 * 60 }),
+        fc.integer({ min: 60, max: 120 }),
+        fc.integer({ min: 5, max: 45 }),
+        fc.integer({ min: 60, max: 120 }),
+        (existingId, facultyId, roomA, roomB, existingStartMin, existingDurMin, overlapMin, newDurMin) => {
           fc.pre(roomA !== roomB);
+          const existingEndMin = existingStartMin + existingDurMin;
+          const newStartMin = existingStartMin + overlapMin;
+          const newEndMin = newStartMin + newDurMin;
+          fc.pre(newStartMin < existingEndMin && newEndMin > existingStartMin);
 
-          const existingEnd = existingStart + existingDuration;
-          const newStart = existingStart + overlapOffset;
-          const newEnd = newStart + newDuration;
-
-          const toISO = (ms: number) => new Date(ms).toISOString();
-
-          const existing: import('./types').Schedule = {
-            id: 'existing-1',
-            subject: subjectA,
-            instructor,
+          const existing = baseSchedule({
+            id: existingId,
             room: roomA,
-            startTime: toISO(existingStart),
-            endTime: toISO(existingEnd),
-            type: 'class',
-            createdAt: toISO(existingStart),
-            updatedAt: toISO(existingStart),
-          };
+            faculty_id: facultyId,
+            faculty_name: 'Prof. X',
+            day: 'monday',
+            start_time: minsToHHMM(existingStartMin),
+            end_time: minsToHHMM(existingEndMin),
+          });
 
-          const payload = {
-            instructor,       // same instructor → should trigger instructor conflict
-            room: roomB,      // different room to isolate instructor conflict
-            startTime: toISO(newStart),
-            endTime: toISO(newEnd),
-          };
-
-          const result = detectConflicts(payload, [existing]);
+          const result = detectConflicts(
+            {
+              room: roomB,
+              day: 'monday',
+              start_time: minsToHHMM(newStartMin),
+              end_time: minsToHHMM(newEndMin),
+              faculty_id: facultyId,
+            },
+            [existing]
+          );
 
           expect(result.hasConflict).toBe(true);
           expect(result.conflicts.some((c) => c.reason === 'instructor')).toBe(true);
@@ -325,57 +308,44 @@ describe('Property 6: Overlap detection — instructor conflict', () => {
 // Feature: scheduling-module, Property 7: Non-overlapping schedules produce no conflicts
 
 describe('Property 7: Non-overlapping schedules produce no conflicts', () => {
-  /**
-   * Validates: Requirements 5.4
-   *
-   * For any two schedule entries whose time slots do not overlap (regardless of
-   * shared room or instructor), detectConflicts should return hasConflict: false.
-   */
-  it('returns no conflicts when two schedules do not overlap in time, even with the same room and instructor', () => {
-    const baseTimeArb = fc.integer({ min: 1, max: 1_000_000 }).map((n) => n * 60_000);
-    const durationArb = fc.integer({ min: 30, max: 480 }).map((m) => m * 60_000);
-    const gapArb = fc.integer({ min: 1, max: 60 }).map((m) => m * 60_000); // gap between schedules
+  it('returns no conflicts when two schedules do not overlap in time, even with the same room and faculty', () => {
     const nameArb = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
+    const fid = fc.uuid();
 
     fc.assert(
       fc.property(
-        nameArb,       // shared room
-        nameArb,       // shared instructor
-        nameArb,       // subject A
-        nameArb,       // subject B
-        baseTimeArb,   // start of existing schedule (ms)
-        durationArb,   // duration of existing schedule
-        gapArb,        // gap after existing schedule ends before new one starts
-        durationArb,   // duration of new schedule
-        (room, instructor, subjectA, subjectB, existingStart, existingDuration, gap, newDuration) => {
-          const existingEnd = existingStart + existingDuration;
+        fc.uuid(),
+        nameArb,
+        fid,
+        fc.integer({ min: 8 * 60, max: 12 * 60 }),
+        fc.integer({ min: 45, max: 90 }),
+        fc.integer({ min: 30, max: 120 }),
+        fc.integer({ min: 45, max: 120 }),
+        (existingId, room, facultyId, existingStartMin, existingDurMin, gapMin, newDurMin) => {
+          const existingEndMin = existingStartMin + existingDurMin;
+          const newStartMin = existingEndMin + gapMin;
+          const newEndMin = newStartMin + newDurMin;
+          fc.pre(newEndMin < 24 * 60);
 
-          // New schedule starts strictly after the existing one ends (no overlap)
-          const newStart = existingEnd + gap;
-          const newEnd = newStart + newDuration;
-
-          const toISO = (ms: number) => new Date(ms).toISOString();
-
-          const existing: import('./types').Schedule = {
-            id: 'existing-1',
-            subject: subjectA,
-            instructor,
+          const existing = baseSchedule({
+            id: existingId,
             room,
-            startTime: toISO(existingStart),
-            endTime: toISO(existingEnd),
-            type: 'class',
-            createdAt: toISO(existingStart),
-            updatedAt: toISO(existingStart),
-          };
+            faculty_id: facultyId,
+            day: 'monday',
+            start_time: minsToHHMM(existingStartMin),
+            end_time: minsToHHMM(existingEndMin),
+          });
 
-          const payload = {
-            room,        // same room — but no time overlap
-            instructor,  // same instructor — but no time overlap
-            startTime: toISO(newStart),
-            endTime: toISO(newEnd),
-          };
-
-          const result = detectConflicts(payload, [existing]);
+          const result = detectConflicts(
+            {
+              room,
+              day: 'monday',
+              start_time: minsToHHMM(newStartMin),
+              end_time: minsToHHMM(newEndMin),
+              faculty_id: facultyId,
+            },
+            [existing]
+          );
 
           expect(result.hasConflict).toBe(false);
           expect(result.conflicts).toHaveLength(0);
@@ -389,49 +359,40 @@ describe('Property 7: Non-overlapping schedules produce no conflicts', () => {
 // Feature: scheduling-module, Property 8: Self-exclusion in conflict detection
 
 describe('Property 8: Self-exclusion in conflict detection', () => {
-  /**
-   * Validates: Requirements 5.5
-   *
-   * For any schedule entry, running conflict detection against a list containing
-   * only that same entry (simulating edit mode with excludeId) should return
-   * hasConflict: false.
-   */
   it('returns no conflicts when the only existing schedule is the one being edited (self-exclusion)', () => {
-    const baseTimeArb = fc.integer({ min: 0, max: 1_000_000 }).map((n) => n * 60_000);
-    const durationArb = fc.integer({ min: 30, max: 480 }).map((m) => m * 60_000);
     const nameArb = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
-    const idArb = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
+    const idArb = fc.uuid();
+    const fid = fc.uuid();
 
     fc.assert(
       fc.property(
         idArb,
-        nameArb,   // subject
-        nameArb,   // instructor
-        nameArb,   // room
-        baseTimeArb,
-        durationArb,
-        (id, subject, instructor, room, startMs, durationMs) => {
-          const toISO = (ms: number) => new Date(ms).toISOString();
-          const startTime = toISO(startMs);
-          const endTime = toISO(startMs + durationMs);
-
-          const existing: import('./types').Schedule = {
+        nameArb,
+        fid,
+        fc.integer({ min: 10 * 60, max: 15 * 60 }),
+        fc.integer({ min: 60, max: 120 }),
+        (id, room, facultyId, startMin, durMin) => {
+          const endMin = startMin + durMin;
+          const existing = baseSchedule({
             id,
-            subject,
-            instructor,
             room,
-            startTime,
-            endTime,
-            type: 'class',
-            createdAt: startTime,
-            updatedAt: startTime,
-          };
+            faculty_id: facultyId,
+            day: 'monday',
+            start_time: minsToHHMM(startMin),
+            end_time: minsToHHMM(endMin),
+          });
 
-          // Payload is identical to the existing schedule — same room, instructor, and time
-          const payload = { room, instructor, startTime, endTime };
-
-          // Passing the same id as excludeId simulates edit mode
-          const result = detectConflicts(payload, [existing], id);
+          const result = detectConflicts(
+            {
+              room,
+              day: 'monday',
+              start_time: minsToHHMM(startMin),
+              end_time: minsToHHMM(endMin),
+              faculty_id: facultyId,
+            },
+            [existing],
+            id
+          );
 
           expect(result.hasConflict).toBe(false);
           expect(result.conflicts).toHaveLength(0);
@@ -445,76 +406,42 @@ describe('Property 8: Self-exclusion in conflict detection', () => {
 // Feature: scheduling-module, Property 10: Delete removes entry from list
 
 describe('Property 10: Delete removes entry from list', () => {
-  /**
-   * Validates: Requirements 2.3
-   *
-   * For any list of schedules and any schedule ID in that list, after filtering
-   * out that ID (as deleteSchedule does), the resulting list should not contain
-   * an entry with that ID.
-   */
+  const scheduleArb = fc.record({
+    id: fc.uuid(),
+    subject_code: fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0),
+    faculty_name: fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0),
+    room: fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0),
+    schedule_type: fc.constantFrom<Schedule['schedule_type']>('class', 'exam'),
+    day: fc.constantFrom<Schedule['day']>('monday', 'tuesday'),
+    start_time: fc.constant('08:00'),
+    end_time: fc.constant('09:00'),
+    semester: fc.constantFrom<Schedule['semester']>('1st', '2nd'),
+    academic_year: fc.constant('2025-2026'),
+    created_at: fc.constant('2024-01-01T00:00:00.000Z'),
+    updated_at: fc.constant('2024-01-01T00:00:00.000Z'),
+  });
+
   it('removes the deleted schedule ID from the list', () => {
-    const idArb = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
-    const nameArb = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
-
-    const scheduleArb = fc.record({
-      id: idArb,
-      subject: nameArb,
-      instructor: nameArb,
-      room: nameArb,
-      startTime: fc.constant('2024-01-01T08:00:00.000Z'),
-      endTime: fc.constant('2024-01-01T09:00:00.000Z'),
-      type: fc.constantFrom('class' as const, 'exam' as const),
-      createdAt: fc.constant('2024-01-01T00:00:00.000Z'),
-      updatedAt: fc.constant('2024-01-01T00:00:00.000Z'),
-    });
-
     fc.assert(
-      fc.property(
-        fc.array(scheduleArb, { minLength: 1, maxLength: 20 }),
-        fc.integer({ min: 0, max: 19 }),
-        (schedules, indexHint) => {
-          // Pick a schedule that actually exists in the list
-          const index = indexHint % schedules.length;
-          const targetId = schedules[index].id;
-
-          // Replicate the delete logic from useSchedules
-          const result = schedules.filter((s) => s.id !== targetId);
-
-          expect(result.every((s) => s.id !== targetId)).toBe(true);
-        }
-      ),
+      fc.property(fc.array(scheduleArb, { minLength: 1, maxLength: 20 }), fc.integer({ min: 0, max: 19 }), (rows, hint) => {
+        const schedules = rows as Schedule[];
+        const index = hint % schedules.length;
+        const targetId = schedules[index].id;
+        const result = schedules.filter((s) => s.id !== targetId);
+        expect(result.every((s) => s.id !== targetId)).toBe(true);
+      }),
       { numRuns: 100 }
     );
   });
 
   it('leaves the list unchanged when the ID does not exist', () => {
-    const idArb = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
-    const nameArb = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
-
-    const scheduleArb = fc.record({
-      id: idArb,
-      subject: nameArb,
-      instructor: nameArb,
-      room: nameArb,
-      startTime: fc.constant('2024-01-01T08:00:00.000Z'),
-      endTime: fc.constant('2024-01-01T09:00:00.000Z'),
-      type: fc.constantFrom('class' as const, 'exam' as const),
-      createdAt: fc.constant('2024-01-01T00:00:00.000Z'),
-      updatedAt: fc.constant('2024-01-01T00:00:00.000Z'),
-    });
-
     fc.assert(
-      fc.property(
-        fc.array(scheduleArb, { minLength: 0, maxLength: 20 }),
-        fc.constant('__nonexistent_id__'),
-        (schedules, absentId) => {
-          fc.pre(schedules.every((s) => s.id !== absentId));
-
-          const result = schedules.filter((s) => s.id !== absentId);
-
-          expect(result).toHaveLength(schedules.length);
-        }
-      ),
+      fc.property(fc.array(scheduleArb, { minLength: 0, maxLength: 20 }), fc.constant('00000000-0000-0000-0000-000000000099'), (rows, absentId) => {
+        const schedules = rows as Schedule[];
+        fc.pre(schedules.every((s) => s.id !== absentId));
+        const result = schedules.filter((s) => s.id !== absentId);
+        expect(result).toHaveLength(schedules.length);
+      }),
       { numRuns: 100 }
     );
   });
@@ -523,62 +450,43 @@ describe('Property 10: Delete removes entry from list', () => {
 // Feature: scheduling-module, Property 3: Schedule entry rendering completeness
 
 describe('Property 3: Schedule entry rendering completeness', () => {
-  /**
-   * Validates: Requirements 3.3, 4.3
-   *
-   * For any schedule entry, the rendered CalendarCell output should contain
-   * the subject, instructor, room, and time slot information.
-   */
   it('renders subject, instructor, room, and time slot for any schedule entry', () => {
     const nameArb = fc.string({ minLength: 1 }).filter((s) => s.trim().length > 0);
-    const isoDateArb = fc
-      .integer({ min: 0, max: 1_000_000 })
-      .map((n) => new Date(n * 60_000).toISOString());
 
     fc.assert(
-      fc.property(
-        nameArb,  // subject
-        nameArb,  // instructor
-        nameArb,  // room
-        isoDateArb, // startTime
-        isoDateArb, // endTime
-        (subject, instructor, room, startTime, endTime) => {
-          const schedule: Schedule = {
-            id: 'test-id',
-            subject,
-            instructor,
-            room,
-            startTime,
-            endTime,
-            type: 'class',
-            createdAt: startTime,
-            updatedAt: startTime,
-          };
+      fc.property(nameArb, nameArb, nameArb, (subjectCode, instructor, room) => {
+        const schedule: Schedule = {
+          id: '00000000-0000-7000-8000-000000000099',
+          schedule_type: 'class',
+          subject_code: subjectCode,
+          faculty_name: instructor,
+          room,
+          day: 'monday',
+          start_time: '08:00',
+          end_time: '09:30',
+          semester: '1st',
+          academic_year: '2025-2026',
+          created_at: '2024-01-01T00:00:00.000Z',
+          updated_at: '2024-01-01T00:00:00.000Z',
+        };
 
-          const html = renderToStaticMarkup(
-            createElement(CalendarCell, {
-              schedule,
-              onEdit: () => {},
-              onDelete: () => {},
-            })
-          );
+        const html = renderToStaticMarkup(
+          createElement(CalendarCell, {
+            schedule,
+            onEdit: () => {},
+            onDelete: () => {},
+          })
+        );
 
-          // React HTML-encodes text content; encode our expected strings the same way
-          // by rendering a simple span and extracting its inner content
-          const encodeForHtml = (s: string) =>
-            renderToStaticMarkup(createElement('span', null, s)).slice(6, -7); // strip <span> and </span>
+        const encodeForHtml = (s: string) =>
+          renderToStaticMarkup(createElement('span', null, s)).slice(6, -7);
 
-          expect(html).toContain(encodeForHtml(subject));
-          expect(html).toContain(encodeForHtml(instructor));
-          expect(html).toContain(encodeForHtml(room));
-
-          // Time slot: both formatted times must appear in the output
-          const startFormatted = new Date(startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          const endFormatted = new Date(endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          expect(html).toContain(startFormatted);
-          expect(html).toContain(endFormatted);
-        }
-      ),
+        expect(html).toContain(encodeForHtml(subjectCode));
+        expect(html).toContain(encodeForHtml(instructor));
+        expect(html).toContain(encodeForHtml(room));
+        expect(html).toContain('8:00 AM');
+        expect(html).toContain('9:30 AM');
+      }),
       { numRuns: 100 }
     );
   });
@@ -587,28 +495,17 @@ describe('Property 3: Schedule entry rendering completeness', () => {
 // Feature: scheduling-module, Property 9: Calendar view mode is always a valid value
 
 describe('Property 9: Calendar view mode is always a valid value', () => {
-  /**
-   * Validates: Requirements 4.2
-   *
-   * For any view mode value, only "daily", "weekly", and "monthly" should be
-   * accepted as valid; all other strings should not be present in VALID_CALENDAR_VIEWS.
-   */
-  it('accepts only "daily", "weekly", and "monthly" as valid view modes', () => {
+  it('accepts only daily, weekly, and monthly as valid view modes', () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom('daily' as const, 'weekly' as const, 'monthly' as const),
-        (validMode) => {
-          expect(VALID_CALENDAR_VIEWS).toContain(validMode);
-        }
-      ),
+      fc.property(fc.constantFrom('daily' as const, 'weekly' as const, 'monthly' as const), (validMode) => {
+        expect(VALID_CALENDAR_VIEWS).toContain(validMode);
+      }),
       { numRuns: 100 }
     );
   });
 
   it('rejects any string that is not a valid calendar view mode', () => {
-    const invalidMode = fc.string().filter(
-      (s) => !(['daily', 'weekly', 'monthly'] as string[]).includes(s)
-    );
+    const invalidMode = fc.string().filter((s) => !(['daily', 'weekly', 'monthly'] as string[]).includes(s));
 
     fc.assert(
       fc.property(invalidMode, (mode) => {

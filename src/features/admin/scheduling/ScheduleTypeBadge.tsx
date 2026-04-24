@@ -6,8 +6,9 @@ interface ScheduleTypeBadgeProps {
 }
 
 const badgeStyles: Record<ScheduleType, string> = {
-  class: 'bg-blue-100 text-blue-700 border-blue-200',
-  exam: 'bg-amber-100 text-amber-700 border-amber-200',
+  class: 'border-slate-200/90 bg-slate-100 text-slate-700',
+  exam: 'border-amber-200/80 bg-amber-50 text-amber-900',
+  consultation: 'border-emerald-200/80 bg-emerald-50 text-emerald-900',
 };
 
 const badgeIcons: Record<ScheduleType, JSX.Element> = {
@@ -22,14 +23,19 @@ const badgeIcons: Record<ScheduleType, JSX.Element> = {
       <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
     </svg>
   ),
+  consultation: (
+    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+    </svg>
+  ),
 };
 
 export function ScheduleTypeBadge({ type, size = 'sm' }: ScheduleTypeBadgeProps) {
-  const sizeClasses = size === 'xs' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-xs';
-  
+  const sizeClasses = size === 'xs' ? 'px-1.5 py-0.5 text-[10px] font-semibold' : 'px-2 py-0.5 text-xs font-semibold';
+
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-md font-medium capitalize border ${badgeStyles[type]} ${sizeClasses}`}
+      className={`inline-flex items-center gap-1 rounded border font-medium capitalize tracking-wide ${badgeStyles[type]} ${sizeClasses}`}
     >
       {size !== 'xs' && badgeIcons[type]}
       {type}
