@@ -1,5 +1,0 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { AlertCircle, XCircle } from 'lucide-react';
-export function ErrorAlert({ title = 'Error', message, onRetry, onDismiss }) {
-    return (_jsx("div", { className: "bg-secondary/10 border-l-4 border-secondary p-4 rounded-lg", children: _jsxs("div", { className: "flex items-start gap-3", children: [_jsx(AlertCircle, { className: "w-5 h-5 text-secondary flex-shrink-0 mt-0.5" }), _jsxs("div", { className: "flex-1", children: [_jsxs("div", { className: "flex items-start justify-between", children: [_jsxs("div", { children: [_jsx("p", { className: "font-semibold text-secondary", children: title }), _jsx("p", { className: "text-sm text-gray-700 mt-1", children: message })] }), onDismiss && (_jsx("button", { onClick: onDismiss, className: "text-gray-400 hover:text-gray-600 transition", "aria-label": "Dismiss", children: _jsx(XCircle, { className: "w-5 h-5" }) }))] }), onRetry && (_jsx("button", { onClick: onRetry, className: "mt-3 text-sm bg-secondary hover:bg-red-600 text-white px-4 py-2 rounded-lg transition", children: "Try Again" }))] })] }) }));
-}

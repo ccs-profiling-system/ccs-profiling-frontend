@@ -1,2 +1,0 @@
-// Approval Workflow Types
-export {};

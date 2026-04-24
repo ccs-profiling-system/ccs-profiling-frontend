@@ -1,339 +1,391 @@
 import { useState, useEffect } from 'react';
-import type { Schedule, CreateSchedulePayload, ScheduleType } from './types';
+import type { Schedule, CreateSchedulePayload, UpdateSchedulePayload, DayOfWeek, Semester } from './types';
 import type { Room } from './roomsService';
-import { validateScheduleForm, detectConflicts, VALID_SCHEDULE_TYPES } from './validation';
+import {
+  validateScheduleForm,
+  detectConflicts,
+  VALID_SCHEDULE_TYPES,
+  type ScheduleFormErrors,
+} from './validation';
 import { ConflictAlert } from './ConflictAlert';
-import { useSchedules } from './useSchedules';
+
+const DAYS: DayOfWeek[] = [
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+];
+
+const SEMESTERS: Semester[] = ['1st', '2nd', 'summer'];
+
+const EMPTY_FORM: CreateSchedulePayload = {
+  schedule_type: 'class',
+  room: '',
+  day: 'monday',
+  start_time: '08:00',
+  end_time: '09:00',
+  semester: '1st',
+  academic_year: '2025-2026',
+};
+
+function scheduleToForm(s: Schedule): CreateSchedulePayload {
+  return {
+    schedule_type: s.schedule_type,
+    instruction_id: s.instruction_id,
+    faculty_id: s.faculty_id,
+    room: s.room,
+    day: s.day,
+    start_time: normalizeTimeInput(s.start_time),
+    end_time: normalizeTimeInput(s.end_time),
+    semester: s.semester,
+    academic_year: s.academic_year,
+  };
+}
+
+/** Ensure HTML time inputs receive "HH:MM" */
+function normalizeTimeInput(t: string): string {
+  if (!t) return '';
+  if (t.includes('T')) {
+    const d = new Date(t);
+    if (Number.isNaN(d.getTime())) return t.slice(0, 5);
+    const h = String(d.getUTCHours()).padStart(2, '0');
+    const m = String(d.getUTCMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
+  }
+  return t.length >= 5 ? t.slice(0, 5) : t;
+}
 
 interface ScheduleFormModalProps {
-  /** Existing schedule to edit; undefined means create mode */
   schedule?: Schedule;
   existingSchedules: Schedule[];
   rooms: Room[];
-  instructors: string[];
-  subjects: string[];
+  /** Reserved for future instruction/faculty pickers */
+  instructors?: string[];
+  subjects?: string[];
   onClose: () => void;
   onSaved: () => void;
-}
-
-type FormData = {
-  subject: string;
-  instructor: string;
-  room: string;
-  startTime: string;
-  endTime: string;
-  type: string;
-};
-
-function toDatetimeLocal(iso: string): string {
-  // datetime-local input expects "YYYY-MM-DDTHH:mm"
-  return iso ? iso.slice(0, 16) : '';
+  createSchedule: (payload: CreateSchedulePayload) => Promise<unknown>;
+  updateSchedule: (id: string, payload: UpdateSchedulePayload) => Promise<unknown>;
 }
 
 export function ScheduleFormModal({
   schedule,
   existingSchedules,
   rooms,
-  instructors,
-  subjects,
   onClose,
   onSaved,
+  createSchedule,
+  updateSchedule,
 }: ScheduleFormModalProps) {
-  const { createSchedule, updateSchedule } = useSchedules();
-
-  const [form, setForm] = useState<FormData>({
-    subject: schedule?.subject ?? '',
-    instructor: schedule?.instructor ?? '',
-    room: schedule?.room ?? '',
-    startTime: schedule ? toDatetimeLocal(schedule.startTime) : '',
-    endTime: schedule ? toDatetimeLocal(schedule.endTime) : '',
-    type: schedule?.type ?? '',
-  });
-
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [conflictDetails, setConflictDetails] = useState<import('./types').ConflictDetail[]>([]);
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [form, setForm] = useState<CreateSchedulePayload>(EMPTY_FORM);
+  const [errors, setErrors] = useState<ScheduleFormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  // Reset conflict details when form changes
   useEffect(() => {
-    setConflictDetails([]);
-  }, [form]);
+    if (schedule) {
+      setForm(scheduleToForm(schedule));
+    } else {
+      setForm(EMPTY_FORM);
+    }
+    setErrors({});
+    setApiError(null);
+  }, [schedule]);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setFieldErrors((prev) => ({ ...prev, [name]: '' }));
+  function handleChange<K extends keyof CreateSchedulePayload>(field: K, value: CreateSchedulePayload[K]) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
     setApiError(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    // 1. Client-side validation
-    const errors = validateScheduleForm(form as Partial<CreateSchedulePayload>);
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors as Record<string, string>);
+    const validationErrors = validateScheduleForm(form);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
-    // 2. Conflict detection
-    const payload: CreateSchedulePayload = {
-      subject: form.subject,
-      instructor: form.instructor,
-      room: form.room,
-      startTime: new Date(form.startTime).toISOString(),
-      endTime: new Date(form.endTime).toISOString(),
-      type: form.type as ScheduleType,
-    };
+    const conflictResult = detectConflicts(
+      {
+        room: form.room,
+        day: form.day,
+        start_time: form.start_time,
+        end_time: form.end_time,
+        faculty_id: form.faculty_id,
+      },
+      existingSchedules,
+      schedule?.id
+    );
 
-    const result = detectConflicts(payload, existingSchedules, schedule?.id);
-    if (result.hasConflict) {
-      setConflictDetails(result.conflicts);
+    if (conflictResult.hasConflict) {
+      setApiError('Resolve scheduling conflicts before saving.');
+      setErrors({});
       return;
     }
 
-    // 3. Submit to API
-    setSubmitting(true);
+    setErrors({});
     setApiError(null);
+    setSubmitting(true);
     try {
       if (schedule) {
-        await updateSchedule(schedule.id, payload);
+        const updatePayload: UpdateSchedulePayload = { ...form };
+        await updateSchedule(schedule.id, updatePayload);
       } else {
-        await createSchedule(payload);
+        await createSchedule(form);
       }
       onSaved();
       onClose();
     } catch (err) {
-      setApiError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
+      setApiError(err instanceof Error ? err.message : 'Failed to save schedule');
     } finally {
       setSubmitting(false);
     }
   }
 
+  const conflictPreview =
+    form.room && form.day && form.start_time && form.end_time
+      ? detectConflicts(
+          {
+            room: form.room,
+            day: form.day,
+            start_time: form.start_time,
+            end_time: form.end_time,
+            faculty_id: form.faculty_id,
+          },
+          existingSchedules,
+          schedule?.id
+        )
+      : { hasConflict: false, conflicts: [] };
+
+  const fieldBase =
+    'w-full rounded-md border bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/40';
+  const labelCls = 'block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5';
+
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-    >
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 rounded-t-xl">
-          <div className="flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]">
+      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-slate-200/80">
+        <header className="shrink-0 border-b border-slate-200/90 bg-gradient-to-b from-slate-50 to-white px-6 py-5">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 id="modal-title" className="text-xl font-bold text-slate-900">
-                {schedule ? 'Edit Schedule' : 'Create New Schedule'}
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+                Scheduling
+              </p>
+              <h2 className="mt-1 text-lg font-semibold tracking-tight text-slate-900">
+                {schedule ? 'Edit entry' : 'New entry'}
               </h2>
-              <p className="text-sm text-slate-600 mt-0.5">
-                {schedule ? 'Update the schedule details below' : 'Fill in the details to create a new schedule'}
+              <p className="mt-1 text-sm text-slate-500">
+                {schedule
+                  ? 'Adjust type, venue, and time block for this slot.'
+                  : 'Define a class, exam, or consultation time block.'}
               </p>
             </div>
-            <button 
-              onClick={onClose} 
-              aria-label="Close" 
-              className="text-slate-400 hover:text-slate-600 transition-colors p-1 hover:bg-slate-100 rounded-lg"
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="rounded-md p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-        </div>
+        </header>
 
-        {/* Content */}
-        <div className="px-6 py-6 space-y-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
           {apiError && (
-            <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 shadow-sm">
-              <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-                <div>
-                  <p className="font-medium">Error saving schedule</p>
-                  <p className="mt-1">{apiError}</p>
-                </div>
-              </div>
+            <div
+              role="alert"
+              className="mb-5 rounded-md border border-red-200/80 bg-red-50/90 px-4 py-3 text-sm text-red-800"
+            >
+              {apiError}
             </div>
           )}
 
-          {conflictDetails.length > 0 && <ConflictAlert conflicts={conflictDetails} />}
+          {conflictPreview.hasConflict && (
+            <ConflictAlert conflicts={conflictPreview.conflicts} />
+          )}
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
-            {/* Type Selection - Prominent */}
-            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-              <label htmlFor="type" className="block text-sm font-semibold text-slate-900 mb-2">
-                Schedule Type
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                {VALID_SCHEDULE_TYPES.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => {
-                      setForm((prev) => ({ ...prev, type: t }));
-                      setFieldErrors((prev) => ({ ...prev, type: '' }));
-                    }}
-                    className={`p-3 rounded-lg border-2 text-sm font-medium capitalize transition-all ${
-                      form.type === t
-                        ? t === 'class'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-amber-500 bg-amber-50 text-amber-700'
-                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-              {fieldErrors.type && <p className="text-xs text-red-600 mt-2">{fieldErrors.type}</p>}
-            </div>
-
-            {/* Subject and Instructor */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="subject" className="block text-sm font-semibold text-slate-900 mb-2">
-                  Subject <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="subject"
-                  name="subject"
-                  value={form.subject}
-                  onChange={handleChange}
-                  className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all ${
-                    fieldErrors.subject
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-slate-300 focus:ring-blue-500 focus:border-transparent'
-                  }`}
-                >
-                  <option value="">Select subject…</option>
-                  {subjects.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
-                {fieldErrors.subject && <p className="text-xs text-red-600 mt-1.5">{fieldErrors.subject}</p>}
-              </div>
-
-              <div>
-                <label htmlFor="instructor" className="block text-sm font-semibold text-slate-900 mb-2">
-                  Instructor <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="instructor"
-                  name="instructor"
-                  value={form.instructor}
-                  onChange={handleChange}
-                  className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all ${
-                    fieldErrors.instructor
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-slate-300 focus:ring-blue-500 focus:border-transparent'
-                  }`}
-                >
-                  <option value="">Select instructor…</option>
-                  {instructors.map((i) => <option key={i} value={i}>{i}</option>)}
-                </select>
-                {fieldErrors.instructor && <p className="text-xs text-red-600 mt-1.5">{fieldErrors.instructor}</p>}
-              </div>
-            </div>
-
-            {/* Room */}
             <div>
-              <label htmlFor="room" className="block text-sm font-semibold text-slate-900 mb-2">
-                Room <span className="text-red-500">*</span>
+              <label htmlFor="sf-type" className={labelCls}>
+                Schedule type <span className="text-red-600">*</span>
               </label>
               <select
-                id="room"
-                name="room"
-                value={form.room}
-                onChange={handleChange}
-                className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all ${
-                  fieldErrors.room
-                    ? 'border-red-300 focus:ring-red-500'
-                    : 'border-slate-300 focus:ring-blue-500 focus:border-transparent'
+                id="sf-type"
+                value={form.schedule_type}
+                onChange={(e) =>
+                  handleChange('schedule_type', e.target.value as CreateSchedulePayload['schedule_type'])
+                }
+                className={`${fieldBase} ${
+                  errors.schedule_type ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-200'
                 }`}
               >
-                <option value="">Select room…</option>
-                {rooms.map((r) => <option key={r.id} value={r.name}>{r.name}</option>)}
+                {VALID_SCHEDULE_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
               </select>
-              {fieldErrors.room && <p className="text-xs text-red-600 mt-1.5">{fieldErrors.room}</p>}
+              {errors.schedule_type && (
+                <p className="mt-1 text-xs font-medium text-red-600">{errors.schedule_type}</p>
+              )}
             </div>
 
-            {/* Time Range */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
               <div>
-                <label htmlFor="startTime" className="block text-sm font-semibold text-slate-900 mb-2">
-                  Start Time <span className="text-red-500">*</span>
+                <label htmlFor="sf-room" className={labelCls}>
+                  Room / venue <span className="text-red-600">*</span>
                 </label>
                 <input
-                  id="startTime"
-                  name="startTime"
-                  type="datetime-local"
-                  value={form.startTime}
-                  onChange={handleChange}
-                  className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all ${
-                    fieldErrors.startTime
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-slate-300 focus:ring-blue-500 focus:border-transparent'
+                  id="sf-room"
+                  name="room"
+                  type="text"
+                  list="sf-room-suggestions"
+                  autoComplete="off"
+                  placeholder="Select or enter venue"
+                  maxLength={100}
+                  value={form.room}
+                  onChange={(e) => handleChange('room', e.target.value)}
+                  className={`${fieldBase} ${
+                    errors.room ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-200'
                   }`}
                 />
-                {fieldErrors.startTime && <p className="text-xs text-red-600 mt-1.5">{fieldErrors.startTime}</p>}
+                <datalist id="sf-room-suggestions">
+                  {rooms.map((r) => (
+                    <option key={r.id} value={r.name} />
+                  ))}
+                </datalist>
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+                  Use suggestions when available, or enter a custom venue name.
+                </p>
+                {errors.room && <p className="mt-1 text-xs font-medium text-red-600">{errors.room}</p>}
               </div>
 
               <div>
-                <label htmlFor="endTime" className="block text-sm font-semibold text-slate-900 mb-2">
-                  End Time <span className="text-red-500">*</span>
+                <label htmlFor="sf-day" className={labelCls}>
+                  Day <span className="text-red-600">*</span>
+                </label>
+                <select
+                  id="sf-day"
+                  value={form.day}
+                  onChange={(e) => handleChange('day', e.target.value as DayOfWeek)}
+                  className={`${fieldBase} ${
+                    errors.day ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-200'
+                  }`}
+                >
+                  {DAYS.map((d) => (
+                    <option key={d} value={d}>
+                      {d.charAt(0).toUpperCase() + d.slice(1)}
+                    </option>
+                  ))}
+                </select>
+                {errors.day && <p className="mt-1 text-xs text-red-600">{errors.day}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
+              <div>
+                <label htmlFor="sf-start" className={labelCls}>
+                  Start time <span className="text-red-600">*</span>
                 </label>
                 <input
-                  id="endTime"
-                  name="endTime"
-                  type="datetime-local"
-                  value={form.endTime}
-                  onChange={handleChange}
-                  className={`w-full rounded-lg border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all ${
-                    fieldErrors.endTime
-                      ? 'border-red-300 focus:ring-red-500'
-                      : 'border-slate-300 focus:ring-blue-500 focus:border-transparent'
+                  id="sf-start"
+                  type="time"
+                  value={form.start_time}
+                  onChange={(e) => handleChange('start_time', e.target.value)}
+                  className={`${fieldBase} ${
+                    errors.start_time
+                      ? 'border-red-300 focus:border-red-400 focus:ring-red-200'
+                      : 'border-slate-200'
                   }`}
                 />
-                {fieldErrors.endTime && <p className="text-xs text-red-600 mt-1.5">{fieldErrors.endTime}</p>}
+                {errors.start_time && (
+                  <p className="mt-1 text-xs font-medium text-red-600">{errors.start_time}</p>
+                )}
               </div>
+              <div>
+                <label htmlFor="sf-end" className={labelCls}>
+                  End time <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="sf-end"
+                  type="time"
+                  value={form.end_time}
+                  onChange={(e) => handleChange('end_time', e.target.value)}
+                  className={`${fieldBase} ${
+                    errors.end_time ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-200'
+                  }`}
+                />
+                {errors.end_time && <p className="mt-1 text-xs font-medium text-red-600">{errors.end_time}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6">
+              <div>
+                <label htmlFor="sf-sem" className={labelCls}>
+                  Semester <span className="text-red-600">*</span>
+                </label>
+                <select
+                  id="sf-sem"
+                  value={form.semester}
+                  onChange={(e) => handleChange('semester', e.target.value as Semester)}
+                  className={`${fieldBase} ${
+                    errors.semester ? 'border-red-300 focus:border-red-400 focus:ring-red-200' : 'border-slate-200'
+                  }`}
+                >
+                  {SEMESTERS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+                {errors.semester && <p className="mt-1 text-xs text-red-600">{errors.semester}</p>}
+              </div>
+              <div>
+                <label htmlFor="sf-year" className={labelCls}>
+                  Academic year <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id="sf-year"
+                  type="text"
+                  placeholder="e.g. 2025-2026"
+                  value={form.academic_year}
+                  onChange={(e) => handleChange('academic_year', e.target.value)}
+                  maxLength={20}
+                  className={`${fieldBase} ${
+                    errors.academic_year
+                      ? 'border-red-300 focus:border-red-400 focus:ring-red-200'
+                      : 'border-slate-200'
+                  }`}
+                />
+                {errors.academic_year && (
+                  <p className="mt-1 text-xs font-medium text-red-600">{errors.academic_year}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-8 flex flex-col-reverse gap-2 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end sm:gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {submitting ? 'Saving…' : schedule ? 'Save changes' : 'Create schedule'}
+              </button>
             </div>
           </form>
-        </div>
-
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-slate-50 border-t border-slate-200 px-6 py-4 rounded-b-xl">
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-white transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm hover:shadow-md inline-flex items-center gap-2"
-            >
-              {submitting ? (
-                <>
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Saving…
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  {schedule ? 'Save Changes' : 'Create Schedule'}
-                </>
-              )}
-            </button>
-          </div>
         </div>
       </div>
     </div>

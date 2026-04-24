@@ -11,48 +11,117 @@ import {
   CheckCircle,
   AlertTriangle,
   BarChart2,
+  Building2,
+  Plus,
 } from 'lucide-react';
 import type { Schedule } from './types';
 
 interface SchedulingAsideProps {
   schedules: Schedule[];
   loading: boolean;
+  /** Optional: compact “register room” form (state lives in parent for schedule modal suggestions) */
+  registerNewRoomName?: string;
+  onRegisterNewRoomNameChange?: (value: string) => void;
+  onRegisterRoom?: () => void;
+  registerRoomMessage?: string | null;
 }
 
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+function formatTime(time: string) {
+  if (!time) return '';
+  const [h, m] = time.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
+const DAY_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+// getDay() returns 0=Sun,1=Mon,...,6=Sat — map to our DAY_ORDER (0=Mon,...,6=Sun)
+function getTodayDayName(): string {
+  const jsDay = new Date().getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const idx = jsDay === 0 ? 6 : jsDay - 1; // convert to Mon=0 ... Sun=6
+  return DAY_ORDER[idx];
 }
 
-function isToday(iso: string) {
-  const d = new Date(iso);
-  const now = new Date();
+function isToday(schedule: import('./types').Schedule) {
+  return schedule.day === getTodayDayName();
+}
+
+function isUpcoming(schedule: import('./types').Schedule) {
+  const jsDay = new Date().getDay();
+  const todayIdx = jsDay === 0 ? 6 : jsDay - 1;
+  const schedIdx = DAY_ORDER.indexOf(schedule.day);
+  // upcoming = later this week (not today)
+  return schedIdx > todayIdx;
+}
+
+function RegisterRoomCompact({
+  value,
+  onChange,
+  onSubmit,
+  message,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+  message: string | null;
+}) {
   return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
+    <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm ring-1 ring-slate-900/[0.04]">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Venue list</p>
+      <div className="mt-2 flex items-center gap-2">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+          <Building2 className="h-4 w-4" aria-hidden />
+        </div>
+        <h3 className="text-sm font-semibold tracking-tight text-slate-900">Register a room name</h3>
+      </div>
+      <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+        Stored on this browser for suggestions. Persists in the system when used on a saved schedule.
+      </p>
+      <div className="mt-3 flex flex-col gap-2">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                onSubmit();
+              }
+            }}
+            maxLength={100}
+            placeholder="e.g. ICS Lab B"
+            className="min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            aria-label="New room name"
+          />
+          <button
+            type="button"
+            onClick={onSubmit}
+            className="inline-flex shrink-0 items-center justify-center gap-1 rounded-md bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-slate-800"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add
+          </button>
+        </div>
+        {message ? (
+          <p className="text-xs font-medium text-amber-800" role="status">
+            {message}
+          </p>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
-function isUpcoming(iso: string) {
-  const d = new Date(iso);
-  const now = new Date();
-  const in7Days = new Date(now);
-  in7Days.setDate(now.getDate() + 7);
-  return d > now && d <= in7Days;
-}
-
-export function SchedulingAside({ schedules, loading }: SchedulingAsideProps) {
+export function SchedulingAside({
+  schedules,
+  loading,
+  registerNewRoomName = '',
+  onRegisterNewRoomNameChange,
+  onRegisterRoom,
+  registerRoomMessage = null,
+}: SchedulingAsideProps) {
   const navigate = useNavigate();
 
   // Defensive check: ensure schedules is always an array
@@ -60,197 +129,228 @@ export function SchedulingAside({ schedules, loading }: SchedulingAsideProps) {
 
   const todaySchedules = useMemo(
     () =>
-      safeFilter<Schedule>(displayed, (s) => isToday(s.startTime), [])
-        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
+      safeFilter<Schedule>(displayed, (s) => isToday(s), [])
+        .sort((a, b) => a.start_time.localeCompare(b.start_time)),
     [displayed]
   );
 
   const upcomingSchedules = useMemo(
     () =>
-      safeFilter<Schedule>(displayed, (s) => isUpcoming(s.startTime), [])
-        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+      safeFilter<Schedule>(displayed, (s) => isUpcoming(s), [])
+        .sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day))
         .slice(0, 4),
     [displayed]
   );
 
   const stats = useMemo(() => {
-    const classes = safeFilter<Schedule>(displayed, (s) => s.type === 'class', []).length;
-    const exams = safeFilter<Schedule>(displayed, (s) => s.type === 'exam', []).length;
+    const classes = safeFilter<Schedule>(displayed, (s) => s.schedule_type === 'class', []).length;
+    const exams = safeFilter<Schedule>(displayed, (s) => s.schedule_type === 'exam', []).length;
     const uniqueRooms = new Set(safeMap<Schedule, string>(displayed, (s) => s.room, [])).size;
-    const uniqueInstructors = new Set(safeMap<Schedule, string>(displayed, (s) => s.instructor, [])).size;
-    return { classes, exams, uniqueRooms, uniqueInstructors };
+    const uniqueFaculty = new Set(safeMap<Schedule, string>(displayed, (s) => s.faculty_name ?? '', []).filter(Boolean)).size;
+    return { classes, exams, uniqueRooms, uniqueInstructors: uniqueFaculty };
   }, [displayed]);
+
+  const asideCardClass = 'border-slate-200/90 shadow-sm ring-1 ring-slate-900/[0.03]';
 
   if (loading) {
     return (
-      <aside className="space-y-4 sm:space-y-6">
-        <Card>
+      <aside className="space-y-5">
+        <Card hover={false} className={asideCardClass}>
           <div className="animate-pulse space-y-3">
-            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-16 bg-gray-100 rounded"></div>
-            <div className="h-16 bg-gray-100 rounded"></div>
+            <div className="h-4 w-24 rounded bg-slate-200" />
+            <div className="h-20 rounded-lg bg-slate-100" />
+            <div className="h-20 rounded-lg bg-slate-100" />
           </div>
         </Card>
-        <Card>
+        <Card hover={false} className={asideCardClass}>
           <div className="animate-pulse space-y-3">
-            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-16 bg-gray-100 rounded"></div>
-            <div className="h-16 bg-gray-100 rounded"></div>
+            <div className="h-4 w-28 rounded bg-slate-200" />
+            <div className="h-16 rounded-lg bg-slate-100" />
+            <div className="h-16 rounded-lg bg-slate-100" />
           </div>
         </Card>
+        {onRegisterRoom && onRegisterNewRoomNameChange ? (
+          <RegisterRoomCompact
+            value={registerNewRoomName}
+            onChange={onRegisterNewRoomNameChange}
+            onSubmit={onRegisterRoom}
+            message={registerRoomMessage}
+          />
+        ) : null}
       </aside>
     );
   }
 
   return (
-    <aside className="space-y-4 sm:space-y-6">
-      {/* Today's Schedule */}
-      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-            <Clock className="w-5 h-5 text-white" />
+    <aside className="space-y-5">
+      <Card hover={false} className={asideCardClass}>
+        <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+              <Clock className="h-5 w-5 text-primary" aria-hidden />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Today</p>
+              <h3 className="text-sm font-semibold tracking-tight text-slate-900">Schedule</h3>
+            </div>
           </div>
-          <h3 className="font-semibold text-gray-900">Today's Schedule</h3>
-          <span className="ml-auto bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">
+          <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-700">
             {todaySchedules.length}
           </span>
         </div>
 
         {todaySchedules.length === 0 ? (
-          <div className="text-center py-4">
-            <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-600">No classes scheduled today</p>
+          <div className="py-6 text-center">
+            <CheckCircle className="mx-auto mb-2 h-9 w-9 text-slate-300" aria-hidden />
+            <p className="text-sm text-slate-600">No sessions today</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <ul className="mt-3 space-y-2">
             {todaySchedules.slice(0, 4).map((s) => (
-              <div
+              <li
                 key={s.id}
-                className="w-full bg-white rounded-lg p-3 border border-blue-100 text-left"
+                className="rounded-lg border border-slate-100 bg-slate-50/50 p-3 text-left transition-colors hover:border-slate-200 hover:bg-slate-50"
               >
-                <div className="flex items-start gap-2">
-                  {s.type === 'exam' ? (
-                    <FlaskConical className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2.5">
+                  {s.schedule_type === 'exam' ? (
+                    <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
                   ) : (
-                    <BookOpen className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
                   )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{s.subject}</p>
-                    <p className="text-xs text-gray-600 mt-0.5">
-                      {formatTime(s.startTime)} – {formatTime(s.endTime)}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-slate-900">
+                      {s.subject_code ?? s.subject_name ?? '(No subject)'}
                     </p>
-                    <p className="text-xs text-gray-500">{s.room}</p>
+                    <p className="mt-0.5 text-xs text-slate-600">
+                      {formatTime(s.start_time)} – {formatTime(s.end_time)}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-500">{s.room}</p>
                   </div>
                   <span
-                    className={`text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0 ${
-                      s.type === 'exam'
-                        ? 'bg-orange-100 text-orange-700'
-                        : 'bg-blue-100 text-blue-700'
+                    className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                      s.schedule_type === 'exam'
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-slate-200/80 text-slate-700'
                     }`}
                   >
-                    {s.type}
+                    {s.schedule_type}
                   </span>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </Card>
 
-      {/* Upcoming This Week */}
-      <Card>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-gray-900">Upcoming (7 days)</h3>
+      <Card hover={false} className={asideCardClass}>
+        <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+              <Calendar className="h-5 w-5 text-slate-600" aria-hidden />
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">This week</p>
+              <h3 className="text-sm font-semibold tracking-tight text-slate-900">Upcoming</h3>
+            </div>
           </div>
-          <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded-full">
+          <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-slate-700">
             {upcomingSchedules.length}
           </span>
         </div>
 
         {upcomingSchedules.length === 0 ? (
-          <p className="text-sm text-gray-500 text-center py-4">No upcoming schedules</p>
+          <p className="py-6 text-center text-sm text-slate-500">No further entries this week</p>
         ) : (
-          <div className="space-y-2">
+          <ul className="mt-3 space-y-2">
             {upcomingSchedules.map((s) => (
-              <div
+              <li
                 key={s.id}
-                className={`w-full p-3 rounded-lg border text-left transition-colors ${
-                  s.type === 'exam'
-                    ? 'bg-orange-50 border-orange-200'
-                    : 'bg-gray-50 border-gray-200'
-                }`}
+                className="rounded-lg border border-slate-100 bg-white p-3 text-left shadow-sm"
               >
-                <div className="flex items-start gap-2">
-                  {s.type === 'exam' ? (
-                    <AlertTriangle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2.5">
+                  {s.schedule_type === 'exam' ? (
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
                   ) : (
-                    <Calendar className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                    <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" aria-hidden />
                   )}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-800 text-sm truncate">{s.subject}</p>
-                    <p className="text-xs text-gray-600 mt-0.5">
-                      {formatDate(s.startTime)} · {formatTime(s.startTime)}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-slate-900">
+                      {s.subject_code ?? s.subject_name ?? '(No subject)'}
                     </p>
-                    <p className="text-xs text-gray-500">{s.instructor}</p>
+                    <p className="mt-0.5 text-xs capitalize text-slate-600">
+                      {s.day} · {formatTime(s.start_time)}
+                    </p>
+                    {s.faculty_name && <p className="mt-0.5 text-xs text-slate-500">{s.faculty_name}</p>}
                   </div>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
 
         <button
-          onClick={() => navigate('/scheduling')}
-          className="w-full mt-3 text-sm text-primary hover:text-primary-dark font-medium flex items-center justify-center gap-1 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+          type="button"
+          onClick={() => navigate('/admin/scheduling')}
+          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50"
         >
-          View Full Schedule
-          <ArrowRight className="w-4 h-4" />
+          Open full view
+          <ArrowRight className="h-4 w-4 text-slate-500" aria-hidden />
         </button>
       </Card>
 
-      {/* Quick Stats */}
-      <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
-        <div className="flex items-center gap-2 mb-3">
-          <BarChart2 className="w-5 h-5 text-primary" />
-          <h3 className="font-semibold text-gray-900">Quick Stats</h3>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-            <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-blue-600" />
-              <span className="text-sm text-gray-700">Classes</span>
-            </div>
-            <span className="font-semibold text-gray-900">{stats.classes}</span>
+      <Card hover={false} className={asideCardClass}>
+        <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+            <BarChart2 className="h-5 w-5 text-slate-600" aria-hidden />
           </div>
-
-          <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-            <div className="flex items-center gap-2">
-              <FlaskConical className="w-4 h-4 text-orange-600" />
-              <span className="text-sm text-gray-700">Exams</span>
-            </div>
-            <span className="font-semibold text-gray-900">{stats.exams}</span>
-          </div>
-
-          <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-purple-600" />
-              <span className="text-sm text-gray-700">Rooms Used</span>
-            </div>
-            <span className="font-semibold text-gray-900">{stats.uniqueRooms}</span>
-          </div>
-
-          <div className="flex items-center justify-between p-2 bg-white rounded-lg">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-sm text-gray-700">Instructors</span>
-            </div>
-            <span className="font-semibold text-gray-900">{stats.uniqueInstructors}</span>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Summary</p>
+            <h3 className="text-sm font-semibold tracking-tight text-slate-900">Quick stats</h3>
           </div>
         </div>
+
+        <dl className="mt-3 grid grid-cols-2 gap-2">
+          <div className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
+            <dt className="flex items-center gap-1.5 text-xs text-slate-500">
+              <BookOpen className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              Classes
+            </dt>
+            <dd className="mt-1 text-lg font-semibold tabular-nums tracking-tight text-slate-900">{stats.classes}</dd>
+          </div>
+          <div className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
+            <dt className="flex items-center gap-1.5 text-xs text-slate-500">
+              <FlaskConical className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              Exams
+            </dt>
+            <dd className="mt-1 text-lg font-semibold tabular-nums tracking-tight text-slate-900">{stats.exams}</dd>
+          </div>
+          <div className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
+            <dt className="flex items-center gap-1.5 text-xs text-slate-500">
+              <Calendar className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              Rooms
+            </dt>
+            <dd className="mt-1 text-lg font-semibold tabular-nums tracking-tight text-slate-900">{stats.uniqueRooms}</dd>
+          </div>
+          <div className="rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2.5">
+            <dt className="flex items-center gap-1.5 text-xs text-slate-500">
+              <CheckCircle className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              Faculty
+            </dt>
+            <dd className="mt-1 text-lg font-semibold tabular-nums tracking-tight text-slate-900">
+              {stats.uniqueInstructors}
+            </dd>
+          </div>
+        </dl>
       </Card>
+
+      {onRegisterRoom && onRegisterNewRoomNameChange ? (
+        <RegisterRoomCompact
+          value={registerNewRoomName}
+          onChange={onRegisterNewRoomNameChange}
+          onSubmit={onRegisterRoom}
+          message={registerRoomMessage}
+        />
+      ) : null}
     </aside>
   );
 }
