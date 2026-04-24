@@ -1,24 +1,36 @@
-export type ScheduleType = 'class' | 'exam';
+export type ScheduleType = 'class' | 'exam' | 'consultation';
+export type DayOfWeek = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+export type Semester = '1st' | '2nd' | 'summer';
 
+/** Matches the backend ScheduleResponseDTO */
 export interface Schedule {
   id: string;
-  subject: string;
-  instructor: string;
+  schedule_type: ScheduleType;
+  instruction_id?: string;
+  subject_code?: string;
+  subject_name?: string;
+  faculty_id?: string;
+  faculty_name?: string;
   room: string;
-  startTime: string; // ISO 8601 datetime string
-  endTime: string;   // ISO 8601 datetime string
-  type: ScheduleType;
-  createdAt: string;
-  updatedAt: string;
+  day: DayOfWeek;
+  start_time: string; // "HH:MM" or "HH:MM:SS"
+  end_time: string;   // "HH:MM" or "HH:MM:SS"
+  semester: Semester;
+  academic_year: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateSchedulePayload {
-  subject: string;
-  instructor: string;
+  schedule_type: ScheduleType;
+  instruction_id?: string;
+  faculty_id?: string;
   room: string;
-  startTime: string;
-  endTime: string;
-  type: ScheduleType;
+  day: DayOfWeek;
+  start_time: string;
+  end_time: string;
+  semester: Semester;
+  academic_year: string;
 }
 
 export interface UpdateSchedulePayload extends Partial<CreateSchedulePayload> {}
@@ -31,16 +43,16 @@ export interface ConflictResult {
 export interface ConflictDetail {
   scheduleId: string;
   reason: 'room' | 'instructor';
-  subject: string;
+  subject_code?: string;
   room: string;
-  instructor: string;
-  startTime: string;
-  endTime: string;
+  faculty_name?: string;
+  start_time: string;
+  end_time: string;
 }
 
 export type CalendarViewMode = 'daily' | 'weekly' | 'monthly';
 
 export interface DateRange {
-  start: string; // ISO 8601 date string
-  end: string;   // ISO 8601 date string
+  start: string; // ISO 8601 date string "YYYY-MM-DD"
+  end: string;
 }

@@ -19,7 +19,7 @@ export function Sidebar({ isOpen, onClose, variant = 'admin' }: SidebarProps) {
     { to: '/admin/students', label: 'Students', icon: GraduationCap },
     { to: '/admin/faculty', label: 'Faculty', icon: Users },
     { to: '/admin/events', label: 'Events', icon: Calendar },
-    // { to: '/admin/scheduling', label: 'Scheduling', icon: Clock }, // Disabled - data type issues
+    { to: '/admin/scheduling', label: 'Scheduling', icon: Clock },
     { to: '/admin/research', label: 'Research', icon: FlaskConical },
     { to: '/admin/approvals', label: 'Approvals', icon: CheckCircle },
     { to: '/admin/reports', label: 'Reports', icon: FileText },

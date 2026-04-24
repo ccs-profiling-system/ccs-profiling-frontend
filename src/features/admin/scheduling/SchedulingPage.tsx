@@ -7,9 +7,27 @@ import { CalendarView } from './CalendarView';
 import { ScheduleFormModal } from './ScheduleFormModal';
 import { VALID_CALENDAR_VIEWS } from './validation';
 import { MainLayout, Card } from '@/components/layout';
-import { Calendar, Plus, Filter, X } from 'lucide-react';
+import { Calendar, Plus, Filter, X, AlertCircle } from 'lucide-react';
 import { SchedulingAside } from './SchedulingAside';
 import { safeMap, safeFilter, ensureArray } from '@/utils/typeGuards';
+
+const CUSTOM_ROOMS_STORAGE_KEY = 'ccs-scheduling-custom-rooms';
+
+function readCustomRoomsFromStorage(): string[] {
+  try {
+    const raw = localStorage.getItem(CUSTOM_ROOMS_STORAGE_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw) as unknown;
+    if (!Array.isArray(data)) return [];
+    return data.filter((x): x is string => typeof x === 'string' && x.trim().length > 0);
+  } catch {
+    return [];
+  }
+}
+
+function writeCustomRoomsToStorage(names: string[]) {
+  localStorage.setItem(CUSTOM_ROOMS_STORAGE_KEY, JSON.stringify(names));
+}
 
 // ---------------------------------------------------------------------------
 // Date range helpers
@@ -58,7 +76,15 @@ function navigate(viewMode: CalendarViewMode, anchor: Date, direction: 'prev' | 
 // ---------------------------------------------------------------------------
 
 export function SchedulingPage() {
-  const { schedules, loading, error, fetchSchedules, deleteSchedule } = useSchedules();
+  const {
+    schedules,
+    loading,
+    error,
+    fetchSchedules,
+    deleteSchedule,
+    createSchedule,
+    updateSchedule,
+  } = useSchedules();
 
   // Defensive check: ensure schedules is always an array (like EventsPage does)
   const displayed = Array.isArray(schedules) ? schedules : [];
@@ -69,6 +95,9 @@ export function SchedulingPage() {
   const [dateRange, setDateRange] = useState<DateRange>(() => buildRange('weekly', new Date()));
 
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [customRoomNames, setCustomRoomNames] = useState<string[]>([]);
+  const [newRoomName, setNewRoomName] = useState('');
+  const [roomRegisterMessage, setRoomRegisterMessage] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | undefined>(undefined);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -82,7 +111,7 @@ export function SchedulingPage() {
 
   // Derive unique instructors and subjects from loaded schedules for the form
   const instructors = useMemo(() => {
-    const fromSchedules = [...new Set(safeMap<Schedule, string>(displayed, (s) => s.instructor, []))];
+    const fromSchedules = [...new Set(safeMap<Schedule, string>(displayed, (s) => s.faculty_name ?? '', []).filter(Boolean))];
     if (fromSchedules.length === 0) {
       return ['Dr. Smith', 'Prof. Johnson', 'Dr. Williams', 'Prof. Brown', 'Dr. Davis'];
     }
@@ -90,9 +119,9 @@ export function SchedulingPage() {
   }, [displayed]);
   
   const subjects = useMemo(() => {
-    const fromSchedules = [...new Set(safeMap<Schedule, string>(displayed, (s) => s.subject, []))];
+    const fromSchedules = [...new Set(safeMap<Schedule, string>(displayed, (s) => s.subject_code ?? s.subject_name ?? '', []).filter(Boolean))];
     if (fromSchedules.length === 0) {
-      return ['Computer Science 101', 'Mathematics 201', 'Physics 301', 'Chemistry 101', 'Biology 201'];
+      return ['CS 101', 'MATH 201', 'PHYS 301', 'CHEM 101', 'BIO 201'];
     }
     return fromSchedules;
   }, [displayed]);
@@ -102,13 +131,41 @@ export function SchedulingPage() {
     return fromSchedules;
   }, [displayed]);
 
+  /** Suggestions for the schedule form: saved custom names, API/mock list, rooms from schedules */
+  const roomsForForm = useMemo(() => {
+    const seen = new Set<string>();
+    const out: Room[] = [];
+    let i = 0;
+    for (const name of customRoomNames) {
+      const n = name.trim();
+      if (n && !seen.has(n)) {
+        seen.add(n);
+        out.push({ id: `custom-${i++}`, name: n });
+      }
+    }
+    for (const r of rooms) {
+      if (!seen.has(r.name)) {
+        seen.add(r.name);
+        out.push(r);
+      }
+    }
+    for (const name of roomNames) {
+      const n = name.trim();
+      if (n && !seen.has(n)) {
+        seen.add(n);
+        out.push({ id: `from-schedule-${i++}`, name: n });
+      }
+    }
+    return out;
+  }, [customRoomNames, rooms, roomNames]);
+
   // Apply filters
   const filteredSchedules = useMemo(() => {
     return safeFilter<Schedule>(displayed, (schedule) => {
-      if (filterInstructor && schedule.instructor !== filterInstructor) return false;
-      if (filterSubject && schedule.subject !== filterSubject) return false;
+      if (filterInstructor && schedule.faculty_name !== filterInstructor) return false;
+      if (filterSubject && schedule.subject_code !== filterSubject && schedule.subject_name !== filterSubject) return false;
       if (filterRoom && schedule.room !== filterRoom) return false;
-      if (filterType && schedule.type !== filterType) return false;
+      if (filterType && schedule.schedule_type !== filterType) return false;
       return true;
     }, []);
   }, [displayed, filterInstructor, filterSubject, filterRoom, filterType]);
@@ -150,6 +207,36 @@ export function SchedulingPage() {
     loadRooms();
   }, []);
 
+  useEffect(() => {
+    setCustomRoomNames(readCustomRoomsFromStorage());
+  }, []);
+
+  const handleRegisterRoom = useCallback(() => {
+    const name = newRoomName.trim();
+    if (!name) {
+      setRoomRegisterMessage('Enter a room name.');
+      return;
+    }
+    if (name.length > 100) {
+      setRoomRegisterMessage('Room name must be at most 100 characters.');
+      return;
+    }
+    const known = new Set<string>([
+      ...customRoomNames.map((n) => n.trim()),
+      ...rooms.map((r) => r.name.trim()),
+      ...roomNames.map((n) => n.trim()),
+    ]);
+    if (known.has(name)) {
+      setRoomRegisterMessage('That room is already available in the list.');
+      return;
+    }
+    const next = [...customRoomNames, name];
+    setCustomRoomNames(next);
+    writeCustomRoomsToStorage(next);
+    setNewRoomName('');
+    setRoomRegisterMessage(null);
+  }, [newRoomName, customRoomNames, rooms, roomNames]);
+
   const handleViewModeChange = useCallback((mode: CalendarViewMode) => {
     setViewMode(mode);
     const newRange = buildRange(mode, anchor);
@@ -186,67 +273,76 @@ export function SchedulingPage() {
     fetchSchedules({ start: dateRange.start, end: dateRange.end });
   }, [fetchSchedules, dateRange]);
 
+  const selectField =
+    'w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20';
+
   return (
     <MainLayout title="Class Scheduling">
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6">
-      <div className="xl:col-span-8 space-y-6">
-        {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Calendar className="w-7 h-7 text-primary" />
-              Class Scheduling
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12 xl:gap-8">
+      <div className="space-y-6 xl:col-span-8">
+        <header className="flex flex-col gap-4 border-b border-slate-200/90 pb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Operations</p>
+            <h1 className="mt-1 flex items-center gap-2.5 text-2xl font-semibold tracking-tight text-slate-900">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <Calendar className="h-5 w-5 text-primary" aria-hidden />
+              </span>
+              Class scheduling
             </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Manage class and exam schedules
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-600">
+              Plan and review class, exam, and consultation time blocks. Use filters to narrow the calendar.
             </p>
           </div>
           <button
             type="button"
             onClick={() => { setEditingSchedule(undefined); setModalOpen(true); }}
-            className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-lg font-medium transition-colors shadow-sm"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-dark"
           >
-            <Plus className="w-5 h-5" />
-            New Schedule
+            <Plus className="h-4 w-4" aria-hidden />
+            New schedule
           </button>
-        </div>
+        </header>
 
-        {/* View Mode Switcher & Filters */}
-        <Card className="!p-4">
-          <div className="space-y-4">
-            {/* View Mode and Filter Toggle */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              {/* View Mode Switcher */}
-              <div className="flex gap-1 border rounded-lg p-1 bg-gray-50">
-                {VALID_CALENDAR_VIEWS.map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => handleViewModeChange(mode)}
-                    className={`px-4 py-2 rounded-md text-sm font-medium capitalize transition-colors ${
-                      viewMode === mode 
-                        ? 'bg-white shadow-sm text-primary border border-gray-200' 
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    {mode}
-                  </button>
-                ))}
+        <Card
+          hover={false}
+          className="border-slate-200/90 shadow-sm ring-1 ring-slate-900/[0.03] !border"
+        >
+          <div className="space-y-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Calendar</p>
+                <p className="text-xs text-slate-500">View density</p>
+                <div className="mt-3 inline-flex rounded-lg border border-slate-200 bg-slate-50/80 p-1 shadow-inner">
+                  {VALID_CALENDAR_VIEWS.map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => handleViewModeChange(mode)}
+                      className={`rounded-md px-4 py-2 text-sm font-medium capitalize transition-all ${
+                        viewMode === mode
+                          ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/80'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Filter Toggle Button */}
               <button
                 type="button"
                 onClick={() => setShowFilters(!showFilters)}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                className={`inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-md border px-4 py-2.5 text-sm font-medium shadow-sm transition-colors sm:w-auto ${
                   showFilters || hasActiveFilters
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'border-primary/30 bg-primary text-white'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
-                <Filter className="w-5 h-5" />
+                <Filter className="h-4 w-4" aria-hidden />
                 Filters
                 {hasActiveFilters && (
-                  <span className="bg-white text-primary text-xs font-bold px-2 py-0.5 rounded-full">
+                  <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold tabular-nums text-white">
                     {[filterInstructor, filterSubject, filterRoom, filterType].filter(Boolean).length}
                   </span>
                 )}
@@ -255,84 +351,91 @@ export function SchedulingPage() {
 
             {/* Advanced Filters */}
             {showFilters && (
-              <div className="pt-4 border-t border-gray-200 space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {/* Instructor Filter */}
+              <div className="space-y-4 border-t border-slate-200 pt-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label htmlFor="sched-filter-instructor" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Instructor
                     </label>
                     <select
+                      id="sched-filter-instructor"
+                      title="Filter by instructor"
                       value={filterInstructor}
                       onChange={(e) => setFilterInstructor(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                      className={selectField}
                     >
-                      <option value="">All Instructors</option>
+                      <option value="">All instructors</option>
                       {instructors.map((i) => <option key={i} value={i}>{i}</option>)}
                     </select>
                   </div>
 
-                  {/* Subject Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label htmlFor="sched-filter-subject" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Subject
                     </label>
                     <select
+                      id="sched-filter-subject"
+                      title="Filter by subject"
                       value={filterSubject}
                       onChange={(e) => setFilterSubject(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                      className={selectField}
                     >
-                      <option value="">All Subjects</option>
+                      <option value="">All subjects</option>
                       {subjects.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
 
-                  {/* Room Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label htmlFor="sched-filter-room" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Room
                     </label>
                     <select
+                      id="sched-filter-room"
+                      title="Filter by room"
                       value={filterRoom}
                       onChange={(e) => setFilterRoom(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                      className={selectField}
                     >
-                      <option value="">All Rooms</option>
+                      <option value="">All rooms</option>
                       {roomNames.map((r) => <option key={r} value={r}>{r}</option>)}
                     </select>
                   </div>
 
-                  {/* Type Filter */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label htmlFor="sched-filter-type" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                       Type
                     </label>
                     <select
+                      id="sched-filter-type"
+                      title="Filter by schedule type"
                       value={filterType}
                       onChange={(e) => setFilterType(e.target.value as ScheduleType | '')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                      className={selectField}
                     >
-                      <option value="">All Types</option>
+                      <option value="">All types</option>
                       <option value="class">Class</option>
                       <option value="exam">Exam</option>
+                      <option value="consultation">Consultation</option>
                     </select>
                   </div>
                 </div>
 
-                {/* Clear Filters Button */}
                 {hasActiveFilters && (
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-sm text-gray-600">
-                      Showing <span className="font-semibold text-gray-900">{filteredSchedules.length}</span> of{' '}
-                      <span className="font-semibold text-gray-900">{schedulesLength}</span> schedules
+                  <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-sm text-slate-600">
+                      Showing{' '}
+                      <span className="font-semibold tabular-nums text-slate-900">{filteredSchedules.length}</span>
+                      {' '}of{' '}
+                      <span className="font-semibold tabular-nums text-slate-900">{schedulesLength}</span>
+                      {' '}entries
                     </span>
                     <button
                       type="button"
                       onClick={clearFilters}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition"
+                      className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
                     >
-                      <X className="w-4 h-4" />
-                      Clear Filters
+                      <X className="h-4 w-4" aria-hidden />
+                      Clear filters
                     </button>
                   </div>
                 )}
@@ -341,79 +444,79 @@ export function SchedulingPage() {
           </div>
         </Card>
 
-        {/* Results Summary */}
-        <div className="flex items-center justify-between text-sm text-gray-600">
+        <div className="flex flex-col gap-1 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
           <span>
-            Showing <span className="font-semibold text-gray-900">{filteredSchedules.length}</span> of{' '}
-            <span className="font-semibold text-gray-900">{schedulesLength}</span> schedules
+            <span className="font-semibold tabular-nums text-slate-900">{filteredSchedules.length}</span>
+            {' '}of{' '}
+            <span className="font-semibold tabular-nums text-slate-900">{schedulesLength}</span>
+            {' '}entries visible
           </span>
           {hasActiveFilters && (
-            <span className="text-primary font-medium">Filters active</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-primary">Filters active</span>
           )}
         </div>
 
-        {/* Loading State */}
         {loading && (
-          <Card className="!p-12">
-            <div className="flex flex-col items-center justify-center">
-              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-gray-600">Loading schedules...</p>
+          <Card hover={false} className="border-slate-200/90 !border py-14 shadow-sm ring-1 ring-slate-900/[0.03]">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div
+                className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-primary"
+                aria-hidden
+              />
+              <p className="text-sm font-medium text-slate-600">Loading schedule data…</p>
             </div>
           </Card>
         )}
 
-        {/* Error State */}
         {error && (
-          <Card className="!p-6 border-l-4 border-l-secondary bg-red-50">
+          <Card hover={false} className="border-red-200/80 bg-red-50/50 !border ring-1 ring-red-900/5">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-5 h-5 text-secondary mt-0.5">⚠</div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-secondary mb-1">Error Loading Schedules</h3>
-                <p className="text-sm text-gray-700">{error}</p>
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" aria-hidden />
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-semibold text-red-900">Unable to load schedules</h3>
+                <p className="mt-1 text-sm leading-relaxed text-red-800/90">{error}</p>
               </div>
             </div>
           </Card>
         )}
 
-        {/* Empty State */}
         {!loading && filteredSchedules.length === 0 && (
-          <Card className="!p-12">
-            <div className="text-center">
-              <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {hasActiveFilters ? 'No matching schedules found' : 'No schedules yet'}
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {hasActiveFilters
-                  ? 'Try adjusting your filters to see more results'
-                  : 'Get started by creating your first schedule'}
-              </p>
+          <Card hover={false} className="border-slate-200/90 py-14 text-center shadow-sm ring-1 ring-slate-900/[0.03] !border">
+            <Calendar className="mx-auto mb-4 h-14 w-14 text-slate-300" aria-hidden />
+            <h3 className="text-base font-semibold tracking-tight text-slate-900">
+              {hasActiveFilters ? 'No matching entries' : 'No schedules yet'}
+            </h3>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-600">
+              {hasActiveFilters
+                ? 'Relax or clear filters to see more of the calendar.'
+                : 'Create an entry to populate the calendar for this range.'}
+            </p>
+            <div className="mt-8">
               {hasActiveFilters ? (
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition"
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
                 >
-                  <X className="w-4 h-4" />
-                  Clear Filters
+                  <X className="h-4 w-4" aria-hidden />
+                  Clear filters
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={() => { setEditingSchedule(undefined); setModalOpen(true); }}
-                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-6 py-2.5 rounded-lg font-medium transition-colors"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-dark"
                 >
-                  <Plus className="w-5 h-5" />
-                  Create Schedule
+                  <Plus className="h-4 w-4" aria-hidden />
+                  Create schedule
                 </button>
               )}
             </div>
           </Card>
         )}
 
-        {/* Calendar View */}
         {!loading && filteredSchedules.length > 0 && (
-          <Card className="!p-6">
+          <Card hover={false} className="border-slate-200/90 !border p-0 shadow-sm ring-1 ring-slate-900/[0.03] [&>div]:!p-6">
             <CalendarView
               viewMode={viewMode}
               schedules={filteredSchedules}
@@ -430,32 +533,34 @@ export function SchedulingPage() {
           <div
             role="dialog"
             aria-modal="true"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]"
           >
-            <Card className="w-full max-w-md space-y-4">
+            <Card hover={false} className="w-full max-w-md border-slate-200/90 shadow-xl ring-1 ring-slate-900/10 !border">
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-50 ring-1 ring-red-100">
+                  <AlertCircle className="h-6 w-6 text-red-600" aria-hidden />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">Delete Schedule</h3>
-                  <p className="text-sm text-gray-600 mt-1">Are you sure you want to delete this schedule? This action cannot be undone.</p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base font-semibold tracking-tight text-slate-900">Delete this entry?</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                    This removes the time block from the schedule. You cannot undo this action.
+                  </p>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
                 <button
+                  type="button"
                   onClick={() => setDeleteConfirmId(null)}
-                  className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="rounded-md border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleDeleteConfirm}
-                  className="px-4 py-2 rounded-lg bg-secondary hover:bg-red-600 text-white text-sm font-medium transition-colors shadow-sm"
+                  className="rounded-md bg-secondary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-600"
                 >
-                  Delete Schedule
+                  Delete entry
                 </button>
               </div>
             </Card>
@@ -467,19 +572,30 @@ export function SchedulingPage() {
           <ScheduleFormModal
             schedule={editingSchedule}
             existingSchedules={schedules}
-            rooms={rooms}
+            rooms={roomsForForm}
             instructors={instructors}
             subjects={subjects}
             onClose={handleModalClose}
             onSaved={handleSaved}
+            createSchedule={createSchedule}
+            updateSchedule={updateSchedule}
           />
         )}
       </div>
 
-      {/* Aside */}
-      <div className="xl:col-span-4">
-        <SchedulingAside schedules={schedules} loading={loading} />
-      </div>
+      <aside className="border-t border-slate-200/80 pt-6 xl:col-span-4 xl:border-l xl:border-t-0 xl:pl-8 xl:pt-0">
+        <SchedulingAside
+          schedules={schedules}
+          loading={loading}
+          registerNewRoomName={newRoomName}
+          onRegisterNewRoomNameChange={(v) => {
+            setNewRoomName(v);
+            setRoomRegisterMessage(null);
+          }}
+          onRegisterRoom={handleRegisterRoom}
+          registerRoomMessage={roomRegisterMessage}
+        />
+      </aside>
     </div>
     </MainLayout>
   );
