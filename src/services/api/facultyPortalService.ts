@@ -1,5 +1,5 @@
 import axios from 'axios';
-import api from './axios';
+import api, { portalApi } from './axios';
 import type {
   FacultyPortalProfile,
   FacultyCourse,
@@ -20,17 +20,12 @@ import type {
 } from '@/features/faculty/types';
 
 class FacultyPortalService {
-  private getAuthHeader(): Record<string, string> {
-    const token = localStorage.getItem('facultyToken');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-
   // ── Auth ──────────────────────────────────────────────────────────────────
 
   async login(email: string, password: string): Promise<{ token: string; user: FacultyPortalProfile }> {
     try {
       const response = await api.post<any>(
-        '/v1/auth/login',
+        '/auth/login',
         { email, password }
       );
       const d = response.data?.data ?? response.data;
@@ -69,9 +64,8 @@ class FacultyPortalService {
 
   async getProfile(): Promise<FacultyPortalProfile> {
     try {
-      const response = await api.get<{ success: boolean; data: any }>(
-        '/faculty/profile',
-        { headers: this.getAuthHeader() }
+      const response = await portalApi.get<{ success: boolean; data: any }>(
+        '/faculty/profile'
       );
       return this.mapProfile(response.data.data ?? response.data);
     } catch (error: unknown) {
@@ -91,15 +85,14 @@ class FacultyPortalService {
 
   async updateProfile(_facultyId: string, data: ProfileUpdatePayload): Promise<FacultyPortalProfile> {
     try {
-      const response = await api.put<{ success: boolean; data: any }>(
+      const response = await portalApi.put<{ success: boolean; data: any }>(
         '/faculty/profile',
         {
           email: data.email,
           specialization: data.specialization,
           // Map frontend fields to backend-accepted fields
           ...(data.position && { office_location: data.position }),
-        },
-        { headers: this.getAuthHeader() }
+        }
       );
       return this.mapProfile(response.data.data ?? response.data);
     } catch (error: unknown) {
@@ -129,9 +122,8 @@ class FacultyPortalService {
 
   async getCourses(_facultyId: string): Promise<FacultyCourse[]> {
     try {
-      const response = await api.get<{ success: boolean; data: any[] }>(
-        '/faculty/courses',
-        { headers: this.getAuthHeader() }
+      const response = await portalApi.get<{ success: boolean; data: any[] }>(
+        '/faculty/courses'
       );
       return (response.data.data ?? []).map(this.mapCourse).filter(
         (course, index, self) => index === self.findIndex((c) => c.subjectId === course.subjectId)
@@ -150,9 +142,8 @@ class FacultyPortalService {
 
   async getTeachingLoad(_facultyId: string): Promise<TeachingLoadSummary> {
     try {
-      const response = await api.get<{ success: boolean; data: any }>(
-        '/faculty/teaching-load',
-        { headers: this.getAuthHeader() }
+      const response = await portalApi.get<{ success: boolean; data: any }>(
+        '/faculty/teaching-load'
       );
       const d = response.data.data ?? response.data;
       return {
@@ -187,9 +178,8 @@ class FacultyPortalService {
 
   async getRoster(_facultyId: string, subjectId: string): Promise<RosterStudent[]> {
     try {
-      const response = await api.get<{ success: boolean; data: any[] }>(
-        `/faculty/courses/${subjectId}/roster`,
-        { headers: this.getAuthHeader() }
+      const response = await portalApi.get<{ success: boolean; data: any[] }>(
+        `/faculty/courses/${subjectId}/roster`
       );
       return (response.data.data ?? []).map((s: any) => ({
         id: s.student_id ?? s.id,
@@ -216,9 +206,9 @@ class FacultyPortalService {
 
   async getAttendance(courseId: string, date: string): Promise<AttendanceRecord[]> {
     try {
-      const response = await api.get<{ success: boolean; data: any[] }>(
+      const response = await portalApi.get<{ success: boolean; data: any[] }>(
         `/faculty/courses/${courseId}/attendance`,
-        { params: { date }, headers: this.getAuthHeader() }
+        { params: { date } }
       );
       return (response.data.data ?? []).map((r: any) => ({
         studentId: r.student_number ?? r.studentId ?? r.student_id,
@@ -235,7 +225,7 @@ class FacultyPortalService {
 
   async submitAttendance(payload: AttendanceSubmission): Promise<void> {
     try {
-      await api.post(
+      await portalApi.post(
         `/faculty/courses/${payload.courseId}/attendance`,
         {
           date: payload.date,
@@ -243,8 +233,7 @@ class FacultyPortalService {
             student_id: r.studentId,
             status: r.status,
           })),
-        },
-        { headers: this.getAuthHeader() }
+        }
       );
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -259,9 +248,8 @@ class FacultyPortalService {
 
   async getResearchProjects(_facultyId: string): Promise<FacultyResearchProject[]> {
     try {
-      const response = await api.get<{ success: boolean; data: any[] }>(
-        '/faculty/research',
-        { headers: this.getAuthHeader() }
+      const response = await portalApi.get<{ success: boolean; data: any[] }>(
+        '/faculty/research'
       );
       return (response.data.data ?? []).map(this.mapResearch);
     } catch (error: unknown) {
@@ -275,15 +263,14 @@ class FacultyPortalService {
 
   async createResearchProject(_facultyId: string, data: ResearchSubmissionPayload): Promise<FacultyResearchProject> {
     try {
-      const response = await api.post<{ success: boolean; data: any }>(
+      const response = await portalApi.post<{ success: boolean; data: any }>(
         '/faculty/research',
         {
           title: data.title,
           description: data.description,
           research_type: 'thesis',
           status: data.status === 'proposed' ? 'draft' : data.status,
-        },
-        { headers: this.getAuthHeader() }
+        }
       );
       return this.mapResearch(response.data.data ?? response.data);
     } catch (error: unknown) {
@@ -297,14 +284,13 @@ class FacultyPortalService {
 
   async updateResearchProject(_facultyId: string, projectId: string, data: ResearchSubmissionPayload): Promise<FacultyResearchProject> {
     try {
-      const response = await api.put<{ success: boolean; data: any }>(
+      const response = await portalApi.put<{ success: boolean; data: any }>(
         `/faculty/research/${projectId}`,
         {
           title: data.title,
           description: data.description,
           status: data.status === 'proposed' ? 'draft' : data.status,
-        },
-        { headers: this.getAuthHeader() }
+        }
       );
       return this.mapResearch(response.data.data ?? response.data);
     } catch (error: unknown) {
@@ -332,9 +318,8 @@ class FacultyPortalService {
 
   async getEvents(): Promise<FacultyEvent[]> {
     try {
-      const response = await api.get<{ success: boolean; data: any[] }>(
-        '/faculty/events',
-        { headers: this.getAuthHeader() }
+      const response = await portalApi.get<{ success: boolean; data: any[] }>(
+        '/faculty/events'
       );
       return (response.data.data ?? []).map(this.mapEvent).filter(
         (event, index, self) => index === self.findIndex((e) => e.id === event.id)
@@ -350,9 +335,8 @@ class FacultyPortalService {
 
   async getMyParticipation(): Promise<EventParticipation[]> {
     try {
-      const response = await api.get<{ success: boolean; data: any[] }>(
-        '/faculty/events/my-participation',
-        { headers: this.getAuthHeader() }
+      const response = await portalApi.get<{ success: boolean; data: any[] }>(
+        '/faculty/events/my-participation'
       );
       return (response.data.data ?? []).map((p: any) => ({
         id: p.event_id ?? p.id,
@@ -372,10 +356,9 @@ class FacultyPortalService {
 
   async registerEventParticipation(eventId: string): Promise<EventParticipation> {
     try {
-      const response = await api.post<{ success: boolean; data: any }>(
+      const response = await portalApi.post<{ success: boolean; data: any }>(
         `/faculty/events/${eventId}/register`,
-        {},
-        { headers: this.getAuthHeader() }
+        {}
       );
       const d = response.data.data ?? response.data;
       return {
@@ -419,9 +402,8 @@ class FacultyPortalService {
 
   async getMaterials(courseId: string): Promise<CourseMaterial[]> {
     try {
-      const response = await api.get<{ success: boolean; data: any[] }>(
-        `/faculty/courses/${courseId}/materials`,
-        { headers: this.getAuthHeader() }
+      const response = await portalApi.get<{ success: boolean; data: any[] }>(
+        `/faculty/courses/${courseId}/materials`
       );
       return (response.data.data ?? []).map((m: any) => ({
         id: m.id,
@@ -443,10 +425,10 @@ class FacultyPortalService {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await api.post<{ success: boolean; data: any }>(
+      const response = await portalApi.post<{ success: boolean; data: any }>(
         `/faculty/courses/${courseId}/materials`,
         formData,
-        { headers: { ...this.getAuthHeader(), 'Content-Type': 'multipart/form-data' } }
+        { headers: { 'Content-Type': 'multipart/form-data' } }
       );
       const d = response.data.data ?? response.data;
       return {
@@ -467,8 +449,7 @@ class FacultyPortalService {
 
   async deleteMaterial(courseId: string, materialId: string): Promise<void> {
     try {
-      await api.delete(`/faculty/courses/${courseId}/materials/${materialId}`, {
-        headers: this.getAuthHeader(),
+      await portalApi.delete(`/faculty/courses/${courseId}/materials/${materialId}`, {
       });
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -483,9 +464,8 @@ class FacultyPortalService {
 
   async getSkills(): Promise<FacultyPortalSkill[]> {
     try {
-      const response = await api.get<{ success: boolean; data: any[] }>(
-        '/faculty/profile/skills',
-        { headers: this.getAuthHeader() }
+      const response = await portalApi.get<{ success: boolean; data: any[] }>(
+        '/faculty/profile/skills'
       );
       return (response.data.data ?? []).map((s: any) => ({
         skillName: s.skillName ?? s.skill_name,
@@ -503,10 +483,9 @@ class FacultyPortalService {
 
   async updateSkills(skills: FacultyPortalSkill[]): Promise<FacultyPortalSkill[]> {
     try {
-      const response = await api.put<{ success: boolean; data: any[] }>(
+      const response = await portalApi.put<{ success: boolean; data: any[] }>(
         '/faculty/profile/skills',
-        { skills: skills.map((s) => ({ skillName: s.skillName, category: s.category, proficiencyLevel: s.proficiencyLevel })) },
-        { headers: this.getAuthHeader() }
+        { skills: skills.map((s) => ({ skillName: s.skillName, category: s.category, proficiencyLevel: s.proficiencyLevel })) }
       );
       return (response.data.data ?? skills).map((s: any) => ({
         skillName: s.skillName ?? s.skill_name,
@@ -526,9 +505,8 @@ class FacultyPortalService {
 
   async getAffiliations(): Promise<FacultyPortalAffiliation[]> {
     try {
-      const response = await api.get<{ success: boolean; data: any[] }>(
-        '/faculty/profile/affiliations',
-        { headers: this.getAuthHeader() }
+      const response = await portalApi.get<{ success: boolean; data: any[] }>(
+        '/faculty/profile/affiliations'
       );
       return (response.data.data ?? []).map((a: any) => ({
         organizationName: a.organizationName ?? a.organization_name,
@@ -547,7 +525,7 @@ class FacultyPortalService {
 
   async updateAffiliations(affiliations: FacultyPortalAffiliation[]): Promise<FacultyPortalAffiliation[]> {
     try {
-      const response = await api.put<{ success: boolean; data: any[] }>(
+      const response = await portalApi.put<{ success: boolean; data: any[] }>(
         '/faculty/profile/affiliations',
         {
           affiliations: affiliations.map((a) => ({
@@ -556,8 +534,7 @@ class FacultyPortalService {
             role: a.role,
             joinDate: a.joinDate,
           })),
-        },
-        { headers: this.getAuthHeader() }
+        }
       );
       return (response.data.data ?? affiliations).map((a: any) => ({
         organizationName: a.organizationName ?? a.organization_name,
@@ -578,9 +555,9 @@ class FacultyPortalService {
 
   async getParticipation(subjectId: string, date?: string): Promise<StudentParticipationRecord[]> {
     try {
-      const response = await api.get<{ success: boolean; data: any[] }>(
+      const response = await portalApi.get<{ success: boolean; data: any[] }>(
         `/faculty/courses/${subjectId}/participation`,
-        { params: date ? { date } : {}, headers: this.getAuthHeader() }
+        { params: date ? { date } : {} }
       );
       return (response.data.data ?? []).map((r: any) => ({
         studentId: r.student_number ?? r.studentId ?? r.student_id,
@@ -601,7 +578,7 @@ class FacultyPortalService {
 
   async submitParticipation(subjectId: string, payload: ParticipationSubmission): Promise<void> {
     try {
-      await api.post(
+      await portalApi.post(
         `/faculty/courses/${subjectId}/participation`,
         {
           date: payload.date,
@@ -610,8 +587,7 @@ class FacultyPortalService {
             participationScore: r.participationScore,
             remarks: r.remarks,
           })),
-        },
-        { headers: this.getAuthHeader() }
+        }
       );
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -624,3 +600,6 @@ class FacultyPortalService {
 }
 
 export default new FacultyPortalService();
+
+
+

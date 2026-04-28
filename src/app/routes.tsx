@@ -56,8 +56,8 @@ export function AppRoutes() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/student/login" element={<StudentLogin />} />
-        <Route path="/faculty/login" element={<FacultyLogin />} />
+        <Route path="/student/login" element={<Navigate to="/login" replace />} />
+        <Route path="/faculty/login" element={<Navigate to="/login" replace />} />
         <Route
           path="/admin/dashboard"
           element={

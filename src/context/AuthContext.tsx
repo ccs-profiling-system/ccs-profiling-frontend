@@ -38,6 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('auth_user');
     localStorage.removeItem('auth_refresh_token');
     localStorage.removeItem('studentToken');
+    localStorage.removeItem('facultyToken');
+    localStorage.removeItem('faculty');
+    localStorage.removeItem('userRole');
     setToken(null);
     setUser(null);
   };

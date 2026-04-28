@@ -68,4 +68,39 @@ api.interceptors.response.use(
   }
 );
 
+// Axios instance for portal routes (faculty, student) which the backend
+// mounts at /api instead of /api/v1. Update VITE_PORTAL_API_BASE_URL in .env
+// to match VITE_API_BASE_URL once the backend fixes route mounting.
+const baseApiUrl = import.meta.env.VITE_PORTAL_API_BASE_URL || 'http://localhost:3000/api';
+export const portalApi = axios.create({
+  baseURL: baseApiUrl,
+  timeout: import.meta.env.DEV ? 3000 : 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+portalApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('facultyToken') || localStorage.getItem('studentToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+portalApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      if (error.response.status === 404) console.error('Resource not found');
+      if (error.response.status === 500) console.error('Server error');
+    } else if (error.request) {
+      console.warn('Network error - backend unavailable, using mock data');
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

@@ -18,7 +18,7 @@ export function StudentProtectedRoute({ children }: StudentProtectedRouteProps) 
 
   useEffect(() => {
     if (!isAuthenticated || !token) {
-      navigate('/student/login', { replace: true });
+      navigate('/login', { replace: true });
     } else if (role === 'admin') {
       navigate('/admin/dashboard', { replace: true });
     }

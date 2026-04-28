@@ -32,6 +32,8 @@ vi.mock('@/services/api/facultyPortalService', () => ({
   default: {
     getProfile: (...args: unknown[]) => mockGetProfile(...args),
     updateProfile: (...args: unknown[]) => mockUpdateProfile(...args),
+    getSkills: () => Promise.resolve([]),
+    getAffiliations: () => Promise.resolve([]),
   },
 }));
 
