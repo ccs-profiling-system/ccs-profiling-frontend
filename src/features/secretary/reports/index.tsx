@@ -4,13 +4,12 @@ import { Card } from '@/components/ui/Card';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { Users, Filter, FileText, Download } from 'lucide-react';
 import { Spinner, ErrorAlert, Table, Button } from '@/components/ui';
-import { studentsService, facultyService } from '@/services/api';
+import api from '@/services/api/axios';
 import secretaryService from '@/services/api/secretaryService';
-import type { Student } from '@/types/students';
-import type { Faculty } from '@/types/faculty';
+import type { StudentRecord, FacultyRecord } from '@/types/secretary';
 
 type ReportModule = 'students' | 'faculty';
-type DataItem = Student | Faculty;
+type DataItem = StudentRecord | FacultyRecord;
 
 const tabs = [
   { id: 'students' as const, title: 'Students', icon: Users, color: 'text-blue-600', borderColor: 'border-blue-600' },
@@ -27,8 +26,9 @@ export function SecretaryReports() {
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
   
   // Filters
   const [search, setSearch] = useState('');
@@ -41,30 +41,32 @@ export function SecretaryReports() {
       setLoading(true);
       setError(null);
 
-      const filterParams = {
-        search: search || undefined,
-        status: filters.status.length > 0 ? filters.status[0] : undefined,
+      const filterParams: any = {
+        page: currentPage,
+        limit: itemsPerPage,
       };
+      
+      // Only add filters if they have values
+      if (search) filterParams.search = search;
+      if (filters.status.length > 0) filterParams.status = filters.status[0];
 
+      // Use secretaryService for fetching data
       let response;
-      switch (activeTab) {
-        case 'students': {
-          response = await studentsService.getStudents(filterParams as any, currentPage, pageSize);
-          break;
-        }
-        case 'faculty': {
-          response = await facultyService.getFaculty(filterParams as any, currentPage, pageSize);
-          break;
-        }
+      if (activeTab === 'students') {
+        response = await secretaryService.getStudents(filterParams);
+      } else {
+        response = await secretaryService.getFaculty(filterParams);
       }
-
-      setData(response.data);
-      setTotalItems(response.total ?? 0);
-    } catch (err) {
+      
+      setData(response.data || []);
+      setTotalItems(response.pagination?.totalItems || 0);
+      setTotalPages(response.pagination?.totalPages || 1);
+    } catch (err: any) {
       console.error('Failed to fetch data:', err);
       setError('Failed to load data. Please ensure the backend is running.');
       setData([]);
       setTotalItems(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -79,10 +81,18 @@ export function SecretaryReports() {
     return () => clearTimeout(timer);
   }, [
     activeTab,
-    filters.status.join(','),
-    search,
     currentPage,
-    pageSize
+    filters.status.join(','),
+    search
+  ]);
+
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    activeTab,
+    filters.status.join(','),
+    search
   ]);
 
   // Column definitions for each module
@@ -93,48 +103,40 @@ export function SecretaryReports() {
           {
             key: 'student_id',
             header: 'Student ID',
-            render: (row: Student) => (
+            render: (row: StudentRecord) => (
               <span className="font-medium text-gray-900">{row.studentId}</span>
             )
           },
           {
             key: 'name',
             header: 'Name',
-            render: (row: Student) => (
+            render: (row: StudentRecord) => (
               <span>{`${row.firstName} ${row.lastName}`.trim()}</span>
             )
           },
           {
             key: 'email',
             header: 'Email',
-            render: (row: Student) => (
+            render: (row: StudentRecord) => (
               <span className="text-gray-600">{row.email}</span>
             )
           },
           {
             key: 'program',
             header: 'Program',
-            render: (row: Student) => row.program || 'N/A'
+            render: (row: StudentRecord) => row.program || 'N/A'
           },
           {
             key: 'year_level',
             header: 'Year',
-            render: (row: Student) => row.yearLevel || 'N/A'
-          },
-          {
-            key: 'gpa',
-            header: 'GPA',
-            render: () => {
-              // GPA is not in the Student type, so we'll show N/A
-              return 'N/A';
-            }
+            render: (row: StudentRecord) => row.yearLevel || 'N/A'
           },
           {
             key: 'status',
             header: 'Status',
-            render: (row: Student) => (
+            render: (row: StudentRecord) => (
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                row.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                row.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
               }`}>
                 {row.status || 'Active'}
               </span>
@@ -147,45 +149,45 @@ export function SecretaryReports() {
           {
             key: 'faculty_id',
             header: 'Faculty ID',
-            render: (row: Faculty) => (
-              <span className="font-medium text-gray-900">{row.facultyId}</span>
+            render: (row: FacultyRecord) => (
+              <span className="font-medium text-gray-900">{row.employeeId}</span>
             )
           },
           {
             key: 'name',
             header: 'Name',
-            render: (row: Faculty) => (
+            render: (row: FacultyRecord) => (
               <span>{`${row.firstName} ${row.lastName}`.trim()}</span>
             )
           },
           {
             key: 'email',
             header: 'Email',
-            render: (row: Faculty) => (
+            render: (row: FacultyRecord) => (
               <span className="text-gray-600">{row.email}</span>
             )
           },
           {
             key: 'department',
             header: 'Department',
-            render: (row: Faculty) => row.department || 'N/A'
+            render: (row: FacultyRecord) => row.department || 'N/A'
           },
           {
             key: 'position',
             header: 'Position',
-            render: (row: Faculty) => row.position || 'N/A'
+            render: (row: FacultyRecord) => row.position || 'N/A'
           },
           {
             key: 'specialization',
             header: 'Specialization',
-            render: (row: Faculty) => row.specialization || 'N/A'
+            render: (row: FacultyRecord) => row.specialization || 'N/A'
           },
           {
             key: 'status',
             header: 'Status',
-            render: (row: Faculty) => (
+            render: (row: FacultyRecord) => (
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                row.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                row.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
               }`}>
                 {row.status || 'Active'}
               </span>
@@ -202,14 +204,21 @@ export function SecretaryReports() {
     try {
       setExporting(true);
       
-      const filterParams = {
-        search: search || undefined,
-        status: filters.status.length > 0 ? filters.status[0] : undefined,
-        type: activeTab,
-      };
-
-      // Call backend API to generate PDF
-      const blob = await secretaryService.exportReportPDF(filterParams);
+      // Backend requires 'format' field
+      const response = await api.post(`/secretary/reports/${activeTab}`, {
+        format: 'pdf'
+      }, {
+        responseType: 'blob',
+        headers: {
+          'Accept': 'application/pdf',
+        },
+      });
+      const blob = response.data;
+      
+      // Verify we got a PDF blob
+      if (blob.type !== 'application/pdf' && blob.type !== 'application/octet-stream') {
+        throw new Error('Invalid response type. Expected PDF.');
+      }
       
       // Create download link
       const url = URL.createObjectURL(blob);
@@ -222,7 +231,29 @@ export function SecretaryReports() {
       URL.revokeObjectURL(url);
     } catch (err: any) {
       console.error('Failed to export PDF:', err);
-      alert(err.response?.data?.message || 'Failed to export PDF');
+      console.error('Error response:', err.response);
+      
+      // Try to read the blob error message if it exists
+      if (err.response?.data instanceof Blob) {
+        const text = await err.response.data.text();
+        console.error('Blob error message:', text);
+        try {
+          const errorJson = JSON.parse(text);
+          alert(`Failed to export PDF: ${errorJson.message || errorJson.error || 'Unknown error'}`);
+          return;
+        } catch {
+          alert(`Failed to export PDF: ${text}`);
+          return;
+        }
+      }
+      
+      if (err.response?.status === 404) {
+        alert('PDF export feature is not yet available. Please contact your administrator.');
+      } else if (err.response?.status === 400) {
+        alert('Invalid request. The backend returned a 400 error. Check console for details.');
+      } else {
+        alert(err.response?.data?.message || err.message || 'Failed to export PDF');
+      }
     } finally {
       setExporting(false);
     }
@@ -389,100 +420,28 @@ export function SecretaryReports() {
               />
               
               {/* Pagination Controls */}
-              {totalItems > 0 && (
-                <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-200">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span>Show</span>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value));
-                        setCurrentPage(1);
-                      }}
-                      className="px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                    <span>
-                      entries per page
-                    </span>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    Showing {data.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} {activeTab}
                   </div>
-
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span>
-                      Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalItems)} of {totalItems} entries
-                    </span>
-                  </div>
-
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setCurrentPage(1)}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                      title="First page"
-                    >
-                      «
-                    </button>
                     <button
                       onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
-                      className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                      title="Previous page"
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      ‹
+                      Previous
                     </button>
-                    
-                    <div className="flex items-center gap-1">
-                      {(() => {
-                        const totalPages = Math.ceil(totalItems / pageSize);
-                        const pages = [];
-                        const maxVisible = 5;
-                        
-                        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-                        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-                        
-                        if (endPage - startPage < maxVisible - 1) {
-                          startPage = Math.max(1, endPage - maxVisible + 1);
-                        }
-                        
-                        for (let i = startPage; i <= endPage; i++) {
-                          pages.push(
-                            <button
-                              key={i}
-                              onClick={() => setCurrentPage(i)}
-                              className={`px-3 py-1 border rounded transition ${
-                                currentPage === i
-                                  ? 'bg-primary text-white border-primary'
-                                  : 'border-gray-300 hover:bg-gray-50'
-                              }`}
-                            >
-                              {i}
-                            </button>
-                          );
-                        }
-                        
-                        return pages;
-                      })()}
-                    </div>
-
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
                     <button
-                      onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalItems / pageSize), prev + 1))}
-                      disabled={currentPage >= Math.ceil(totalItems / pageSize)}
-                      className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                      title="Next page"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      ›
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage(Math.ceil(totalItems / pageSize))}
-                      disabled={currentPage >= Math.ceil(totalItems / pageSize)}
-                      className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                      title="Last page"
-                    >
-                      »
+                      Next
                     </button>
                   </div>
                 </div>

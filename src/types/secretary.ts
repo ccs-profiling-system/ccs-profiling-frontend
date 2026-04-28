@@ -23,7 +23,9 @@ export interface StudentRecord {
   email?: string;
   program: string;
   yearLevel: number;
+  section?: string;
   status: 'Active' | 'Inactive' | 'Graduated';
+  enrollmentDate?: string;
   createdAt?: string;
   updatedAt?: string;
 }

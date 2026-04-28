@@ -19,6 +19,12 @@ export function SecretaryEvents() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
+
   // Filters
   const [filters, setFilters] = useState({
     status: [] as string[],
@@ -37,11 +43,13 @@ export function SecretaryEvents() {
       };
 
       const response = await secretaryService.getEvents({
-        page: 1,
-        limit: 100,
+        page: currentPage,
+        limit: itemsPerPage,
         ...filterParams,
       });
       setEvents(response.data);
+      setTotalPages(response.pagination.totalPages);
+      setTotalItems(response.pagination.totalItems);
     } catch (err: any) {
       console.error('Failed to fetch events:', err);
       setError('Failed to load events');
@@ -100,6 +108,8 @@ export function SecretaryEvents() {
           createdAt: '2026-04-18T09:00:00Z',
         },
       ]);
+      setTotalPages(1);
+      setTotalItems(3);
     } finally {
       setLoading(false);
     }
@@ -112,6 +122,16 @@ export function SecretaryEvents() {
     }, 500);
 
     return () => clearTimeout(timer);
+  }, [
+    currentPage,
+    filters.status.join(','),
+    filters.eventType.join(','),
+    search
+  ]);
+
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
   }, [
     filters.status.join(','),
     filters.eventType.join(','),
@@ -497,11 +517,41 @@ export function SecretaryEvents() {
               <Spinner size="lg" />
             </div>
           ) : filteredEvents.length > 0 ? (
-            <Table
-              data={filteredEvents}
-              columns={columns}
-              onRowClick={handleView}
-            />
+            <>
+              <Table
+                data={filteredEvents}
+                columns={columns}
+                onRowClick={handleView}
+              />
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    Showing {events.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} events
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center h-64 text-gray-500">
               <Calendar className="w-16 h-16 text-gray-300 mb-4" />

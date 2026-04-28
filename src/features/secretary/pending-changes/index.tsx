@@ -22,6 +22,12 @@ export function SecretaryPendingChanges() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PendingItem | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
+
   // Filters
   const [filters, setFilters] = useState({
     status: [] as string[],
@@ -36,7 +42,7 @@ export function SecretaryPendingChanges() {
       // Fetch both pending changes and pending events
       const [changesData, eventsData] = await Promise.all([
         approvalsService.getMyPendingChanges().catch(() => []),
-        secretaryService.getEvents({ page: 1, limit: 100 }).then(res => res.data).catch(() => []),
+        secretaryService.getEvents({ page: 1, limit: 1000 }).then(res => res.data).catch(() => []),
       ]);
 
       // Combine and mark items
@@ -48,6 +54,8 @@ export function SecretaryPendingChanges() {
       ];
 
       setItems(combinedItems);
+      setTotalItems(combinedItems.length);
+      setTotalPages(Math.ceil(combinedItems.length / itemsPerPage));
     } catch (err: any) {
       console.error('Failed to fetch pending items:', err);
       setError('Failed to load pending items');
@@ -115,6 +123,8 @@ export function SecretaryPendingChanges() {
         } as any,
       ];
       setItems(mockChanges);
+      setTotalItems(mockChanges.length);
+      setTotalPages(Math.ceil(mockChanges.length / itemsPerPage));
     } finally {
       setLoading(false);
     }
@@ -127,6 +137,15 @@ export function SecretaryPendingChanges() {
     }, 500);
 
     return () => clearTimeout(timer);
+  }, [
+    filters.status.join(','),
+    filters.itemType.join(','),
+    search
+  ]);
+
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
   }, [
     filters.status.join(','),
     filters.itemType.join(','),
@@ -193,8 +212,11 @@ export function SecretaryPendingChanges() {
       });
     }
 
-    return filtered;
-  }, [items, filters, search]);
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  }, [items, filters, search, currentPage]);
 
   const stats = useMemo(() => {
     return {
@@ -496,13 +518,43 @@ export function SecretaryPendingChanges() {
               <Spinner size="lg" />
             </div>
           ) : filteredItems.length > 0 ? (
-            <Table
-              data={filteredItems}
-              columns={columns}
-              onRowClick={(item) => {
-                setSelectedItem(item);
-              }}
-            />
+            <>
+              <Table
+                data={filteredItems}
+                columns={columns}
+                onRowClick={(item) => {
+                  setSelectedItem(item);
+                }}
+              />
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    Showing {filteredItems.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} items
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center h-64 text-gray-500">
               <Clock className="w-16 h-16 text-gray-300 mb-4" />

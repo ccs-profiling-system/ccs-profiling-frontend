@@ -47,6 +47,12 @@ export function SecretaryResearch() {
     category: [] as string[],
   });
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
+
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<ResearchData | undefined>(undefined);
@@ -65,24 +71,26 @@ export function SecretaryResearch() {
       };
 
       // Use secretary research service
-      const response = await secretaryResearchService.getResearch(filterParams, 1, 1000);
+      const response = await secretaryResearchService.getResearch(filterParams, currentPage, itemsPerPage);
       
       // Map response to ResearchData format
       const mappedData: ResearchData[] = response.data.map((r) => ({
         id: r.id,
-        title: r.title,
-        abstract: r.abstract,
-        category: r.category,
-        program: r.program,
-        status: r.approval_status as ResearchStatus, // Use approval_status for secretary view
-        authors: r.authors,
-        adviser: r.adviser,
-        approvalStatus: r.approval_status,
-        createdAt: r.createdAt,
-        updatedAt: r.updatedAt,
+        title: r.title || 'Untitled',
+        abstract: r.abstract || '',
+        category: r.category || 'Uncategorized',
+        program: r.program || '',
+        status: (r.approval_status || r.status || 'draft') as ResearchStatus,
+        authors: Array.isArray(r.authors) ? r.authors : [],
+        adviser: r.adviser || '',
+        approvalStatus: r.approval_status || r.status || 'draft',
+        createdAt: r.createdAt || new Date().toISOString(),
+        updatedAt: r.updatedAt || new Date().toISOString(),
       }));
       
       setResearch(mappedData);
+      setTotalPages(response.totalPages || 1);
+      setTotalItems(response.total || mappedData.length);
     } catch (err: any) {
       console.error('Failed to fetch research:', err);
       setError(err.response?.data?.message || 'Failed to load research data. Please ensure the backend is running.');
@@ -132,6 +140,11 @@ export function SecretaryResearch() {
     }, 500);
 
     return () => clearTimeout(timer);
+  }, [currentPage, search, filters.status.join(','), filters.category.join(',')]);
+
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
   }, [search, filters.status.join(','), filters.category.join(',')]);
 
   // Fetch people on mount
@@ -359,7 +372,7 @@ export function SecretaryResearch() {
         <Card>
           <div className="mb-4 flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              <span>{research.length} research project(s)</span>
+              <span>{totalItems} research project(s)</span>
             </div>
           </div>
 
@@ -374,104 +387,134 @@ export function SecretaryResearch() {
               <p className="text-sm text-gray-500 mt-1">Try adjusting your filters</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Title
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Program
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Category
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Authors
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {research.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-start">
-                          <div>
-                            <div className="font-medium text-gray-900">{r.title}</div>
-                            <div className="text-sm text-gray-500 line-clamp-1 mt-0.5">
-                              {r.abstract}
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Title
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Program
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Category
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Authors
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {research.map((r) => (
+                      <tr
+                        key={r.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-start">
+                            <div>
+                              <div className="font-medium text-gray-900">{r.title}</div>
+                              <div className="text-sm text-gray-500 line-clamp-1 mt-0.5">
+                                {r.abstract}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                          {r.program || 'N/A'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {r.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(r.status)}`}>
-                          {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {r.authors && r.authors.length > 0 ? (
-                          <span>{r.authors.length} author{r.authors.length !== 1 ? 's' : ''}</span>
-                        ) : (
-                          <span className="text-gray-400">No authors</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {r.status === 'draft' && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                icon={<Edit2 className="w-4 h-4" />}
-                                onClick={() => setEditTarget(r)}
-                                title="Edit"
-                              />
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                icon={<Send className="w-4 h-4" />}
-                                onClick={() => handleSubmitForApproval(r.id)}
-                                title="Submit for Approval"
-                              />
-                            </>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                            {r.program || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {r.category}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(r.status || 'draft')}`}>
+                            {r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : 'Draft'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {r.authors && r.authors.length > 0 ? (
+                            <span>{r.authors.length} author{r.authors.length !== 1 ? 's' : ''}</span>
+                          ) : (
+                            <span className="text-gray-400">No authors</span>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            icon={<Eye className="w-4 h-4" />}
-                            onClick={() => handleViewDetails(r.id)}
-                            title="View Details"
-                          >
-                            View
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {r.status === 'draft' && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  icon={<Edit2 className="w-4 h-4" />}
+                                  onClick={() => setEditTarget(r)}
+                                  title="Edit"
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  icon={<Send className="w-4 h-4" />}
+                                  onClick={() => handleSubmitForApproval(r.id)}
+                                  title="Submit for Approval"
+                                />
+                              </>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              icon={<Eye className="w-4 h-4" />}
+                              onClick={() => handleViewDetails(r.id)}
+                              title="View Details"
+                            >
+                              View
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    Showing {research.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} research projects
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </Card>
       </div>
