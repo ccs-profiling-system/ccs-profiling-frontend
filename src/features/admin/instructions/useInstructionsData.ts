@@ -1,118 +1,71 @@
-import { useState, useEffect, useCallback } from 'react';
-import instructionsService, { type Instruction, type InstructionFilters } from '@/services/api/instructionsService';
+﻿import { useState, useEffect, useCallback } from 'react';
+import instructionsService, { 
+  type Instruction, 
+  type InstructionFilters 
+} from '@/services/api/instructionsService';
 
-export interface InstructionStatistics {
-  totalInstructions: number;
-  uniqueYears: number;
-  totalCredits: number;
-  averageCredits: number;
-}
-
-export interface PaginationMeta {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-}
-
-export interface UseInstructionsDataReturn {
+interface UseInstructionsDataReturn {
   instructions: Instruction[];
-  statistics: InstructionStatistics;
-  pagination: PaginationMeta;
+  statistics: {
+    totalInstructions: number;
+    totalCurriculumYears: number;
+    totalCredits: number;
+    instructionsByYear: Record<string, number>;
+  } | null;
   loading: boolean;
   error: string | null;
+  filters: InstructionFilters;
+  setFilters: (filters: InstructionFilters) => void;
   refetch: () => Promise<void>;
-  applyFilters: (filters: InstructionFilters) => Promise<void>;
 }
 
 export function useInstructionsData(): UseInstructionsDataReturn {
   const [instructions, setInstructions] = useState<Instruction[]>([]);
-  const [statistics, setStatistics] = useState<InstructionStatistics>({
-    totalInstructions: 0,
-    uniqueYears: 0,
-    totalCredits: 0,
-    averageCredits: 0,
-  });
-  const [pagination, setPagination] = useState<PaginationMeta>({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0,
-  });
+  const [statistics, setStatistics] = useState<{
+    totalInstructions: number;
+    totalCurriculumYears: number;
+    totalCredits: number;
+    instructionsByYear: Record<string, number>;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<InstructionFilters>({
+    page: 1,
+    limit: 100, // Get all for now, can add pagination later
+  });
 
-  // const calculateStatistics = (data: Instruction[]): InstructionStatistics => {
-  //   const totalInstructions = data.length;
-  //   const uniqueYears = new Set(data.map(i => i.curriculum_year)).size;
-  //   const totalCredits = data.reduce((sum, i) => sum + i.credits, 0);
-  //   const averageCredits = totalInstructions > 0 ? totalCredits / totalInstructions : 0;
-
-  //   return {
-  //     totalInstructions,
-  //     uniqueYears,
-  //     totalCredits,
-  //     averageCredits: Math.round(averageCredits * 10) / 10,
-  //   };
-  // };
-
-  const fetchInstructionsData = useCallback(async (filters?: InstructionFilters) => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await instructionsService.listInstructions(filters);
+      // Fetch instructions and statistics in parallel
+      const [instructionsResponse, statsData] = await Promise.all([
+        instructionsService.getInstructions(filters),
+        instructionsService.getStatistics().catch(() => null),
+      ]);
 
-      setInstructions(response.data);
-      setPagination(response.meta);
-      
-      // Calculate statistics based on total count from backend
-      setStatistics({
-        totalInstructions: response.meta.total,
-        uniqueYears: new Set(response.data.map(i => i.curriculum_year)).size,
-        totalCredits: response.data.reduce((sum, i) => sum + i.credits, 0),
-        averageCredits: response.data.length > 0 
-          ? Math.round((response.data.reduce((sum, i) => sum + i.credits, 0) / response.data.length) * 10) / 10
-          : 0,
-      });
-    } catch (err) {
-      console.error('Failed to fetch instructions data:', err);
-      setError('Failed to connect to the server. Please ensure the backend is running.');
-
-      // Clear data on error
-      setInstructions([]);
-      setPagination({
-        page: 1,
-        limit: 10,
-        total: 0,
-        totalPages: 0,
-      });
-      setStatistics({
-        totalInstructions: 0,
-        uniqueYears: 0,
-        totalCredits: 0,
-        averageCredits: 0,
-      });
+      setInstructions(instructionsResponse.data || []);
+      setStatistics(statsData);
+    } catch (err: unknown) {
+      setError('Failed to load instructions. Please try again.');
+      console.error('Error fetching instructions:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const applyFilters = useCallback(async (filters: InstructionFilters) => {
-    await fetchInstructionsData(filters);
-  }, [fetchInstructionsData]);
+  }, [filters]);
 
   useEffect(() => {
-    fetchInstructionsData();
-  }, [fetchInstructionsData]);
+    fetchData();
+  }, [fetchData]);
 
   return {
     instructions,
     statistics,
-    pagination,
     loading,
     error,
-    refetch: fetchInstructionsData,
-    applyFilters,
+    filters,
+    setFilters,
+    refetch: fetchData,
   };
 }

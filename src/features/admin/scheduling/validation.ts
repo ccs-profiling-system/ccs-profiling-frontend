@@ -16,12 +16,15 @@ export const VALID_CALENDAR_VIEWS: CalendarViewMode[] = ['daily', 'weekly', 'mon
 
 export interface ScheduleFormErrors {
   schedule_type?: string;
+  subject_id?: string;
+  faculty_id?: string;
   room?: string;
   day?: string;
   start_time?: string;
   end_time?: string;
   semester?: string;
   academic_year?: string;
+  recurrence_end_date?: string;
 }
 
 /** Parse "HH:MM", "HH:MM:SS", or ISO datetime to minutes since midnight (UTC for ISO). */
@@ -86,6 +89,13 @@ export function validateScheduleForm(payload: Partial<CreateSchedulePayload>): S
   }
   if (!payload.academic_year || payload.academic_year.trim() === '') {
     errors.academic_year = 'Academic year is required.';
+  }
+  
+  // Validate recurrence for classes
+  if (payload.schedule_type === 'class' && payload.is_recurring) {
+    if (!payload.recurrence_end_date || payload.recurrence_end_date.trim() === '') {
+      errors.recurrence_end_date = 'Recurrence end date is required for recurring classes.';
+    }
   }
 
   return errors;
