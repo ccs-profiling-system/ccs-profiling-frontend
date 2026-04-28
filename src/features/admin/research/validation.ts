@@ -1,6 +1,7 @@
 import type { CreateResearchPayload } from './types';
 
 export const VALID_RESEARCH_STATUSES = ['ongoing', 'completed', 'published'] as const;
+export const VALID_RESEARCH_TYPES = ['thesis', 'capstone', 'publication'] as const;
 
 export interface ValidationErrors {
   title?: string;
@@ -27,7 +28,9 @@ export function validateResearchForm(
   }
 
   if (!payload.category || payload.category.trim() === '') {
-    errors.category = 'Category is required.';
+    errors.category = 'Research type is required.';
+  } else if (!VALID_RESEARCH_TYPES.includes(payload.category as any)) {
+    errors.category = 'Research type must be one of: thesis, capstone, publication.';
   }
 
   if (!payload.status || !VALID_RESEARCH_STATUSES.includes(payload.status as never)) {
