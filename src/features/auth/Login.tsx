@@ -12,15 +12,21 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const getRoleRedirect = (role: string): string => {
+    switch (role) {
+      case 'faculty':         return '/faculty/dashboard';
+      case 'student':         return '/student/dashboard';
+      case 'department_chair': return '/chair/dashboard';
+      case 'secretary':       return '/secretary/dashboard';
+      default:                return '/admin/dashboard';
+    }
+  };
+
   // Redirect already-authenticated users based on role
   useEffect(() => {
     if (isAuthenticated) {
-      const userRole = localStorage.getItem('userRole');
-      if (userRole === 'chair') {
-        navigate('/chair/dashboard', { replace: true });
-      } else {
-        navigate('/admin/dashboard', { replace: true });
-      }
+      const userRole = localStorage.getItem('userRole') ?? 'admin';
+      navigate(getRoleRedirect(userRole), { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -31,24 +37,11 @@ export function Login() {
     try {
       const response = await authService.login({ email, password });
       login(response);
-      
-      // Store user role and department info
-      const userRole = response.user?.role || 'admin';
-      const departmentId = response.user?.department_id;
-      const departmentName = response.user?.department_name;
-      
+
+      const userRole = response.user?.role ?? 'admin';
       localStorage.setItem('userRole', userRole);
-      if (departmentId) localStorage.setItem('departmentId', departmentId);
-      if (departmentName) localStorage.setItem('departmentName', departmentName);
-      
-      // Role-based redirection
-      setTimeout(() => {
-        if (userRole === 'chair') {
-          navigate('/chair/dashboard', { replace: true });
-        } else {
-          navigate('/admin/dashboard', { replace: true });
-        }
-      }, 0);
+
+      navigate(getRoleRedirect(userRole), { replace: true });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     } finally {
@@ -73,7 +66,7 @@ export function Login() {
       <div className="relative z-10 flex-1 flex flex-col justify-between p-12">
         <div>
           <h1 className="text-white text-2xl font-bold">CCS Profiling</h1>
-          <p className="text-white/80 text-sm mt-1">Admin Portal</p>
+          <p className="text-white/80 text-sm mt-1">CCS Profiling System</p>
         </div>
         <p className="text-white/60 text-sm">&copy; 2026 CCS System</p>
       </div>
@@ -83,7 +76,7 @@ export function Login() {
         <div className="w-full">
           <div className="p-2">
             <h2 className="text-xl font-bold text-gray-900 mb-1">Welcome back</h2>
-            <p className="text-gray-500 text-sm mb-6">Sign in to your admin account</p>
+            <p className="text-gray-500 text-sm mb-6">Sign in to your account</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
