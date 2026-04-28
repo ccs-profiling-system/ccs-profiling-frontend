@@ -51,8 +51,12 @@ function isUpcoming(schedule: import('./types').Schedule) {
   const jsDay = new Date().getDay();
   const todayIdx = jsDay === 0 ? 6 : jsDay - 1;
   const schedIdx = DAY_ORDER.indexOf(schedule.day);
-  // upcoming = later this week (not today)
-  return schedIdx > todayIdx;
+  
+  // Upcoming means: later this week (schedIdx > todayIdx) OR next week (schedIdx <= todayIdx but not today)
+  // But for "upcoming in next 7 days", we should show schedules that are:
+  // 1. Later this week (schedIdx > todayIdx)
+  // 2. NOT today
+  return schedIdx > todayIdx && schedIdx <= todayIdx + 7;
 }
 
 function RegisterRoomCompact({

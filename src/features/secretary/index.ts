@@ -6,3 +6,4 @@ export { SecretaryEvents } from './events';
 export { SecretaryResearch } from './research';
 export { SecretaryDocuments } from './documents';
 export { SecretaryReports } from './reports';
+export { SecretaryCurriculum } from './curriculum';

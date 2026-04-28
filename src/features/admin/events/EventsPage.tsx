@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MainLayout, Card } from '@/components/layout';
 import { Plus, X, AlertCircle, Calendar } from 'lucide-react';
+import { Pagination } from '@/components/ui/Pagination';
 import type { Event, CreateEventPayload } from './types';
 import { useEvents } from './useEvents';
 import { EventFormModal } from './EventFormModal';
@@ -16,16 +17,18 @@ type ActiveModal =
   | null;
 
 export function EventsPage() {
-  const { events, loading, error, fetchEvents, createEvent, updateEvent, deleteEvent } =
+  const { events, meta, loading, error, fetchEvents, createEvent, updateEvent, deleteEvent } =
     useEvents();
 
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [formApiError, setFormApiError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    fetchEvents({ page: currentPage, limit: pageSize });
+  }, [fetchEvents, currentPage, pageSize]);
 
   const displayed = Array.isArray(events) ? events : [];
 
@@ -38,6 +41,8 @@ export function EventsPage() {
         await createEvent(payload);
       }
       setActiveModal(null);
+      // Refresh the current page
+      fetchEvents({ page: currentPage, limit: pageSize });
     } catch (err: any) {
       setFormApiError(
         err?.response?.data?.message ?? err?.message ?? 'An error occurred.'
@@ -49,6 +54,8 @@ export function EventsPage() {
   async function handleDelete(id: string) {
     try {
       await deleteEvent(id);
+      // Refresh the current page
+      fetchEvents({ page: currentPage, limit: pageSize });
     } catch {
       // error shown via hook's error state
     } finally {
@@ -103,7 +110,7 @@ export function EventsPage() {
         <Card className="!p-4">
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-gray-700">
-              Total Events: <span className="font-semibold text-gray-900">{displayed.length}</span>
+              Total Events: <span className="font-semibold text-gray-900">{meta.total}</span>
             </span>
           </div>
         </Card>
@@ -229,6 +236,25 @@ export function EventsPage() {
                 </tbody>
               </table>
             </div>
+          </Card>
+        )}
+
+        {/* Pagination Controls */}
+        {!loading && displayed.length > 0 && (
+          <Card className="!p-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={meta.totalPages}
+              totalItems={meta.total}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setCurrentPage(1);
+              }}
+              showPageSizeSelector={true}
+              showItemCount={true}
+            />
           </Card>
         )}
 

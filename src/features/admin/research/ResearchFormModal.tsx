@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, AlertCircle, Upload, Loader2, FileText, Trash2 } from 'lucide-react';
 import type { Research, ResearchStatus, CreateResearchPayload, UpdateResearchPayload, Person } from './types';
-import { validateResearchForm, VALID_RESEARCH_STATUSES } from './validation';
+import { validateResearchForm, VALID_RESEARCH_STATUSES, VALID_RESEARCH_TYPES } from './validation';
 import { MultiSelectDropdown } from './MultiSelectDropdown';
 import type { DropdownOption } from './MultiSelectDropdown';
 
@@ -246,13 +246,12 @@ export function ResearchFormModal({
 
             {/* Category and Status Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Category */}
+              {/* Research Type */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Category <span className="text-secondary">*</span>
+                  Research Type <span className="text-secondary">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   value={form.category}
                   onChange={(e) => set('category', e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition ${
@@ -260,8 +259,14 @@ export function ResearchFormModal({
                       ? 'border-secondary focus:ring-red-200 bg-red-50'
                       : 'border-gray-300 focus:ring-primary focus:border-transparent'
                   }`}
-                  placeholder="e.g., Computer Science"
-                />
+                >
+                  <option value="">Select research type</option>
+                  {VALID_RESEARCH_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </option>
+                  ))}
+                </select>
                 {fieldErrors.category && (
                   <p className="mt-2 text-sm text-secondary flex items-center gap-1.5">
                     <AlertCircle className="w-4 h-4" />

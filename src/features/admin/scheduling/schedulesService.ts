@@ -1,52 +1,81 @@
 import axios from 'axios';
 import type { Schedule, CreateSchedulePayload, UpdateSchedulePayload, DayOfWeek, Semester } from './types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const BASE_URL = `${API_BASE}/v1/admin/schedules`;
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const BASE_URL = `${API_BASE}/admin/schedules`;
+
+// Create axios instance with auth
+const schedulesAPI = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+schedulesAPI.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 const mockSchedules: Schedule[] = [
   {
     id: '1',
     schedule_type: 'class',
-    subject_code: 'CS 101',
-    subject_name: 'Introduction to Computer Science',
-    faculty_name: 'Dr. Smith',
+    subject_id: '1', // CS101 from Instructions module
+    subject_code: 'CS101',
+    subject_name: 'Introduction to Programming',
+    faculty_id: '1', // Dr. Maria Garcia from Faculty module
+    faculty_name: 'Dr. Maria Garcia',
     room: 'Room 101',
     day: 'monday',
     start_time: '09:00',
     end_time: '10:30',
     semester: '2nd',
     academic_year: '2025-2026',
+    is_recurring: true,
+    recurrence_pattern: 'weekly',
+    recurrence_end_date: '2026-05-31', // End of semester
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: '2',
     schedule_type: 'class',
-    subject_code: 'MATH 201',
-    subject_name: 'Mathematics 201',
-    faculty_name: 'Prof. Johnson',
+    subject_id: '2', // CS102 from Instructions module
+    subject_code: 'CS102',
+    subject_name: 'Data Structures and Algorithms',
+    faculty_id: '1', // Dr. Maria Garcia from Faculty module
+    faculty_name: 'Dr. Maria Garcia',
     room: 'Room 102',
     day: 'tuesday',
     start_time: '11:00',
     end_time: '12:30',
     semester: '2nd',
     academic_year: '2025-2026',
+    is_recurring: true,
+    recurrence_pattern: 'weekly',
+    recurrence_end_date: '2026-05-31', // End of semester
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: '3',
     schedule_type: 'exam',
-    subject_code: 'PHYS 301',
-    subject_name: 'Physics 301',
-    faculty_name: 'Dr. Williams',
+    subject_id: '3', // MATH101 from Instructions module
+    subject_code: 'MATH101',
+    subject_name: 'Calculus I',
+    faculty_id: '1', // Dr. Maria Garcia from Faculty module
+    faculty_name: 'Dr. Maria Garcia',
     room: 'Lab 1',
     day: 'wednesday',
     start_time: '14:00',
     end_time: '16:00',
     semester: '2nd',
     academic_year: '2025-2026',
+    is_recurring: false, // Exams don't repeat
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -54,7 +83,7 @@ const mockSchedules: Schedule[] = [
 
 export async function getSchedules(params?: { start?: string; end?: string }): Promise<Schedule[]> {
   try {
-    const response = await axios.get<any>(BASE_URL, { params });
+    const response = await schedulesAPI.get<any>('/', { params });
     const data = response.data;
 
     if (Array.isArray(data)) return data;
@@ -71,10 +100,13 @@ export async function getSchedules(params?: { start?: string; end?: string }): P
 
 export async function createSchedule(payload: CreateSchedulePayload): Promise<Schedule> {
   try {
-    const response = await axios.post<any>(BASE_URL, payload);
+    const response = await schedulesAPI.post<any>('/', payload);
     return response.data?.data ?? response.data;
   } catch (error) {
     console.warn('API not available, simulating create:', error);
+    
+    // If subject_id is provided, we could fetch subject details here
+    // For now, just return the basic schedule
     return {
       id: Date.now().toString(),
       ...payload,
@@ -86,7 +118,7 @@ export async function createSchedule(payload: CreateSchedulePayload): Promise<Sc
 
 export async function updateSchedule(id: string, payload: UpdateSchedulePayload): Promise<Schedule> {
   try {
-    const response = await axios.put<any>(`${BASE_URL}/${id}`, payload);
+    const response = await schedulesAPI.put<any>(`/${id}`, payload);
     return response.data?.data ?? response.data;
   } catch (error) {
     console.warn('API not available, simulating update:', error);
@@ -107,7 +139,7 @@ export async function updateSchedule(id: string, payload: UpdateSchedulePayload)
 
 export async function deleteSchedule(id: string): Promise<void> {
   try {
-    await axios.delete(`${BASE_URL}/${id}`);
+    await schedulesAPI.delete(`/${id}`);
   } catch (error) {
     console.warn('API not available, simulating delete:', error);
   }

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import type { Event, EventStatus, CreateEventPayload, UpdateEventPayload } from './types';
 import * as eventsService from './eventsService';
 import { resolveDefaultStatus } from './validation';
+import type { PaginationMeta, EventFilters } from './eventsService';
 
 /**
  * Filters an events array by status.
@@ -17,6 +18,7 @@ export function filterEventsByStatus(
 
 interface UseEventsState {
   events: Event[];
+  meta: PaginationMeta;
   loading: boolean;
   error: string | null;
 }
@@ -24,15 +26,16 @@ interface UseEventsState {
 export function useEvents() {
   const [state, setState] = useState<UseEventsState>({
     events: [],
+    meta: { page: 1, limit: 10, total: 0, totalPages: 1 },
     loading: false,
     error: null,
   });
 
-  const fetchEvents = useCallback(async () => {
+  const fetchEvents = useCallback(async (filters?: EventFilters) => {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
-      const events = await eventsService.getEvents();
-      setState({ events, loading: false, error: null });
+      const { events, meta } = await eventsService.getEvents(filters);
+      setState({ events, meta, loading: false, error: null });
     } catch (err: any) {
       setState((s) => ({
         ...s,
@@ -97,6 +100,7 @@ export function useEvents() {
 
   return {
     events: state.events,
+    meta: state.meta,
     loading: state.loading,
     error: state.error,
     fetchEvents,
