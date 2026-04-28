@@ -13,9 +13,9 @@ import type {
  */
 
 // Base URLs
-const SECRETARY_BASE = '/api/secretary/approvals';
-const ADMIN_BASE = '/api/admin/approvals';
-const CHAIR_BASE = '/api/chair/approvals';
+const SECRETARY_BASE = '/secretary/approvals';
+const ADMIN_BASE = '/admin/approvals';
+const CHAIR_BASE = '/chair/approvals';
 
 // ============================================================================
 // SECRETARY ENDPOINTS - Submit and track changes

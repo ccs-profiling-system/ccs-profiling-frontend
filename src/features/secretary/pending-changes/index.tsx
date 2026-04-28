@@ -41,9 +41,21 @@ export function SecretaryPendingChanges() {
 
       // Fetch both pending changes and pending events
       const [changesData, eventsData] = await Promise.all([
-        approvalsService.getMyPendingChanges().catch(() => []),
-        secretaryService.getEvents({ page: 1, limit: 1000 }).then(res => res.data).catch(() => []),
+        approvalsService.getMyPendingChanges().catch((err) => {
+          console.warn('Failed to fetch pending changes:', err);
+          return [];
+        }),
+        secretaryService.getEvents({ page: 1, limit: 100 }).then(res => {
+          console.log('Events data:', res);
+          return res.data;
+        }).catch((err) => {
+          console.warn('Failed to fetch events:', err);
+          return [];
+        }),
       ]);
+
+      console.log('Pending changes:', changesData);
+      console.log('Filtered events:', eventsData);
 
       // Combine and mark items
       const combinedItems: PendingItem[] = [
@@ -53,78 +65,17 @@ export function SecretaryPendingChanges() {
           .map((event: Event) => ({ ...event, itemType: 'event' as const })),
       ];
 
+      console.log('Combined items:', combinedItems);
+
       setItems(combinedItems);
       setTotalItems(combinedItems.length);
       setTotalPages(Math.ceil(combinedItems.length / itemsPerPage));
     } catch (err: any) {
       console.error('Failed to fetch pending items:', err);
       setError('Failed to load pending items');
-      
-      // Mock data for development
-      const mockChanges: PendingItem[] = [
-        {
-          id: '1',
-          entityType: 'student',
-          entityId: 'student-1',
-          entityName: 'John Doe',
-          changeType: 'update',
-          changes: {
-            email: 'john.doe.new@example.com',
-            yearLevel: 3,
-          },
-          originalData: {
-            email: 'john.doe@example.com',
-            yearLevel: 2,
-          },
-          submittedBy: 'current-user',
-          submittedByName: 'You',
-          submittedAt: '2026-04-21T10:30:00Z',
-          status: 'pending',
-          itemType: 'change',
-        },
-        {
-          id: '2',
-          entityType: 'faculty',
-          entityId: 'faculty-1',
-          entityName: 'Dr. Smith',
-          changeType: 'update',
-          changes: {
-            position: 'Associate Professor',
-          },
-          originalData: {
-            position: 'Assistant Professor',
-          },
-          submittedBy: 'current-user',
-          submittedByName: 'You',
-          submittedAt: '2026-04-20T14:15:00Z',
-          status: 'approved',
-          reviewedBy: 'chair-1',
-          reviewedByName: 'Dr. Chair',
-          reviewedAt: '2026-04-21T09:00:00Z',
-          itemType: 'change',
-        },
-        {
-          id: '3',
-          title: 'Web Development Workshop',
-          description: 'Learn modern web development',
-          eventType: 'workshop',
-          startDate: '2026-05-15T09:00:00Z',
-          endDate: '2026-05-15T17:00:00Z',
-          location: 'CCS Lab 1',
-          organizer: 'CCS Department',
-          targetAudience: ['students'],
-          maxParticipants: 30,
-          status: 'pending',
-          submittedBy: 'current-user',
-          submittedByName: 'You',
-          submittedAt: '2026-04-20T10:00:00Z',
-          createdAt: '2026-04-20T10:00:00Z',
-          itemType: 'event',
-        } as any,
-      ];
-      setItems(mockChanges);
-      setTotalItems(mockChanges.length);
-      setTotalPages(Math.ceil(mockChanges.length / itemsPerPage));
+      setItems([]);
+      setTotalItems(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
