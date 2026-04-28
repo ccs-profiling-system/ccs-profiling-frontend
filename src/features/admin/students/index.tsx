@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Card } from '@/components/ui/Card';
 import { MultiSelect } from '@/components/ui/MultiSelect';
+import { Pagination } from '@/components/ui/Pagination';
 import { GraduationCap, UserPlus, Filter } from 'lucide-react';
 import { useStudentsData } from './useStudentsData';
 import { StudentForm } from './StudentForm';
@@ -35,6 +36,10 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Available filter options from backend data
   const [availablePrograms, setAvailablePrograms] = useState<string[]>([]);
@@ -94,6 +99,15 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
     );
   }, [students, search]);
 
+  // Paginated students
+  const paginatedStudents = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredStudents.slice(startIndex, endIndex);
+  }, [filteredStudents, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filteredStudents.length / pageSize);
+
   const columns = useMemo((): Column<Student>[] => [
     {
       key: 'studentId',
@@ -140,6 +154,7 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
   const handleExportPDF = async (): Promise<void> => {
     setExporting(true);
     try {
+      // Try backend first
       const blob = await studentsService.exportStudentsToPDF();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -149,8 +164,28 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch {
-      // silently fail — user can retry
+    } catch (err: any) {
+      console.warn('Backend export not available, using client-side export');
+      // Fallback: Use CBA export service
+      const { exportToPDF, createStatusBadge } = await import('@/components/export');
+      
+      exportToPDF({
+        data: filteredStudents,
+        columns: [
+          { key: 'studentId', header: 'Student ID', render: (s) => `<strong>${s.studentId}</strong>` },
+          { key: 'firstName', header: 'Name', render: (s) => `${s.firstName} ${s.lastName}` },
+          { key: 'email', header: 'Email' },
+          { key: 'program', header: 'Program' },
+          { key: 'yearLevel', header: 'Year' },
+          { key: 'section', header: 'Section' },
+          { key: 'status', header: 'Status', render: (s) => createStatusBadge(s.status || 'unknown') },
+        ],
+        filename: `students_${new Date().toISOString().split('T')[0]}`,
+        title: 'Students Report',
+        subtitle: 'College of Computer Studies',
+        icon: '📚',
+        primaryColor: '#f97316', // Orange theme
+      });
     } finally {
       setExporting(false);
     }
@@ -159,6 +194,7 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
   const handleExportExcel = async (): Promise<void> => {
     setExporting(true);
     try {
+      // Try backend first
       const blob = await studentsService.exportStudentsToExcel();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -168,8 +204,27 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch {
-      // silently fail
+    } catch (err: any) {
+      console.warn('Backend export not available, using client-side CSV export');
+      // Fallback: Use CBA export service
+      const { exportToCSV } = await import('@/components/export');
+      
+      exportToCSV({
+        data: filteredStudents,
+        columns: [
+          { key: 'studentId', header: 'Student ID' },
+          { key: 'firstName', header: 'First Name' },
+          { key: 'lastName', header: 'Last Name' },
+          { key: 'email', header: 'Email' },
+          { key: 'program', header: 'Program' },
+          { key: 'yearLevel', header: 'Year Level' },
+          { key: 'section', header: 'Section' },
+          { key: 'status', header: 'Status' },
+          { key: 'enrollmentDate', header: 'Enrollment Date' },
+        ],
+        filename: `students_${new Date().toISOString().split('T')[0]}`,
+        title: 'Students Report',
+      });
     } finally {
       setExporting(false);
     }
@@ -436,12 +491,32 @@ export function Students({ initialOpenAdd = false }: StudentsProps) {
                 </div>
               )}
               <Table<Student>
-                data={filteredStudents}
+                data={paginatedStudents}
                 columns={columns}
                 onRowClick={(s) => navigate(`/admin/students/${s.id}`)}
                 emptyMessage="No students found."
               />
             </div>
+
+            {/* Pagination */}
+            {filteredStudents.length > 0 && (
+              <Card className="!p-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={filteredStudents.length}
+                  pageSize={pageSize}
+                  onPageChange={(page) => {
+                    setCurrentPage(page);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setCurrentPage(1);
+                  }}
+                />
+              </Card>
+            )}
           </>
         )}
       </div>
