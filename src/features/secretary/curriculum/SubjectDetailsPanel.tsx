@@ -28,6 +28,7 @@ interface SubjectDetailsPanelProps {
   onClose: () => void;
   subject: Subject | null;
   curriculumCode?: string;
+  readOnly?: boolean;
   onEdit?: (subject: Subject) => void;
   onDelete?: (subject: Subject) => void;
 }
@@ -37,6 +38,7 @@ export function SubjectDetailsPanel({
   onClose,
   subject,
   curriculumCode,
+  readOnly = false,
   onEdit,
   onDelete,
 }: SubjectDetailsPanelProps) {
@@ -359,27 +361,35 @@ export function SubjectDetailsPanel({
                   <div className="text-center py-12">
                     <FileCheck className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No Syllabus Created</h3>
-                    <p className="text-gray-600 mb-6">Create a comprehensive syllabus for this subject</p>
-                    <button
-                      onClick={handleCreateSyllabus}
-                      className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg transition flex items-center gap-2 mx-auto"
-                    >
-                      <Plus className="w-5 h-5" />
-                      Create Syllabus
-                    </button>
+                    <p className="text-gray-600 mb-6">
+                      {readOnly 
+                        ? 'No syllabus has been uploaded for this subject yet' 
+                        : 'Create a comprehensive syllabus for this subject'}
+                    </p>
+                    {!readOnly && (
+                      <button
+                        onClick={handleCreateSyllabus}
+                        className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-lg transition flex items-center gap-2 mx-auto"
+                      >
+                        <Plus className="w-5 h-5" />
+                        Create Syllabus
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-6">
                     {/* Syllabus Header */}
                     <div className="flex items-center justify-between">
                       <h3 className="text-xl font-bold text-gray-900">{syllabus.title}</h3>
-                      <button
-                        onClick={handleEditSyllabus}
-                        className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition flex items-center gap-2"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                        Edit Syllabus
-                      </button>
+                      {!readOnly && (
+                        <button
+                          onClick={handleEditSyllabus}
+                          className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition flex items-center gap-2"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                          Edit Syllabus
+                        </button>
+                      )}
                     </div>
 
                     {syllabus.description && (
@@ -458,13 +468,15 @@ export function SubjectDetailsPanel({
                   <h3 className="text-xl font-bold text-gray-900">
                     Course Lessons ({lessons.length})
                   </h3>
-                  <button
-                    onClick={handleCreateLesson}
-                    className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Lesson
-                  </button>
+                  {!readOnly && (
+                    <button
+                      onClick={handleCreateLesson}
+                      className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Lesson
+                    </button>
+                  )}
                 </div>
 
                 {lessons.length === 0 ? (
@@ -569,8 +581,8 @@ export function SubjectDetailsPanel({
           </>
         )}
 
-        {/* Action Buttons */}
-        {(onEdit || onDelete) && (
+        {/* Action Buttons - Only show if not read-only */}
+        {!readOnly && (onEdit || onDelete) && (
           <div className="flex gap-3 pt-4 border-t border-gray-200">
             {onEdit && (
               <button 
