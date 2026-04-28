@@ -27,16 +27,24 @@ export interface ScheduleFormErrors {
   recurrence_end_date?: string;
 }
 
-/** Parse "HH:MM", "HH:MM:SS", or ISO datetime to minutes since midnight (UTC for ISO). */
+/** Parse "HH:MM", "HH:MM:SS", or ISO datetime to minutes since midnight. Returns -1 if invalid. */
 function parseTimeToMinutes(value: string): number {
+  if (!value || typeof value !== 'string') return -1;
+  
   if (value.includes('T')) {
     const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return 0;
+    if (Number.isNaN(d.getTime())) return -1;
     return d.getUTCHours() * 60 + d.getUTCMinutes();
   }
+  
   const parts = value.split(':').map((p) => Number(p));
-  const h = parts[0] ?? 0;
+  const h = parts[0];
   const m = parts[1] ?? 0;
+  
+  if (Number.isNaN(h) || Number.isNaN(m) || h < 0 || h > 23 || m < 0 || m > 59) {
+    return -1;
+  }
+  
   return h * 60 + m;
 }
 
@@ -49,10 +57,19 @@ export function timeSlotsOverlap(
   b: { start_time: string; end_time: string; day: string }
 ): boolean {
   if (a.day !== b.day) return false;
+  
   const aStart = parseTimeToMinutes(a.start_time);
   const aEnd = parseTimeToMinutes(a.end_time);
   const bStart = parseTimeToMinutes(b.start_time);
   const bEnd = parseTimeToMinutes(b.end_time);
+  
+  // Invalid times - no overlap
+  if (aStart === -1 || aEnd === -1 || bStart === -1 || bEnd === -1) return false;
+  
+  // Handle overnight schedules (end < start means it crosses midnight)
+  // For simplicity, we don't support overnight schedules - treat as invalid
+  if (aEnd <= aStart || bEnd <= bStart) return false;
+  
   return aStart < bEnd && bStart < aEnd;
 }
 
@@ -79,6 +96,15 @@ export function validateScheduleForm(payload: Partial<CreateSchedulePayload>): S
   }
   if (!payload.end_time || payload.end_time.trim() === '') {
     errors.end_time = 'End time is required.';
+  }
+  
+  // Validate end_time > start_time
+  if (payload.start_time && payload.end_time) {
+    const startMins = parseTimeToMinutes(payload.start_time);
+    const endMins = parseTimeToMinutes(payload.end_time);
+    if (startMins !== -1 && endMins !== -1 && endMins <= startMins) {
+      errors.end_time = 'End time must be after start time.';
+    }
   }
   if (
     !payload.semester ||

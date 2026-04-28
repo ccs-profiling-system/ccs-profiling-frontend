@@ -44,8 +44,12 @@ export function validateEventForm(
     errors.date = 'Date is required.';
   }
 
-  if (!payload.venue || payload.venue.trim() === '') {
-    errors.venue = 'Venue is required.';
+  if (!payload.location || payload.location.trim() === '') {
+    errors.location = 'Location is required.';
+  }
+  
+  if (!payload.description || payload.description.trim() === '') {
+    errors.description = 'Description is required.';
   }
 
   return errors;
