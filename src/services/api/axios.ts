@@ -68,9 +68,10 @@ api.interceptors.response.use(
   }
 );
 
-// Axios instance for portal routes mounted without /v1 prefix on the backend
-// (facultyPortalRouter and studentPortalRouter are mounted at / instead of /v1)
-const baseApiUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api').replace(/\/v\d+$/, '');
+// Axios instance for portal routes (faculty, student) which the backend
+// mounts at /api instead of /api/v1. Update VITE_PORTAL_API_BASE_URL in .env
+// to match VITE_API_BASE_URL once the backend fixes route mounting.
+const baseApiUrl = import.meta.env.VITE_PORTAL_API_BASE_URL || 'http://localhost:3000/api';
 export const portalApi = axios.create({
   baseURL: baseApiUrl,
   timeout: import.meta.env.DEV ? 3000 : 10000,
