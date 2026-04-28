@@ -1,12 +1,13 @@
 ﻿import { MainLayout } from '@/components/layout';
-import { InstructionsManager } from './InstructionsManager';
+import { InstructionsViewer } from './InstructionsViewer';
 
 export function ChairCurriculum() {
   return (
     <MainLayout title="Curriculum & Instructions" variant="chair">
-      <InstructionsManager />
+      <InstructionsViewer />
     </MainLayout>
   );
 }
 
-export { InstructionsManager };
+export { InstructionsViewer };
+export { InstructionsManager } from './InstructionsManager';

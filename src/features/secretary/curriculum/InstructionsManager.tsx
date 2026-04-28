@@ -6,6 +6,7 @@ import { SubjectsList } from './SubjectsList';
 import { CurriculumForm } from './CurriculumForm';
 import { SubjectForm } from './SubjectForm';
 import instructionsService from '@/services/api/instructionsService';
+import secretaryCurriculumService from '@/services/api/secretary/secretaryCurriculumService';
 
 type ViewMode = 'curriculum' | 'subjects';
 
@@ -20,9 +21,12 @@ export function InstructionsManager({ variant = 'admin', readOnly = false }: Ins
   const [isCreateCurriculumModalOpen, setIsCreateCurriculumModalOpen] = useState(false);
   const [isCreateSubjectModalOpen, setIsCreateSubjectModalOpen] = useState(false);
 
+  // Select the appropriate service based on variant
+  const service = variant === 'secretary' ? secretaryCurriculumService : instructionsService;
+
   const handleExportPDF = async () => {
     try {
-      const blob = await instructionsService.exportToPDF();
+      const blob = await service.exportToPDF();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -39,7 +43,7 @@ export function InstructionsManager({ variant = 'admin', readOnly = false }: Ins
 
   const handleExportExcel = async () => {
     try {
-      const blob = await instructionsService.exportToExcel();
+      const blob = await service.exportToExcel();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -137,11 +141,19 @@ export function InstructionsManager({ variant = 'admin', readOnly = false }: Ins
 
       {/* Content based on view mode */}
       {viewMode === 'curriculum' && (
-        <CurriculumList searchQuery={searchQuery} readOnly={readOnly} />
+        <CurriculumList 
+          searchQuery={searchQuery} 
+          readOnly={readOnly} 
+          useSecretaryService={variant === 'secretary'} 
+        />
       )}
 
       {viewMode === 'subjects' && (
-        <SubjectsList searchQuery={searchQuery} readOnly={readOnly} />
+        <SubjectsList 
+          searchQuery={searchQuery} 
+          readOnly={readOnly} 
+          useSecretaryService={variant === 'secretary'} 
+        />
       )}
 
       {/* Create Curriculum Modal - Only show if not read-only */}

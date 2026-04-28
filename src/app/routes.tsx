@@ -28,6 +28,7 @@ import { ChairEvents } from '@/features/chair/events';
 import { ChairResearch } from '@/features/chair/research';
 import { ChairReports } from '@/features/chair/reports';
 import { ChairApprovals } from '@/features/chair/approvals';
+import { ChairCurriculum } from '@/features/chair/curriculum';
 
 // Admin Approvals
 import { AdminApprovals } from '@/features/admin/approvals';
@@ -44,6 +45,7 @@ import { SecretaryDocuments } from '@/features/secretary/documents';
 import { SecretaryReports } from '@/features/secretary/reports';
 import { SecretaryPendingChanges } from '@/features/secretary/pending-changes';
 import { SecretaryResearch } from '@/features/secretary/research';
+import { SecretaryCurriculum } from '@/features/secretary/curriculum';
 
 export function AppRoutes() {
   return (
@@ -239,6 +241,14 @@ export function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/chair/instructions"
+          element={
+            <ProtectedRoute>
+              <ChairCurriculum />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/chair" element={<Navigate to="/chair/dashboard" replace />} />
         
         {/* Secretary Portal Routes - No Authentication Required */}
@@ -249,6 +259,7 @@ export function AppRoutes() {
         <Route path="/secretary/faculty/:id" element={<FacultyProfileView />} />
         <Route path="/secretary/schedules" element={<SecretarySchedules />} />
         <Route path="/secretary/events" element={<SecretaryEvents />} />
+        <Route path="/secretary/curriculum" element={<SecretaryCurriculum />} />
         <Route path="/secretary/documents" element={<SecretaryDocuments />} />
         <Route path="/secretary/reports" element={<SecretaryReports />} />
         <Route path="/secretary/research" element={<SecretaryResearch />} />

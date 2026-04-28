@@ -16,18 +16,23 @@ import {
 import { SubjectForm } from './SubjectForm';
 import { SubjectDetailsPanel } from './SubjectDetailsPanel';
 import instructionsService from '@/services/api/instructionsService';
+import secretaryCurriculumService from '@/services/api/secretary/secretaryCurriculumService';
 import type { Subject, Curriculum, SubjectFilters } from '@/types/instructions';
 
 interface SubjectsListProps {
   searchQuery: string;
   readOnly?: boolean;
+  useSecretaryService?: boolean;
 }
 
-export function SubjectsList({ searchQuery, readOnly = false }: SubjectsListProps) {
+export function SubjectsList({ searchQuery, readOnly = false, useSecretaryService = false }: SubjectsListProps) {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [curriculum, setCurriculum] = useState<Curriculum[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Select the appropriate service based on context
+  const service = useSecretaryService ? secretaryCurriculumService : instructionsService;
   const [filters, setFilters] = useState<SubjectFilters>({});
   
   // Modals
@@ -47,8 +52,8 @@ export function SubjectsList({ searchQuery, readOnly = false }: SubjectsListProp
       setError(null);
       
       const [subjectsResponse, curriculumResponse] = await Promise.all([
-        instructionsService.getSubjects({ ...filters, search: searchQuery }),
-        instructionsService.getCurriculum({ status: 'active' })
+        service.getSubjects({ ...filters, search: searchQuery }),
+        service.getCurriculum({ status: 'active' })
       ]);
       
       setSubjects(subjectsResponse.data);
