@@ -45,6 +45,7 @@ import { SecretaryDocuments } from '@/features/secretary/documents';
 import { SecretaryReports } from '@/features/secretary/reports';
 import { SecretaryPendingChanges } from '@/features/secretary/pending-changes';
 import { SecretaryResearch } from '@/features/secretary/research';
+import { SecretaryCurriculum } from '@/features/secretary/curriculum';
 
 export function AppRoutes() {
   return (
@@ -258,6 +259,7 @@ export function AppRoutes() {
         <Route path="/secretary/faculty/:id" element={<FacultyProfileView />} />
         <Route path="/secretary/schedules" element={<SecretarySchedules />} />
         <Route path="/secretary/events" element={<SecretaryEvents />} />
+        <Route path="/secretary/curriculum" element={<SecretaryCurriculum />} />
         <Route path="/secretary/documents" element={<SecretaryDocuments />} />
         <Route path="/secretary/reports" element={<SecretaryReports />} />
         <Route path="/secretary/research" element={<SecretaryResearch />} />
