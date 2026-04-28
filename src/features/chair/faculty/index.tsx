@@ -107,9 +107,9 @@ export function ChairFaculty() {
                   currentPage={currentPage}
                   totalPages={Math.ceil(totalItems / itemsPerPage)}
                   totalItems={totalItems}
-                  itemsPerPage={itemsPerPage}
+                  pageSize={itemsPerPage}
                   onPageChange={setCurrentPage}
-                  onItemsPerPageChange={setItemsPerPage}
+                  onPageSizeChange={setItemsPerPage}
                 />
               )}
             </>

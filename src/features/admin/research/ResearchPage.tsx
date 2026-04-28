@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout, Card } from '@/components/layout';
+import { Pagination } from '@/components/ui/Pagination';
 import { Search, Filter, Plus, Edit2, Trash2, FlaskConical, X } from 'lucide-react';
 import { useResearch } from './useResearch';
 import { ResearchStatusBadge } from './ResearchStatusBadge';
@@ -25,6 +26,10 @@ export function ResearchPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Research | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     fetchResearch();
@@ -32,6 +37,15 @@ export function ResearchPage() {
   }, [fetchResearch]);
 
   const filtered = applyFilters(safeResearch, filters);
+
+  // Paginated research
+  const paginatedResearch = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filtered.slice(startIndex, endIndex);
+  }, [filtered, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filtered.length / pageSize);
 
   // Derive unique categories from loaded research for the filter dropdown
   const categories = Array.from(new Set(safeResearch.map((r) => r.category))).filter(Boolean);
@@ -264,7 +278,7 @@ export function ResearchPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filtered.map((r) => (
+                  {paginatedResearch.map((r) => (
                     <tr
                       key={r.id}
                       onClick={() => navigate(`/admin/research/${r.id}`)}
@@ -320,6 +334,26 @@ export function ResearchPage() {
                 </tbody>
               </table>
             </div>
+          </Card>
+        )}
+
+        {/* Pagination */}
+        {!loading && filtered.length > 0 && (
+          <Card className="!p-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filtered.length}
+              pageSize={pageSize}
+              onPageChange={(page) => {
+                setCurrentPage(page);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setCurrentPage(1);
+              }}
+            />
           </Card>
         )}
 

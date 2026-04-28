@@ -8,6 +8,8 @@ import { ExportButtons } from '@/components/ui/ExportButtons';
 import { SlidePanel } from '@/components/ui/SlidePanel';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { Card } from '@/components/ui/Card';
+import { Pagination } from '@/components/ui/Pagination';
 import { Users, UserPlus } from 'lucide-react';
 import { useFacultyData } from './useFacultyData';
 import { FacultyForm } from './FacultyForm';
@@ -26,6 +28,10 @@ export function Faculty() {
   const [deleteTarget, setDeleteTarget] = useState<Faculty | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const filteredFaculty = useMemo(() => {
     if (!search) return faculty;
@@ -38,6 +44,15 @@ export function Faculty() {
         (f.email ?? '').toLowerCase().includes(q)
     );
   }, [faculty, search]);
+
+  // Paginated faculty
+  const paginatedFaculty = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredFaculty.slice(startIndex, endIndex);
+  }, [filteredFaculty, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(filteredFaculty.length / pageSize);
 
   const columns = useMemo((): Column<Faculty>[] => [
     {
@@ -78,6 +93,7 @@ export function Faculty() {
   const handleExportPDF = async (): Promise<void> => {
     setExporting(true);
     try {
+      // Try backend first
       const blob = await facultyService.exportFacultyToPDF();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -87,8 +103,27 @@ export function Faculty() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch {
-      // silently fail
+    } catch (err: any) {
+      console.warn('Backend export not available, using client-side export');
+      // Fallback: Use CBA export service
+      const { exportToPDF, createStatusBadge } = await import('@/components/export');
+      
+      exportToPDF({
+        data: filteredFaculty,
+        columns: [
+          { key: 'facultyId', header: 'Faculty ID', render: (f) => `<strong>${f.facultyId}</strong>` },
+          { key: 'firstName', header: 'Name', render: (f) => `${f.firstName} ${f.lastName}` },
+          { key: 'email', header: 'Email' },
+          { key: 'department', header: 'Department' },
+          { key: 'position', header: 'Position' },
+          { key: 'status', header: 'Status', render: (f) => createStatusBadge(f.status || 'unknown') },
+        ],
+        filename: `faculty_${new Date().toISOString().split('T')[0]}`,
+        title: 'Faculty Report',
+        subtitle: 'College of Computer Studies',
+        icon: '👨‍🏫',
+        primaryColor: '#7c3aed', // Purple theme for Faculty
+      });
     } finally {
       setExporting(false);
     }
@@ -97,6 +132,7 @@ export function Faculty() {
   const handleExportExcel = async (): Promise<void> => {
     setExporting(true);
     try {
+      // Try backend first
       const blob = await facultyService.exportFacultyToExcel();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -106,8 +142,25 @@ export function Faculty() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch {
-      // silently fail
+    } catch (err: any) {
+      console.warn('Backend export not available, using client-side CSV export');
+      // Fallback: Use CBA export service
+      const { exportToCSV } = await import('@/components/export');
+      
+      exportToCSV({
+        data: filteredFaculty,
+        columns: [
+          { key: 'facultyId', header: 'Faculty ID' },
+          { key: 'firstName', header: 'First Name' },
+          { key: 'lastName', header: 'Last Name' },
+          { key: 'email', header: 'Email' },
+          { key: 'department', header: 'Department' },
+          { key: 'position', header: 'Position' },
+          { key: 'status', header: 'Status' },
+        ],
+        filename: `faculty_${new Date().toISOString().split('T')[0]}`,
+        title: 'Faculty Report',
+      });
     } finally {
       setExporting(false);
     }
@@ -252,11 +305,31 @@ export function Faculty() {
 
             {/* Table */}
             <Table<Faculty>
-              data={filteredFaculty}
+              data={paginatedFaculty}
               columns={columns}
               onRowClick={(f) => setSelectedFaculty(f)}
               emptyMessage="No faculty found."
             />
+
+            {/* Pagination */}
+            {filteredFaculty.length > 0 && (
+              <Card className="!p-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={filteredFaculty.length}
+                  pageSize={pageSize}
+                  onPageChange={(page) => {
+                    setCurrentPage(page);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setCurrentPage(1);
+                  }}
+                />
+              </Card>
+            )}
           </>
         )}
       </div>

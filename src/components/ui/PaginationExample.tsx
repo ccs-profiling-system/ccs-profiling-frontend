@@ -42,10 +42,10 @@ export function PaginationExample() {
           currentPage={currentPage}
           totalPages={totalPages}
           totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
+          pageSize={itemsPerPage}
           onPageChange={handlePageChange}
-          onItemsPerPageChange={handleItemsPerPageChange}
-          showItemsPerPage={true}
+          onPageSizeChange={handleItemsPerPageChange}
+          showPageSizeSelector={true}
         />
       </div>
 

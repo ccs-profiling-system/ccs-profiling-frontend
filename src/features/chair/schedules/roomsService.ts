@@ -5,11 +5,26 @@ export interface Room {
   name: string;
 }
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/rooms';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+const roomsAPI = axios.create({
+  baseURL: `${API_BASE}/rooms`,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+roomsAPI.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token') || localStorage.getItem('studentToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export async function getRooms(): Promise<Room[]> {
   try {
-    const response = await axios.get<Room[]>(BASE_URL);
+    const response = await roomsAPI.get<Room[]>('');
     return response.data;
   } catch (error) {
     console.error('Error fetching rooms:', error);

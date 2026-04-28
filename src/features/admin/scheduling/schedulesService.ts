@@ -1,8 +1,24 @@
 import axios from 'axios';
 import type { Schedule, CreateSchedulePayload, UpdateSchedulePayload, DayOfWeek, Semester } from './types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const BASE_URL = `${API_BASE}/v1/admin/schedules`;
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const BASE_URL = `${API_BASE}/admin/schedules`;
+
+// Create axios instance with auth
+const schedulesAPI = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+schedulesAPI.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 const mockSchedules: Schedule[] = [
   {
@@ -67,7 +83,7 @@ const mockSchedules: Schedule[] = [
 
 export async function getSchedules(params?: { start?: string; end?: string }): Promise<Schedule[]> {
   try {
-    const response = await axios.get<any>(BASE_URL, { params });
+    const response = await schedulesAPI.get<any>('/', { params });
     const data = response.data;
 
     if (Array.isArray(data)) return data;
@@ -84,7 +100,7 @@ export async function getSchedules(params?: { start?: string; end?: string }): P
 
 export async function createSchedule(payload: CreateSchedulePayload): Promise<Schedule> {
   try {
-    const response = await axios.post<any>(BASE_URL, payload);
+    const response = await schedulesAPI.post<any>('/', payload);
     return response.data?.data ?? response.data;
   } catch (error) {
     console.warn('API not available, simulating create:', error);
@@ -102,7 +118,7 @@ export async function createSchedule(payload: CreateSchedulePayload): Promise<Sc
 
 export async function updateSchedule(id: string, payload: UpdateSchedulePayload): Promise<Schedule> {
   try {
-    const response = await axios.put<any>(`${BASE_URL}/${id}`, payload);
+    const response = await schedulesAPI.put<any>(`/${id}`, payload);
     return response.data?.data ?? response.data;
   } catch (error) {
     console.warn('API not available, simulating update:', error);
@@ -123,7 +139,7 @@ export async function updateSchedule(id: string, payload: UpdateSchedulePayload)
 
 export async function deleteSchedule(id: string): Promise<void> {
   try {
-    await axios.delete(`${BASE_URL}/${id}`);
+    await schedulesAPI.delete(`/${id}`);
   } catch (error) {
     console.warn('API not available, simulating delete:', error);
   }

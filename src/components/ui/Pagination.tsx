@@ -4,11 +4,14 @@ export interface PaginationProps {
   currentPage: number;
   totalPages: number;
   totalItems: number;
-  pageSize: number;
+  pageSize?: number;
+  itemsPerPage?: number;
   onPageChange: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
+  onItemsPerPageChange?: (size: number) => void;
   pageSizeOptions?: number[];
   showPageSizeSelector?: boolean;
+  showItemsPerPage?: boolean;
   showItemCount?: boolean;
 }
 
@@ -17,14 +20,21 @@ export function Pagination({
   totalPages,
   totalItems,
   pageSize,
+  itemsPerPage,
   onPageChange,
   onPageSizeChange,
+  onItemsPerPageChange,
   pageSizeOptions = [5, 10, 20, 50, 100],
   showPageSizeSelector = true,
+  showItemsPerPage = true,
   showItemCount = true,
 }: PaginationProps) {
-  const startItem = (currentPage - 1) * pageSize + 1;
-  const endItem = Math.min(currentPage * pageSize, totalItems);
+  const effectivePageSize = pageSize || itemsPerPage || 10;
+  const effectiveOnPageSizeChange = onPageSizeChange || onItemsPerPageChange;
+  const effectiveShowPageSizeSelector = showPageSizeSelector || showItemsPerPage;
+  
+  const startItem = (currentPage - 1) * effectivePageSize + 1;
+  const endItem = Math.min(currentPage * effectivePageSize, totalItems);
 
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
@@ -55,7 +65,7 @@ export function Pagination({
     return pages;
   };
 
-  if (totalPages <= 1 && !showPageSizeSelector) {
+  if (totalPages <= 1 && !effectiveShowPageSizeSelector) {
     return null;
   }
 
@@ -78,15 +88,15 @@ export function Pagination({
 
       <div className="flex items-center gap-4">
         {/* Page size selector */}
-        {showPageSizeSelector && onPageSizeChange && (
+        {effectiveShowPageSizeSelector && effectiveOnPageSizeChange && (
           <div className="flex items-center gap-2">
             <label htmlFor="pageSize" className="text-sm text-gray-600 whitespace-nowrap">
               Rows per page:
             </label>
             <select
               id="pageSize"
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              value={effectivePageSize}
+              onChange={(e) => effectiveOnPageSizeChange(Number(e.target.value))}
               className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
             >
               {pageSizeOptions.map((size) => (
