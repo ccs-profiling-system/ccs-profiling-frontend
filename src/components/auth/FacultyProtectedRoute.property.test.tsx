@@ -8,6 +8,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import * as fc from 'fast-check';
 import { FacultyProtectedRoute } from './FacultyProtectedRoute';
+import { AuthProvider } from '@/context/AuthContext';
 
 // Mock useNavigate to capture navigation calls
 const mockNavigate = vi.fn();
@@ -18,6 +19,18 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => mockNavigate,
   };
 });
+
+function renderWithAuth(children: React.ReactNode) {
+  return render(
+    <MemoryRouter>
+      <AuthProvider>
+        <FacultyProtectedRoute>
+          {children}
+        </FacultyProtectedRoute>
+      </AuthProvider>
+    </MemoryRouter>
+  );
+}
 
 // ── Unit Tests ────────────────────────────────────────────────────────────────
 
@@ -31,57 +44,41 @@ describe('FacultyProtectedRoute — unit tests', () => {
     localStorage.clear();
   });
 
-  it('renders children when facultyToken IS present in localStorage', () => {
-    localStorage.setItem('facultyToken', 'test-token-123');
+  it('renders children when auth_token and faculty role are present', () => {
+    localStorage.setItem('auth_token', 'test-token-123');
+    localStorage.setItem('auth_user', JSON.stringify({ id: '1', email: 'f@ccs.edu', role: 'faculty' }));
 
-    render(
-      <MemoryRouter>
-        <FacultyProtectedRoute>
-          <div data-testid="protected-content">Secret Page</div>
-        </FacultyProtectedRoute>
-      </MemoryRouter>
-    );
+    renderWithAuth(<div data-testid="protected-content">Secret Page</div>);
 
     expect(screen.getByTestId('protected-content')).toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('does NOT render children when facultyToken is absent from localStorage', () => {
-    render(
-      <MemoryRouter>
-        <FacultyProtectedRoute>
-          <div data-testid="protected-content">Secret Page</div>
-        </FacultyProtectedRoute>
-      </MemoryRouter>
-    );
+  it('does NOT render children when no token is present', () => {
+    renderWithAuth(<div data-testid="protected-content">Secret Page</div>);
 
     expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
   });
 
-  it('redirects to /faculty/login when facultyToken is absent', () => {
-    render(
-      <MemoryRouter>
-        <FacultyProtectedRoute>
-          <div>Secret Page</div>
-        </FacultyProtectedRoute>
-      </MemoryRouter>
-    );
+  it('redirects to /login when no token is present', () => {
+    renderWithAuth(<div>Secret Page</div>);
 
-    expect(mockNavigate).toHaveBeenCalledWith('/faculty/login', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
+  });
+
+  it('redirects to /login when role is not faculty or department_chair', () => {
+    localStorage.setItem('auth_token', 'test-token-123');
+    localStorage.setItem('auth_user', JSON.stringify({ id: '1', email: 'a@ccs.edu', role: 'admin' }));
+
+    renderWithAuth(<div>Secret Page</div>);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
   });
 });
 
 // ── Property Test ─────────────────────────────────────────────────────────────
 
 describe('Property 3: Protected routes redirect without token', () => {
-  /**
-   * For any faculty protected route rendered when `facultyToken` is absent from
-   * `localStorage`, the component should redirect to `/faculty/login` rather than
-   * rendering the protected content.
-   *
-   * Validates: Requirements 1.5
-   */
-
   beforeEach(() => {
     localStorage.clear();
     mockNavigate.mockClear();
@@ -91,26 +88,19 @@ describe('Property 3: Protected routes redirect without token', () => {
     localStorage.clear();
   });
 
-  it('never renders protected content and always redirects to /faculty/login when no token', () => {
+  it('never renders protected content and always redirects to /login when no token', () => {
     fc.assert(
       fc.property(fc.string(), (content) => {
-        // Ensure no token is present
-        localStorage.removeItem('facultyToken');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
         mockNavigate.mockClear();
 
-        const { unmount } = render(
-          <MemoryRouter>
-            <FacultyProtectedRoute>
-              <div data-testid="protected-content">{content}</div>
-            </FacultyProtectedRoute>
-          </MemoryRouter>
+        const { unmount } = renderWithAuth(
+          <div data-testid="protected-content">{content}</div>
         );
 
-        // Protected content must NOT be rendered
         expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
-
-        // Navigation to /faculty/login must have been triggered
-        expect(mockNavigate).toHaveBeenCalledWith('/faculty/login', { replace: true });
+        expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
 
         unmount();
       }),

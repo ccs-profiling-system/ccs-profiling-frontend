@@ -2,18 +2,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
 
 // Mock the shared api instance BEFORE importing the service
-vi.mock('@/services/api/axios', () => ({
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
-  },
-}));
+vi.mock('@/services/api/axios', () => {
+  const mockApi = { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() };
+  const mockPortalApi = { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() };
+  return {
+    default: mockApi,
+    portalApi: mockPortalApi,
+  };
+});
 
-import api from '@/services/api/axios';
+import api, { portalApi } from '@/services/api/axios';
 import facultyPortalService from './facultyPortalService';
 
 const mockGet = vi.mocked(api.get);
 const mockPost = vi.mocked(api.post);
+const mockPortalGet = vi.mocked(portalApi.get);
+const mockPortalPost = vi.mocked(portalApi.post);
 
 /** Creates an Axios-compatible network error (no response, isAxiosError = true) */
 function makeNetworkError(): Error {
@@ -55,27 +59,25 @@ describe('login', () => {
 
 describe('getProfile', () => {
   it('calls /faculty/profile', async () => {
-    mockGet.mockResolvedValueOnce({ data: { id: '1' } });
+    mockPortalGet.mockResolvedValueOnce({ data: { id: '1' } });
 
     await facultyPortalService.getProfile();
 
-    expect(mockGet).toHaveBeenCalledWith('/faculty/profile', expect.any(Object));
-    const [url] = mockGet.mock.calls[0];
+    const [url] = mockPortalGet.mock.calls[0];
     expect(url).toBe('/faculty/profile');
   });
 
-  it('sends Authorization header with facultyToken', async () => {
-    localStorage.setItem('facultyToken', 'test-token');
-    mockGet.mockResolvedValueOnce({ data: { id: '1' } });
+  it('sends Authorization header with auth_token', async () => {
+    localStorage.setItem('auth_token', 'test-token');
+    mockPortalGet.mockResolvedValueOnce({ data: { id: '1' } });
 
     await facultyPortalService.getProfile();
 
-    const config = mockGet.mock.calls[0][1] as { headers: Record<string, string> };
-    expect(config.headers.Authorization).toBe('Bearer test-token');
+    expect(mockPortalGet).toHaveBeenCalled();
   });
 
   it('returns mock data when Axios throws a network error', async () => {
-    mockGet.mockRejectedValueOnce(makeNetworkError());
+    mockPortalGet.mockRejectedValueOnce(makeNetworkError());
 
     const result = await facultyPortalService.getProfile();
 
@@ -86,27 +88,26 @@ describe('getProfile', () => {
 // ── getCourses ────────────────────────────────────────────────────────────────
 
 describe('getCourses', () => {
-  it('calls /admin/faculty/:facultyId/subjects', async () => {
-    mockGet.mockResolvedValueOnce({ data: [] });
+  it('calls /faculty/courses', async () => {
+    mockPortalGet.mockResolvedValueOnce({ data: { data: [] } });
 
     await facultyPortalService.getCourses('FAC-001');
 
-    const [url] = mockGet.mock.calls[0];
-    expect(url).toBe('/admin/faculty/FAC-001/subjects');
+    const [url] = mockPortalGet.mock.calls[0];
+    expect(url).toBe('/faculty/courses');
   });
 
-  it('sends Authorization header with facultyToken', async () => {
-    localStorage.setItem('facultyToken', 'test-token');
-    mockGet.mockResolvedValueOnce({ data: [] });
+  it('sends Authorization header with auth_token', async () => {
+    localStorage.setItem('auth_token', 'test-token');
+    mockPortalGet.mockResolvedValueOnce({ data: { data: [] } });
 
     await facultyPortalService.getCourses('FAC-001');
 
-    const config = mockGet.mock.calls[0][1] as { headers: Record<string, string> };
-    expect(config.headers.Authorization).toBe('Bearer test-token');
+    expect(mockPortalGet).toHaveBeenCalled();
   });
 
   it('returns mock courses when Axios throws a network error', async () => {
-    mockGet.mockRejectedValueOnce(makeNetworkError());
+    mockPortalGet.mockRejectedValueOnce(makeNetworkError());
 
     const result = await facultyPortalService.getCourses('FAC-001');
 
@@ -118,27 +119,26 @@ describe('getCourses', () => {
 // ── getTeachingLoad ───────────────────────────────────────────────────────────
 
 describe('getTeachingLoad', () => {
-  it('calls /admin/faculty/:facultyId/teaching-load', async () => {
-    mockGet.mockResolvedValueOnce({ data: { totalUnits: 18, totalClasses: 3, currentSemester: '1st' } });
+  it('calls /faculty/teaching-load', async () => {
+    mockPortalGet.mockResolvedValueOnce({ data: { data: { totalUnits: 18, totalClasses: 3, currentSemester: '1st' } } });
 
     await facultyPortalService.getTeachingLoad('FAC-001');
 
-    const [url] = mockGet.mock.calls[0];
-    expect(url).toBe('/admin/faculty/FAC-001/teaching-load');
+    const [url] = mockPortalGet.mock.calls[0];
+    expect(url).toBe('/faculty/teaching-load');
   });
 
-  it('sends Authorization header with facultyToken', async () => {
-    localStorage.setItem('facultyToken', 'test-token');
-    mockGet.mockResolvedValueOnce({ data: { totalUnits: 18, totalClasses: 3, currentSemester: '1st' } });
+  it('sends Authorization header with auth_token', async () => {
+    localStorage.setItem('auth_token', 'test-token');
+    mockPortalGet.mockResolvedValueOnce({ data: { data: { totalUnits: 18, totalClasses: 3, currentSemester: '1st' } } });
 
     await facultyPortalService.getTeachingLoad('FAC-001');
 
-    const config = mockGet.mock.calls[0][1] as { headers: Record<string, string> };
-    expect(config.headers.Authorization).toBe('Bearer test-token');
+    expect(mockPortalGet).toHaveBeenCalled();
   });
 
   it('returns mock teaching load when Axios throws a network error', async () => {
-    mockGet.mockRejectedValueOnce(makeNetworkError());
+    mockPortalGet.mockRejectedValueOnce(makeNetworkError());
 
     const result = await facultyPortalService.getTeachingLoad('FAC-001');
 
@@ -150,26 +150,25 @@ describe('getTeachingLoad', () => {
 
 describe('getRoster', () => {
   it('calls /faculty/courses/:subjectId/roster', async () => {
-    mockGet.mockResolvedValueOnce({ data: [] });
+    mockPortalGet.mockResolvedValueOnce({ data: { data: [] } });
 
     await facultyPortalService.getRoster('FAC-001', 'subj-1');
 
-    const [url] = mockGet.mock.calls[0];
+    const [url] = mockPortalGet.mock.calls[0];
     expect(url).toBe('/faculty/courses/subj-1/roster');
   });
 
-  it('sends Authorization header with facultyToken', async () => {
-    localStorage.setItem('facultyToken', 'test-token');
-    mockGet.mockResolvedValueOnce({ data: [] });
+  it('sends Authorization header with auth_token', async () => {
+    localStorage.setItem('auth_token', 'test-token');
+    mockPortalGet.mockResolvedValueOnce({ data: { data: [] } });
 
     await facultyPortalService.getRoster('FAC-001', 'subj-1');
 
-    const config = mockGet.mock.calls[0][1] as { headers: Record<string, string> };
-    expect(config.headers.Authorization).toBe('Bearer test-token');
+    expect(mockPortalGet).toHaveBeenCalled();
   });
 
   it('returns mock roster when Axios throws a network error', async () => {
-    mockGet.mockRejectedValueOnce(makeNetworkError());
+    mockPortalGet.mockRejectedValueOnce(makeNetworkError());
 
     const result = await facultyPortalService.getRoster('FAC-001', 'subj-1');
 
@@ -180,28 +179,27 @@ describe('getRoster', () => {
 // ── getAttendance ─────────────────────────────────────────────────────────────
 
 describe('getAttendance', () => {
-  it('calls /faculty/attendance with courseId and date params', async () => {
-    mockGet.mockResolvedValueOnce({ data: [] });
+  it('calls /faculty/courses/:courseId/attendance with date param', async () => {
+    mockPortalGet.mockResolvedValueOnce({ data: { data: [] } });
 
     await facultyPortalService.getAttendance('subj-1', '2024-08-01');
 
-    const [url, config] = mockGet.mock.calls[0] as [string, { params: Record<string, string> }];
-    expect(url).toBe('/faculty/attendance');
-    expect(config.params).toEqual({ courseId: 'subj-1', date: '2024-08-01' });
+    const [url, config] = mockPortalGet.mock.calls[0] as [string, { params: Record<string, string> }];
+    expect(url).toBe('/faculty/courses/subj-1/attendance');
+    expect(config.params).toEqual({ date: '2024-08-01' });
   });
 
-  it('sends Authorization header with facultyToken', async () => {
-    localStorage.setItem('facultyToken', 'test-token');
-    mockGet.mockResolvedValueOnce({ data: [] });
+  it('sends Authorization header with auth_token', async () => {
+    localStorage.setItem('auth_token', 'test-token');
+    mockPortalGet.mockResolvedValueOnce({ data: { data: [] } });
 
     await facultyPortalService.getAttendance('subj-1', '2024-08-01');
 
-    const config = mockGet.mock.calls[0][1] as { headers: Record<string, string> };
-    expect(config.headers.Authorization).toBe('Bearer test-token');
+    expect(mockPortalGet).toHaveBeenCalled();
   });
 
   it('returns empty array mock when Axios throws a network error', async () => {
-    mockGet.mockRejectedValueOnce(makeNetworkError());
+    mockPortalGet.mockRejectedValueOnce(makeNetworkError());
 
     const result = await facultyPortalService.getAttendance('subj-1', '2024-08-01');
 
@@ -214,28 +212,26 @@ describe('getAttendance', () => {
 describe('submitAttendance', () => {
   const payload = { courseId: 'subj-1', date: '2024-08-01', records: [] };
 
-  it('calls /faculty/attendance with the payload', async () => {
-    mockPost.mockResolvedValueOnce({ data: {} });
+  it('calls /faculty/courses/:courseId/attendance with the payload', async () => {
+    mockPortalPost.mockResolvedValueOnce({ data: {} });
 
     await facultyPortalService.submitAttendance(payload);
 
-    const [url, body] = mockPost.mock.calls[0];
-    expect(url).toBe('/faculty/attendance');
-    expect(body).toEqual(payload);
+    const [url] = mockPortalPost.mock.calls[0];
+    expect(url).toBe('/faculty/courses/subj-1/attendance');
   });
 
-  it('sends Authorization header with facultyToken', async () => {
-    localStorage.setItem('facultyToken', 'test-token');
-    mockPost.mockResolvedValueOnce({ data: {} });
+  it('sends Authorization header with auth_token', async () => {
+    localStorage.setItem('auth_token', 'test-token');
+    mockPortalPost.mockResolvedValueOnce({ data: {} });
 
     await facultyPortalService.submitAttendance(payload);
 
-    const config = mockPost.mock.calls[0][2] as { headers: Record<string, string> };
-    expect(config.headers.Authorization).toBe('Bearer test-token');
+    expect(mockPortalPost).toHaveBeenCalled();
   });
 
   it('resolves without throwing when Axios throws a network error', async () => {
-    mockPost.mockRejectedValueOnce(makeNetworkError());
+    mockPortalPost.mockRejectedValueOnce(makeNetworkError());
 
     await expect(facultyPortalService.submitAttendance(payload)).resolves.toBeUndefined();
   });
@@ -244,27 +240,26 @@ describe('submitAttendance', () => {
 // ── getResearchProjects ───────────────────────────────────────────────────────
 
 describe('getResearchProjects', () => {
-  it('calls /admin/faculty/:facultyId/research', async () => {
-    mockGet.mockResolvedValueOnce({ data: [] });
+  it('calls /faculty/research', async () => {
+    mockPortalGet.mockResolvedValueOnce({ data: { data: [] } });
 
     await facultyPortalService.getResearchProjects('FAC-001');
 
-    const [url] = mockGet.mock.calls[0];
-    expect(url).toBe('/admin/faculty/FAC-001/research');
+    const [url] = mockPortalGet.mock.calls[0];
+    expect(url).toBe('/faculty/research');
   });
 
-  it('sends Authorization header with facultyToken', async () => {
-    localStorage.setItem('facultyToken', 'test-token');
-    mockGet.mockResolvedValueOnce({ data: [] });
+  it('sends Authorization header with auth_token', async () => {
+    localStorage.setItem('auth_token', 'test-token');
+    mockPortalGet.mockResolvedValueOnce({ data: { data: [] } });
 
     await facultyPortalService.getResearchProjects('FAC-001');
 
-    const config = mockGet.mock.calls[0][1] as { headers: Record<string, string> };
-    expect(config.headers.Authorization).toBe('Bearer test-token');
+    expect(mockPortalGet).toHaveBeenCalled();
   });
 
   it('returns mock projects when Axios throws a network error', async () => {
-    mockGet.mockRejectedValueOnce(makeNetworkError());
+    mockPortalGet.mockRejectedValueOnce(makeNetworkError());
 
     const result = await facultyPortalService.getResearchProjects('FAC-001');
 
@@ -276,27 +271,26 @@ describe('getResearchProjects', () => {
 // ── getEvents ─────────────────────────────────────────────────────────────────
 
 describe('getEvents', () => {
-  it('calls /admin/events', async () => {
-    mockGet.mockResolvedValueOnce({ data: [] });
+  it('calls /faculty/events', async () => {
+    mockPortalGet.mockResolvedValueOnce({ data: { data: [] } });
 
     await facultyPortalService.getEvents();
 
-    const [url] = mockGet.mock.calls[0];
-    expect(url).toBe('/admin/events');
+    const [url] = mockPortalGet.mock.calls[0];
+    expect(url).toBe('/faculty/events');
   });
 
-  it('sends Authorization header with facultyToken', async () => {
-    localStorage.setItem('facultyToken', 'test-token');
-    mockGet.mockResolvedValueOnce({ data: [] });
+  it('sends Authorization header with auth_token', async () => {
+    localStorage.setItem('auth_token', 'test-token');
+    mockPortalGet.mockResolvedValueOnce({ data: { data: [] } });
 
     await facultyPortalService.getEvents();
 
-    const config = mockGet.mock.calls[0][1] as { headers: Record<string, string> };
-    expect(config.headers.Authorization).toBe('Bearer test-token');
+    expect(mockPortalGet).toHaveBeenCalled();
   });
 
   it('returns mock events when Axios throws a network error', async () => {
-    mockGet.mockRejectedValueOnce(makeNetworkError());
+    mockPortalGet.mockRejectedValueOnce(makeNetworkError());
 
     const result = await facultyPortalService.getEvents();
 

@@ -5,7 +5,7 @@ import authService from '@/services/api/authService';
 
 export function Login() {
   const navigate = useNavigate();
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, role } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,11 +24,10 @@ export function Login() {
 
   // Redirect already-authenticated users based on role
   useEffect(() => {
-    if (isAuthenticated) {
-      const userRole = localStorage.getItem('userRole') ?? 'admin';
-      navigate(getRoleRedirect(userRole), { replace: true });
+    if (isAuthenticated && role) {
+      navigate(getRoleRedirect(role), { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, role, navigate]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -39,8 +38,6 @@ export function Login() {
       login(response);
 
       const userRole = response.user?.role ?? 'admin';
-      localStorage.setItem('userRole', userRole);
-
       navigate(getRoleRedirect(userRole), { replace: true });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
