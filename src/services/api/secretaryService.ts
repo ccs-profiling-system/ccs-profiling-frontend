@@ -20,7 +20,7 @@ const BASE_URL = '/api/secretary';
 
 // Dashboard
 export const getDashboardStats = async (): Promise<SecretaryDashboardStats> => {
-  const response = await api.get(`${BASE_URL}/dashboard/stats`);
+  const response = await api.get(`${BASE_URL}/dashboard`);
   return response.data;
 };
 
