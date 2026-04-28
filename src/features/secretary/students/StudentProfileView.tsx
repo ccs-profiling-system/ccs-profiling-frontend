@@ -37,7 +37,7 @@ export function StudentProfileView() {
       const docsResponse = await secretaryService.getDocuments({
         page: 1,
         limit: 50,
-        category: 'student',
+        // Note: Backend categories are: memo, policy, form, report, other
       });
       // Filter by student ID in the frontend for now
       setDocuments(docsResponse.data.filter(doc => doc.relatedEntityId === studentId));
@@ -62,7 +62,7 @@ export function StudentProfileView() {
         {
           id: '1',
           name: 'Transcript_of_Records.pdf',
-          category: 'student',
+          category: 'other',
           fileUrl: '/uploads/doc1.pdf',
           fileSize: 2400000,
           fileType: 'PDF',
@@ -73,7 +73,7 @@ export function StudentProfileView() {
         {
           id: '2',
           name: 'Birth_Certificate.pdf',
-          category: 'student',
+          category: 'other',
           fileUrl: '/uploads/doc2.pdf',
           fileSize: 1800000,
           fileType: 'PDF',

@@ -38,7 +38,7 @@ export function FacultyProfileModal({ isOpen, onClose, facultyId }: FacultyProfi
       const docsResponse = await secretaryService.getDocuments({
         page: 1,
         limit: 50,
-        category: 'faculty',
+        // Note: Backend categories are: memo, policy, form, report, other
       });
       setDocuments(docsResponse.data.filter(doc => doc.relatedEntityId === id));
     } catch (err: any) {
@@ -63,7 +63,7 @@ export function FacultyProfileModal({ isOpen, onClose, facultyId }: FacultyProfi
         {
           id: '1',
           name: 'Teaching_Credentials.pdf',
-          category: 'faculty',
+          category: 'other',
           fileUrl: '/uploads/doc1.pdf',
           fileSize: 3200000,
           fileType: 'PDF',
@@ -74,7 +74,7 @@ export function FacultyProfileModal({ isOpen, onClose, facultyId }: FacultyProfi
         {
           id: '2',
           name: 'Research_Publications.pdf',
-          category: 'faculty',
+          category: 'other',
           fileUrl: '/uploads/doc2.pdf',
           fileSize: 2100000,
           fileType: 'PDF',

@@ -37,7 +37,7 @@ export function FacultyProfileView() {
       const docsResponse = await secretaryService.getDocuments({
         page: 1,
         limit: 50,
-        category: 'faculty',
+        // Note: Backend categories are: memo, policy, form, report, other
       });
       // Filter by faculty ID in the frontend for now
       setDocuments(docsResponse.data.filter(doc => doc.relatedEntityId === facultyId));
@@ -63,7 +63,7 @@ export function FacultyProfileView() {
         {
           id: '1',
           name: 'Teaching_Credentials.pdf',
-          category: 'faculty',
+          category: 'other',
           fileUrl: '/uploads/doc1.pdf',
           fileSize: 3200000,
           fileType: 'PDF',
@@ -74,7 +74,7 @@ export function FacultyProfileView() {
         {
           id: '2',
           name: 'Research_Publications.pdf',
-          category: 'faculty',
+          category: 'other',
           fileUrl: '/uploads/doc2.pdf',
           fileSize: 2100000,
           fileType: 'PDF',
