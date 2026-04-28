@@ -282,7 +282,7 @@ export function SchedulingPage({ variant = 'admin', readOnly = false }: Scheduli
     'w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20';
 
   return (
-    <MainLayout title="Class Scheduling" variant="chair">
+    <MainLayout title="Class Scheduling" variant="secretary">
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-12 xl:gap-8">
       <div className="space-y-6 xl:col-span-8">
         <header className="flex flex-col gap-4 border-b border-slate-200/90 pb-6 sm:flex-row sm:items-end sm:justify-between">

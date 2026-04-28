@@ -5,7 +5,7 @@ export interface Room {
   name: string;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
 
 const roomsAPI = axios.create({
   baseURL: `${API_BASE}/rooms`,
@@ -15,7 +15,7 @@ const roomsAPI = axios.create({
 });
 
 roomsAPI.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token') || localStorage.getItem('studentToken');
+  const token = localStorage.getItem('auth_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

@@ -251,19 +251,103 @@ export function AppRoutes() {
         />
         <Route path="/chair" element={<Navigate to="/chair/dashboard" replace />} />
         
-        {/* Secretary Portal Routes - No Authentication Required */}
-        <Route path="/secretary/dashboard" element={<SecretaryDashboard />} />
-        <Route path="/secretary/students" element={<SecretaryStudents />} />
-        <Route path="/secretary/students/:id" element={<StudentProfileView />} />
-        <Route path="/secretary/faculty" element={<SecretaryFaculty />} />
-        <Route path="/secretary/faculty/:id" element={<FacultyProfileView />} />
-        <Route path="/secretary/schedules" element={<SecretarySchedules />} />
-        <Route path="/secretary/events" element={<SecretaryEvents />} />
-        <Route path="/secretary/curriculum" element={<SecretaryCurriculum />} />
-        <Route path="/secretary/documents" element={<SecretaryDocuments />} />
-        <Route path="/secretary/reports" element={<SecretaryReports />} />
-        <Route path="/secretary/research" element={<SecretaryResearch />} />
-        <Route path="/secretary/pending-changes" element={<SecretaryPendingChanges />} />
+        {/* Secretary Portal Routes - Protected with Authentication */}
+        <Route
+          path="/secretary/dashboard"
+          element={
+            <ProtectedRoute>
+              <SecretaryDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/secretary/students"
+          element={
+            <ProtectedRoute>
+              <SecretaryStudents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/secretary/students/:id"
+          element={
+            <ProtectedRoute>
+              <StudentProfileView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/secretary/faculty"
+          element={
+            <ProtectedRoute>
+              <SecretaryFaculty />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/secretary/faculty/:id"
+          element={
+            <ProtectedRoute>
+              <FacultyProfileView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/secretary/schedules"
+          element={
+            <ProtectedRoute>
+              <SecretarySchedules />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/secretary/events"
+          element={
+            <ProtectedRoute>
+              <SecretaryEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/secretary/curriculum"
+          element={
+            <ProtectedRoute>
+              <SecretaryCurriculum />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/secretary/documents"
+          element={
+            <ProtectedRoute>
+              <SecretaryDocuments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/secretary/reports"
+          element={
+            <ProtectedRoute>
+              <SecretaryReports />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/secretary/research"
+          element={
+            <ProtectedRoute>
+              <SecretaryResearch />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/secretary/pending-changes"
+          element={
+            <ProtectedRoute>
+              <SecretaryPendingChanges />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/secretary" element={<Navigate to="/secretary/dashboard" replace />} />
         
         <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />

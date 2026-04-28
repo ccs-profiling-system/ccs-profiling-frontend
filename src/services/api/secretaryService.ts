@@ -16,12 +16,26 @@ import type {
   EventInput,
 } from '@/types/secretary';
 
-const BASE_URL = '/api/secretary';
+const BASE_URL = '/secretary';
 
 // Dashboard
 export const getDashboardStats = async (): Promise<SecretaryDashboardStats> => {
-  const response = await api.get(`${BASE_URL}/dashboard/stats`);
-  return response.data;
+  const response = await api.get(`${BASE_URL}/dashboard`);
+  // Backend returns { success: true, data: { stats: {...}, recent_activities: [...] } }
+  // Map to frontend format
+  const backendData = response.data.data;
+  return {
+    pendingDocuments: backendData.stats?.pending_changes || 0,
+    completedToday: backendData.stats?.total_events || 0,
+    scheduledEntries: backendData.stats?.total_students || 0,
+    uploadedFiles: backendData.stats?.total_research || 0,
+    recentActivities: (backendData.recent_activities || []).map((activity: any) => ({
+      id: activity.entity_id,
+      description: `${activity.activity_type} ${activity.entity_type}`,
+      timestamp: activity.timestamp,
+      type: activity.activity_type.toLowerCase(),
+    })),
+  };
 };
 
 // Student Records
