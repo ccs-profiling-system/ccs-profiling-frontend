@@ -16,18 +16,24 @@ import {
 import { SubjectForm } from './SubjectForm';
 import { SubjectDetailsPanel } from './SubjectDetailsPanel';
 import instructionsService from '@/services/api/instructionsService';
+import chairCurriculumService from '@/services/api/chair/chairCurriculumService';
 import type { Subject, Curriculum, SubjectFilters } from '@/types/instructions';
 
 interface SubjectsListProps {
   searchQuery: string;
+  viewOnly?: boolean;
+  useChairService?: boolean;
 }
 
-export function SubjectsList({ searchQuery }: SubjectsListProps) {
+export function SubjectsList({ searchQuery, viewOnly = false, useChairService = false }: SubjectsListProps) {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [curriculum, setCurriculum] = useState<Curriculum[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<SubjectFilters>({});
+  
+  // Select the appropriate service based on context
+  const service = useChairService ? chairCurriculumService : instructionsService;
   
   // Modals
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -46,8 +52,8 @@ export function SubjectsList({ searchQuery }: SubjectsListProps) {
       setError(null);
       
       const [subjectsResponse, curriculumResponse] = await Promise.all([
-        instructionsService.getSubjects({ ...filters, search: searchQuery }),
-        instructionsService.getCurriculum({ status: 'active' })
+        service.getSubjects({ ...filters, search: searchQuery }),
+        service.getCurriculum({ status: 'active' })
       ]);
       
       setSubjects(subjectsResponse.data);
@@ -335,22 +341,24 @@ export function SubjectsList({ searchQuery }: SubjectsListProps) {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 ml-2">
-                              <button
-                                onClick={() => handleEditSubject(subject)}
-                                className="p-1.5 hover:bg-primary/10 rounded transition"
-                                title="Edit"
-                              >
-                                <Edit2 className="w-3.5 h-3.5 text-gray-600" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteSubject(subject)}
-                                className="p-1.5 hover:bg-red-100 rounded transition"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-3.5 h-3.5 text-red-600" />
-                              </button>
-                            </div>
+                            {!viewOnly && (
+                              <div className="flex items-center gap-1 ml-2">
+                                <button
+                                  onClick={() => handleEditSubject(subject)}
+                                  className="p-1.5 hover:bg-primary/10 rounded transition"
+                                  title="Edit"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5 text-gray-600" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteSubject(subject)}
+                                  className="p-1.5 hover:bg-red-100 rounded transition"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -413,22 +421,24 @@ export function SubjectsList({ searchQuery }: SubjectsListProps) {
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 ml-2">
-                              <button
-                                onClick={() => handleEditSubject(subject)}
-                                className="p-1.5 hover:bg-primary/10 rounded transition"
-                                title="Edit"
-                              >
-                                <Edit2 className="w-3.5 h-3.5 text-gray-600" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteSubject(subject)}
-                                className="p-1.5 hover:bg-red-100 rounded transition"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-3.5 h-3.5 text-red-600" />
-                              </button>
-                            </div>
+                            {!viewOnly && (
+                              <div className="flex items-center gap-1 ml-2">
+                                <button
+                                  onClick={() => handleEditSubject(subject)}
+                                  className="p-1.5 hover:bg-primary/10 rounded transition"
+                                  title="Edit"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5 text-gray-600" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteSubject(subject)}
+                                  className="p-1.5 hover:bg-red-100 rounded transition"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}

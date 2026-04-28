@@ -28,6 +28,7 @@ import { ChairEvents } from '@/features/chair/events';
 import { ChairResearch } from '@/features/chair/research';
 import { ChairReports } from '@/features/chair/reports';
 import { ChairApprovals } from '@/features/chair/approvals';
+import { ChairCurriculum } from '@/features/chair/curriculum';
 
 // Admin Approvals
 import { AdminApprovals } from '@/features/admin/approvals';
@@ -236,6 +237,14 @@ export function AppRoutes() {
           element={
             <ProtectedRoute>
               <ChairApprovals />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chair/instructions"
+          element={
+            <ProtectedRoute>
+              <ChairCurriculum />
             </ProtectedRoute>
           }
         />

@@ -35,6 +35,7 @@ export function Sidebar({ isOpen, onClose, variant = 'admin' }: SidebarProps) {
     { to: '/chair/research', label: 'Research', icon: FlaskConical },
     { to: '/chair/approvals', label: 'Approvals', icon: CheckCircle },
     { to: '/chair/reports', label: 'Reports', icon: FileText },
+    { to: '/chair/instructions', label: 'Instructions', icon: BookOpen },
   ];
 
   const secretaryLinks = [
