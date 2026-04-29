@@ -15,6 +15,25 @@ export interface Event {
 }
 
 class ChairEventsService {
+  /**
+   * Transform backend event data to frontend format
+   */
+  private transformEvent(data: any): Event {
+    return {
+      id: data.id,
+      eventName: data.title || data.event_name || data.eventName,
+      eventType: data.event_type || data.eventType,
+      description: data.description,
+      eventDate: data.event_date || data.eventDate,
+      startTime: data.start_time || data.startTime,
+      endTime: data.end_time || data.endTime,
+      location: data.location,
+      maxParticipants: data.max_participants || data.maxParticipants,
+      status: data.status,
+      participantCount: data.participant_count || data.participantCount,
+    };
+  }
+
   async getEvents(filters?: {
     eventType?: string;
     status?: string;
@@ -22,11 +41,24 @@ class ChairEventsService {
     endDate?: string;
   }, page: number = 1, limit: number = 20) {
     const response = await api.get('/chair/events', { 
-      params: { ...filters, page, limit } 
+      params: { 
+        ...filters,
+        event_type: filters?.eventType,
+        start_date: filters?.startDate,
+        end_date: filters?.endDate,
+        page, 
+        limit 
+      } 
     });
+    
+    const rawData = response.data.data || response.data;
+    const transformedData = Array.isArray(rawData) 
+      ? rawData.map(item => this.transformEvent(item))
+      : [];
+    
     return {
-      data: response.data.data || response.data,
-      total: response.data.total || response.data.meta?.total || (response.data.data || response.data).length,
+      data: transformedData,
+      total: response.data.total || response.data.meta?.total || transformedData.length,
       page: response.data.page || response.data.meta?.page || page,
       limit: response.data.limit || response.data.meta?.limit || limit,
     };
@@ -34,7 +66,8 @@ class ChairEventsService {
 
   async getEventById(id: string): Promise<Event> {
     const response = await api.get(`/chair/events/${id}`);
-    return response.data.data || response.data;
+    const data = response.data.data || response.data;
+    return this.transformEvent(data);
   }
 
   async approveEvent(id: string, notes?: string) {
@@ -53,10 +86,19 @@ class ChairEventsService {
   }
 
   async getUpcomingEvents(limit: number = 5) {
-    const response = await api.get('/chair/events/upcoming', {
-      params: { limit },
-    });
-    return response.data.data || response.data;
+    try {
+      const response = await api.get('/chair/events/upcoming', {
+        params: { limit },
+      });
+      const rawData = response.data.data || response.data;
+      return Array.isArray(rawData) ? rawData.map(item => this.transformEvent(item)) : [];
+    } catch (error) {
+      // Fallback: get events and filter for upcoming
+      console.warn('Upcoming events endpoint not available, filtering from list');
+      const today = new Date().toISOString().split('T')[0];
+      const eventsResponse = await this.getEvents({ startDate: today }, 1, limit);
+      return eventsResponse.data.slice(0, limit);
+    }
   }
 }
 

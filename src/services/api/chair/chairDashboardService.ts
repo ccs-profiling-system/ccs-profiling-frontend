@@ -20,8 +20,22 @@ export interface ChairDashboardStats {
 
 class ChairDashboardService {
   async getDashboardStats(): Promise<ChairDashboardStats> {
-    const response = await api.get('/chair/dashboard/stats');
-    return response.data.data || response.data;
+    const response = await api.get('/chair/dashboard');
+    const data = response.data.data || response.data;
+    
+    // Transform backend response to match frontend expectations
+    return {
+      totalStudents: data.totalStudents || 0,
+      totalFaculty: data.totalFaculty || 0,
+      activeSchedules: data.totalSchedules || 0,
+      ongoingResearch: data.activeResearchProjects || 0,
+      upcomingEvents: data.upcomingEvents || 0,
+      pendingApprovals: (data.pendingStudentApprovals || 0) + (data.pendingResearchApprovals || 0),
+      studentsByProgram: data.studentsByProgram || {},
+      studentsByYear: data.studentsByYear || {},
+      facultyBySpecialization: data.facultyBySpecialization || {},
+      recentActivities: data.recentActivities || [],
+    };
   }
 
   async getRecentActivities(limit: number = 10) {
