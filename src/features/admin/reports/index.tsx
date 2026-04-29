@@ -166,32 +166,128 @@ export function Reports() {
     try {
       setExporting(true);
       
-      // Build filter parameters to pass to backend
-      const exportFilters: any = {
-        module: activeTab,
-        search: filters.search || undefined,
-        status: filters.status !== 'all' ? filters.status : undefined,
-      };
-
-      // If items are selected, export only those
-      // Otherwise, export all filtered items from current tab
-      const selectedIds = selectedItems.size > 0 ? Array.from(selectedItems) : undefined;
+      console.log('Starting export...', { activeTab, exportFormat, selectedItems: selectedItems.size, totalItems });
       
-      // Generate report based on active tab with filters
-      await reportsService.generateReport({
-        type: activeTab,
-        format: exportFormat,
-        dateRange: 'current-month',
-        filters: exportFilters,
-        selectedIds: selectedIds
-      });
+      if (exportFormat === 'pdf') {
+        // Use the PDFTemplate component for better design
+        console.log('Importing export components...');
+        const { exportToPDF, createStatusBadge } = await import('@/components/export');
+        
+        // Get the data to export (selected or all filtered)
+        const dataToExport = selectedItems.size > 0 
+          ? data.filter(item => selectedItems.has(item.id))
+          : data;
+        
+        console.log('Data to export:', dataToExport.length, 'items');
+        
+        if (dataToExport.length === 0) {
+          alert('No data to export. Please ensure there are items in the table.');
+          return;
+        }
+        
+        // Define columns based on active tab
+        let columns: any[] = [];
+        let title = '';
+        let icon = '';
+        let primaryColor = '';
+        
+        switch (activeTab) {
+          case 'students':
+            title = 'Students Report';
+            icon = '🎓';
+            primaryColor = '#f97316'; // orange
+            columns = [
+              { key: 'studentId', header: 'Student ID', render: (s: Student) => `<strong>${s.studentId}</strong>` },
+              { key: 'firstName', header: 'Name', render: (s: Student) => `${s.firstName} ${s.lastName}` },
+              { key: 'email', header: 'Email' },
+              { key: 'program', header: 'Program', render: (s: Student) => s.program || 'N/A' },
+              { key: 'yearLevel', header: 'Year', render: (s: Student) => s.yearLevel || 'N/A' },
+              { key: 'status', header: 'Status', render: (s: Student) => createStatusBadge(s.status || 'active') },
+            ];
+            break;
+            
+          case 'faculty':
+            title = 'Faculty Report';
+            icon = '👨‍🏫';
+            primaryColor = '#f97316'; // orange
+            columns = [
+              { key: 'facultyId', header: 'Faculty ID', render: (f: Faculty) => `<strong>${f.facultyId}</strong>` },
+              { key: 'firstName', header: 'Name', render: (f: Faculty) => `${f.firstName} ${f.lastName}` },
+              { key: 'email', header: 'Email' },
+              { key: 'department', header: 'Department', render: (f: Faculty) => f.department || 'N/A' },
+              { key: 'position', header: 'Position', render: (f: Faculty) => f.position || 'N/A' },
+              { key: 'specialization', header: 'Specialization', render: (f: Faculty) => f.specialization || 'N/A' },
+              { key: 'status', header: 'Status', render: (f: Faculty) => createStatusBadge(f.status || 'active') },
+            ];
+            break;
+            
+          case 'research':
+            title = 'Research Report';
+            icon = '🔬';
+            primaryColor = '#f97316'; // orange
+            columns = [
+              { key: 'title', header: 'Title', render: (r: Research) => `<strong>${r.title}</strong>` },
+              { key: 'category', header: 'Category', render: (r: Research) => `<span class="status-badge" style="background: #fed7aa; color: #9a3412;">${r.category}</span>` },
+              { key: 'status', header: 'Status', render: (r: Research) => createStatusBadge(r.status) },
+              { key: 'createdAt', header: 'Created', render: (r: Research) => r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'N/A' },
+            ];
+            break;
+            
+          case 'events':
+            title = 'Events Report';
+            icon = '📅';
+            primaryColor = '#f97316'; // orange
+            columns = [
+              { key: 'event_name', header: 'Event Name', render: (e: Event) => `<strong>${e.event_name}</strong>` },
+              { key: 'event_type', header: 'Type', render: (e: Event) => `<span class="status-badge" style="background: #fed7aa; color: #9a3412;">${e.event_type}</span>` },
+              { key: 'start_date', header: 'Start Date', render: (e: Event) => new Date(e.start_date).toLocaleDateString() },
+              { key: 'location', header: 'Location', render: (e: Event) => e.location || 'N/A' },
+              { key: 'organizer', header: 'Organizer', render: (e: Event) => e.organizer || 'N/A' },
+              { key: 'status', header: 'Status', render: (e: Event) => createStatusBadge(e.status) },
+            ];
+            break;
+        }
+        
+        console.log('Exporting PDF with config:', { title, columns: columns.length, dataCount: dataToExport.length });
+        
+        exportToPDF({
+          data: dataToExport,
+          columns,
+          filename: `${activeTab}_report_${new Date().toISOString().split('T')[0]}`,
+          title,
+          subtitle: 'College of Computer Studies',
+          icon,
+          primaryColor,
+        });
+        
+        console.log('PDF export completed successfully');
+      } else {
+        // Excel export - use backend service
+        console.log('Using backend service for Excel export...');
+        const exportFilters: any = {
+          module: activeTab,
+          search: filters.search || undefined,
+          status: filters.status !== 'all' ? filters.status : undefined,
+        };
+
+        const selectedIds = selectedItems.size > 0 ? Array.from(selectedItems) : undefined;
+        
+        await reportsService.generateReport({
+          type: activeTab,
+          format: exportFormat,
+          dateRange: 'current-month',
+          filters: exportFilters,
+          selectedIds: selectedIds
+        });
+      }
       
       setIsExportModalOpen(false);
       const exportCount = selectedItems.size > 0 ? selectedItems.size : totalItems;
       alert(`Report generated successfully! ${exportCount} ${activeTab} items included.`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to export:', error);
-      alert('Failed to export data');
+      const errorMessage = error?.message || error?.toString() || 'Unknown error occurred';
+      alert(`Failed to export data: ${errorMessage}`);
     } finally {
       setExporting(false);
     }
