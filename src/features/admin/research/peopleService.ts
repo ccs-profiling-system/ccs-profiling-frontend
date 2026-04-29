@@ -8,8 +8,20 @@ export async function getPeople(): Promise<Person[]> {
       api.get<Person[]>('/admin/faculty'),
     ]);
 
-    const students: Person[] = studentsRes.data.map((p) => ({ ...p, role: 'student' as const }));
-    const faculty: Person[] = facultyRes.data.map((p) => ({ ...p, role: 'faculty' as const }));
+    // Handle both wrapped and direct array responses
+    const studentsData = Array.isArray(studentsRes.data) ? studentsRes.data : studentsRes.data.data || [];
+    const facultyData = Array.isArray(facultyRes.data) ? facultyRes.data : facultyRes.data.data || [];
+
+    const students: Person[] = studentsData.map((p: any) => ({ 
+      id: p.id, 
+      name: `${p.first_name} ${p.last_name}`, 
+      role: 'student' as const 
+    }));
+    const faculty: Person[] = facultyData.map((p: any) => ({ 
+      id: p.id, 
+      name: `${p.first_name} ${p.last_name}`, 
+      role: 'faculty' as const 
+    }));
 
     return [...students, ...faculty];
   } catch (error) {
