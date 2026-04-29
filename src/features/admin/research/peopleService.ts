@@ -1,11 +1,11 @@
-import axios from 'axios';
+import api from '@/services/api/axios';
 import type { Person } from './types';
 
 export async function getPeople(): Promise<Person[]> {
   try {
     const [studentsRes, facultyRes] = await Promise.all([
-      axios.get<Person[]>('/students'),
-      axios.get<Person[]>('/faculty'),
+      api.get<Person[]>('/admin/students'),
+      api.get<Person[]>('/admin/faculty'),
     ]);
 
     const students: Person[] = studentsRes.data.map((p) => ({ ...p, role: 'student' as const }));

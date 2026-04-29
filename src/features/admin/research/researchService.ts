@@ -1,17 +1,17 @@
-import axios from 'axios';
+import api from '@/services/api/axios';
 import type { Research, CreateResearchPayload, UpdateResearchPayload } from './types';
 
-const BASE_URL = '/research';
+const BASE_URL = '/admin/research';
 
 export async function getResearch(): Promise<Research[]> {
-  const response = await axios.get<Research[] | { data: Research[] }>(BASE_URL);
+  const response = await api.get<Research[] | { data: Research[] }>(BASE_URL);
   // Handle both direct array and wrapped response
   const data = Array.isArray(response.data) ? response.data : response.data.data;
   return Array.isArray(data) ? data : [];
 }
 
 export async function getResearchById(id: string): Promise<Research> {
-  const response = await axios.get<Research | { data: Research }>(`${BASE_URL}/${id}`);
+  const response = await api.get<Research | { data: Research }>(`${BASE_URL}/${id}`);
   // Handle both direct object and wrapped response
   const data = 'data' in response.data ? response.data.data : response.data;
   return data;
@@ -19,7 +19,7 @@ export async function getResearchById(id: string): Promise<Research> {
 
 export async function createResearch(payload: CreateResearchPayload): Promise<Research> {
   const formData = buildFormData(payload);
-  const response = await axios.post<Research | { data: Research }>(BASE_URL, formData, {
+  const response = await api.post<Research | { data: Research }>(BASE_URL, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   // Handle both direct object and wrapped response
@@ -29,7 +29,7 @@ export async function createResearch(payload: CreateResearchPayload): Promise<Re
 
 export async function updateResearch(id: string, payload: UpdateResearchPayload): Promise<Research> {
   const formData = buildFormData(payload);
-  const response = await axios.put<Research | { data: Research }>(`${BASE_URL}/${id}`, formData, {
+  const response = await api.put<Research | { data: Research }>(`${BASE_URL}/${id}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   // Handle both direct object and wrapped response
@@ -38,11 +38,11 @@ export async function updateResearch(id: string, payload: UpdateResearchPayload)
 }
 
 export async function deleteResearch(id: string): Promise<void> {
-  await axios.delete(`${BASE_URL}/${id}`);
+  await api.delete(`${BASE_URL}/${id}`);
 }
 
 export async function deleteResearchFile(researchId: string, fileId: string): Promise<void> {
-  await axios.delete(`${BASE_URL}/${researchId}/files/${fileId}`);
+  await api.delete(`${BASE_URL}/${researchId}/files/${fileId}`);
 }
 
 function buildFormData(payload: CreateResearchPayload | UpdateResearchPayload): FormData {
