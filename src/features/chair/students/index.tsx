@@ -57,7 +57,7 @@ export function ChairStudents() {
       setStudents(response.data || []);
       setTotalItems(response.total || 0);
     } catch (err) {
-      // Show empty state instead of error for 404
+      console.error('Failed to load students:', err);
       setStudents([]);
       setTotalItems(0);
     } finally {
@@ -79,8 +79,8 @@ export function ChairStudents() {
       setNotes('');
       loadStudents();
     } catch (err) {
-      // Approval failed silently - could add toast notification here
       console.error('Approval action failed:', err);
+      alert(`Failed to ${approvalModal.action} student. Please try again.`);
     } finally {
       setProcessing(false);
     }

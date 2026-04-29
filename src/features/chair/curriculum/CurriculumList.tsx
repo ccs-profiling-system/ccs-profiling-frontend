@@ -26,7 +26,7 @@ interface CurriculumListProps {
   useChairService?: boolean;
 }
 
-export function CurriculumList({ searchQuery, viewOnly = false, useChairService = false }: CurriculumListProps) {
+export function CurriculumList({ searchQuery, viewOnly = false, useChairService = true }: CurriculumListProps) {
   const [curriculum, setCurriculum] = useState<Curriculum[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

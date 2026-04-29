@@ -52,7 +52,7 @@ export function ChairEvents() {
       setEvents(response.data || []);
       setFilteredEvents(response.data || []);
     } catch (err) {
-      // Show empty state instead of error for 404
+      console.error('Failed to load events:', err);
       setEvents([]);
       setFilteredEvents([]);
     } finally {
@@ -74,8 +74,8 @@ export function ChairEvents() {
       setNotes('');
       loadEvents();
     } catch (err) {
-      // Approval failed silently - could add toast notification here
       console.error('Approval action failed:', err);
+      alert(`Failed to ${approvalModal.action} event. Please try again.`);
     } finally {
       setProcessing(false);
     }

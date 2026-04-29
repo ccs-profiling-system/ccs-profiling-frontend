@@ -161,7 +161,7 @@ export function ChairReports() {
       alert(`Report generated successfully! ${exportCount} ${activeTab} items included.`);
     } catch (error) {
       console.error('Failed to export:', error);
-      alert('Failed to export data');
+      alert('Failed to export data. Please try again.');
     } finally {
       setExporting(false);
     }

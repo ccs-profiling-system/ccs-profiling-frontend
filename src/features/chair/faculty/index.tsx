@@ -39,7 +39,7 @@ export function ChairFaculty() {
       setFaculty(response.data || []);
       setTotalItems(response.total || 0);
     } catch (err) {
-      // Show empty state instead of error for 404
+      console.error('Failed to load faculty:', err);
       setFaculty([]);
       setTotalItems(0);
     } finally {

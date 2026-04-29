@@ -1,130 +1,83 @@
-import axios from 'axios';
-import type { Schedule, CreateSchedulePayload, UpdateSchedulePayload, DayOfWeek, Semester } from './types';
+import chairSchedulesService from '@/services/api/chair/chairSchedulesService';
+import type { Schedule, CreateSchedulePayload, UpdateSchedulePayload } from './types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-const BASE_URL = `${API_BASE}/v1/admin/schedules`;
-
-const mockSchedules: Schedule[] = [
-  {
-    id: '1',
-    schedule_type: 'class',
-    subject_id: '1', // CS101 from Instructions module
-    subject_code: 'CS101',
-    subject_name: 'Introduction to Programming',
-    faculty_id: '1', // Dr. Maria Garcia from Faculty module
-    faculty_name: 'Dr. Maria Garcia',
-    room: 'Room 101',
-    day: 'monday',
-    start_time: '09:00',
-    end_time: '10:30',
-    semester: '2nd',
-    academic_year: '2025-2026',
-    is_recurring: true,
-    recurrence_pattern: 'weekly',
-    recurrence_end_date: '2026-05-31', // End of semester
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    schedule_type: 'class',
-    subject_id: '2', // CS102 from Instructions module
-    subject_code: 'CS102',
-    subject_name: 'Data Structures and Algorithms',
-    faculty_id: '1', // Dr. Maria Garcia from Faculty module
-    faculty_name: 'Dr. Maria Garcia',
-    room: 'Room 102',
-    day: 'tuesday',
-    start_time: '11:00',
-    end_time: '12:30',
-    semester: '2nd',
-    academic_year: '2025-2026',
-    is_recurring: true,
-    recurrence_pattern: 'weekly',
-    recurrence_end_date: '2026-05-31', // End of semester
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    schedule_type: 'exam',
-    subject_id: '3', // MATH101 from Instructions module
-    subject_code: 'MATH101',
-    subject_name: 'Calculus I',
-    faculty_id: '1', // Dr. Maria Garcia from Faculty module
-    faculty_name: 'Dr. Maria Garcia',
-    room: 'Lab 1',
-    day: 'wednesday',
-    start_time: '14:00',
-    end_time: '16:00',
-    semester: '2nd',
-    academic_year: '2025-2026',
-    is_recurring: false, // Exams don't repeat
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+/**
+ * Chair Schedules Service Wrapper
+ * 
+ * This service wraps the chair schedules API service to provide
+ * schedule management functionality for the chair portal.
+ * All mock data has been removed - this now connects directly to the backend.
+ */
 
 export async function getSchedules(params?: { start?: string; end?: string }): Promise<Schedule[]> {
   try {
-    const response = await axios.get<any>(BASE_URL, { params });
-    const data = response.data;
-
-    if (Array.isArray(data)) return data;
-    if (data && Array.isArray(data.data)) return data.data;
-    if (data && Array.isArray(data.schedules)) return data.schedules;
-
-    console.warn('Unexpected API response structure:', data);
-    return mockSchedules;
+    const response = await chairSchedulesService.getSchedules({
+      // Map date range params if provided
+      ...(params?.start && { startDate: params.start }),
+      ...(params?.end && { endDate: params.end }),
+    });
+    
+    // Handle different response structures
+    if (Array.isArray(response)) return response;
+    if (response && Array.isArray(response.data)) return response.data;
+    if (response && Array.isArray(response.schedules)) return response.schedules;
+    
+    console.error('Unexpected API response structure:', response);
+    throw new Error('Invalid response format from schedules API');
   } catch (error) {
-    console.warn('API not available, using mock data:', error);
-    return mockSchedules;
+    console.error('Failed to fetch schedules:', error);
+    throw error;
   }
 }
 
 export async function createSchedule(payload: CreateSchedulePayload): Promise<Schedule> {
   try {
-    const response = await axios.post<any>(BASE_URL, payload);
-    return response.data?.data ?? response.data;
-  } catch (error) {
-    console.warn('API not available, simulating create:', error);
+    // Transform payload to match backend expectations
+    const response = await chairSchedulesService.createSchedule({
+      instructionId: payload.subject_id || '',
+      facultyId: payload.faculty_id || '',
+      room: payload.room,
+      day: payload.day,
+      startTime: payload.start_time,
+      endTime: payload.end_time,
+      academicYear: payload.academic_year,
+      semester: payload.semester,
+      scheduleType: payload.schedule_type,
+    });
     
-    // If subject_id is provided, we could fetch subject details here
-    // For now, just return the basic schedule
-    return {
-      id: Date.now().toString(),
-      ...payload,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    return response.data || response;
+  } catch (error) {
+    console.error('Failed to create schedule:', error);
+    throw error;
   }
 }
 
 export async function updateSchedule(id: string, payload: UpdateSchedulePayload): Promise<Schedule> {
   try {
-    const response = await axios.put<any>(`${BASE_URL}/${id}`, payload);
-    return response.data?.data ?? response.data;
+    const response = await chairSchedulesService.updateSchedule(id, {
+      ...(payload.subject_id && { instructionId: payload.subject_id }),
+      ...(payload.faculty_id && { facultyId: payload.faculty_id }),
+      ...(payload.room && { room: payload.room }),
+      ...(payload.day && { day: payload.day }),
+      ...(payload.start_time && { startTime: payload.start_time }),
+      ...(payload.end_time && { endTime: payload.end_time }),
+      ...(payload.academic_year && { academicYear: payload.academic_year }),
+      ...(payload.semester && { semester: payload.semester }),
+      ...(payload.schedule_type && { scheduleType: payload.schedule_type }),
+    });
+    
+    return response.data || response;
   } catch (error) {
-    console.warn('API not available, simulating update:', error);
-    return {
-      id,
-      schedule_type: payload.schedule_type ?? 'class',
-      room: payload.room ?? '',
-      day: payload.day ?? 'monday',
-      start_time: payload.start_time ?? '',
-      end_time: payload.end_time ?? '',
-      semester: payload.semester ?? '2nd',
-      academic_year: payload.academic_year ?? '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    console.error('Failed to update schedule:', error);
+    throw error;
   }
 }
 
 export async function deleteSchedule(id: string): Promise<void> {
   try {
-    await axios.delete(`${BASE_URL}/${id}`);
+    await chairSchedulesService.deleteSchedule(id);
   } catch (error) {
-    console.warn('API not available, simulating delete:', error);
+    console.error('Failed to delete schedule:', error);
+    throw error;
   }
 }

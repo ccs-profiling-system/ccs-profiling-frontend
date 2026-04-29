@@ -5,3 +5,4 @@ export { default as chairSchedulesService } from './chairSchedulesService';
 export { default as chairEventsService } from './chairEventsService';
 export { default as chairResearchService } from './chairResearchService';
 export { default as chairReportsService } from './chairReportsService';
+export { default as chairCurriculumService } from './chairCurriculumService';

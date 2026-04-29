@@ -37,7 +37,8 @@ export function ChairDashboard() {
       const data = await chairDashboardService.getDashboardStats();
       setStats(data);
     } catch (err) {
-      // Show empty state instead of error for 404 (backend not implemented)
+      console.error('Failed to load dashboard data:', err);
+      // Show empty state with error message
       setStats({
         totalStudents: 0,
         totalFaculty: 0,
