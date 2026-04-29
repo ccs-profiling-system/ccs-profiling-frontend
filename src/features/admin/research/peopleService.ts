@@ -4,13 +4,13 @@ import type { Person } from './types';
 export async function getPeople(): Promise<Person[]> {
   try {
     const [studentsRes, facultyRes] = await Promise.all([
-      api.get<Person[]>('/admin/students'),
-      api.get<Person[]>('/admin/faculty'),
+      api.get<any>('/admin/students'),
+      api.get<any>('/admin/faculty'),
     ]);
 
     // Handle both wrapped and direct array responses
-    const studentsData = Array.isArray(studentsRes.data) ? studentsRes.data : studentsRes.data.data || [];
-    const facultyData = Array.isArray(facultyRes.data) ? facultyRes.data : facultyRes.data.data || [];
+    const studentsData = Array.isArray(studentsRes.data) ? studentsRes.data : studentsRes.data?.data || [];
+    const facultyData = Array.isArray(facultyRes.data) ? facultyRes.data : facultyRes.data?.data || [];
 
     const students: Person[] = studentsData.map((p: any) => ({ 
       id: p.id, 
