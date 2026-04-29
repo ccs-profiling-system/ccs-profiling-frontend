@@ -19,18 +19,14 @@ class ChairStudentsService {
     return {
       id: data.id,
       studentId: data.student_id || data.studentId,
-      userId: data.user_id || data.userId,
       firstName: data.first_name || data.firstName,
       lastName: data.last_name || data.lastName,
-      middleName: data.middle_name || data.middleName,
       email: data.email,
-      phone: data.phone,
-      dateOfBirth: data.date_of_birth || data.dateOfBirth,
-      address: data.address,
       yearLevel: data.year_level || data.yearLevel,
       program: data.program,
       section: data.section,
       status: data.status,
+      enrollmentDate: data.enrollment_date || data.enrollmentDate,
       createdAt: data.created_at || data.createdAt,
       updatedAt: data.updated_at || data.updatedAt,
     };
@@ -96,7 +92,8 @@ class ChairStudentsService {
           return acc;
         }, {}),
         byStatus: students.reduce((acc: any, s: Student) => {
-          acc[s.status] = (acc[s.status] || 0) + 1;
+          const status = s.status || 'unknown';
+          acc[status] = (acc[status] || 0) + 1;
           return acc;
         }, {}),
       };
