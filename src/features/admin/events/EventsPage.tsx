@@ -57,13 +57,13 @@ export function EventsPage() {
     }
     
     // Type filter
-    if (typeFilter !== 'all' && event.event_type !== typeFilter) {
+    if (typeFilter !== 'all' && event.type !== typeFilter) {
       return false;
     }
     
     // Date filter
     if (dateFilter !== 'all') {
-      const eventDate = new Date(event.date || event.start_date);
+      const eventDate = new Date(event.date);
       const now = new Date();
       
       switch (dateFilter) {
