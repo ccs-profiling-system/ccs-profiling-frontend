@@ -275,6 +275,14 @@ export function SecretaryFaculty() {
   const [editFaculty, setEditFaculty] = useState<Faculty | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalActive, setTotalActive] = useState(0);
+  const [totalOnLeave, setTotalOnLeave] = useState(0);
+  const itemsPerPage = 10;
+
   // Filters
   const [filters, setFilters] = useState({
     status: [] as string[],
@@ -294,13 +302,31 @@ export function SecretaryFaculty() {
         search: search || undefined,
       };
 
-      const [facultyData, statsData] = await Promise.all([
-        facultyService.getFaculty(filterParams, 1, 1000),
-        facultyService.getFacultyStats(),
-      ]);
+      const facultyData = await facultyService.getFaculty(filterParams, currentPage, itemsPerPage);
 
       setFaculty(facultyData.data);
-      setStats(statsData);
+      setTotalPages(facultyData.meta?.totalPages || 1);
+      setTotalItems(facultyData.meta?.total || facultyData.data.length);
+      
+      // Fetch total active/on-leave counts
+      try {
+        const [activeResponse, onLeaveResponse] = await Promise.all([
+          facultyService.getFaculty({ status: 'active' }, 1, 1),
+          facultyService.getFaculty({ status: 'on-leave' }, 1, 1),
+        ]);
+        setTotalActive(activeResponse.meta?.total || 0);
+        setTotalOnLeave(onLeaveResponse.meta?.total || 0);
+      } catch (countErr) {
+        console.warn('Failed to fetch status counts');
+      }
+
+      // Get stats
+      try {
+        const statsData = await facultyService.getFacultyStats();
+        setStats(statsData);
+      } catch (statsErr) {
+        console.warn('Failed to fetch stats');
+      }
     } catch (err: any) {
       console.error('Failed to fetch faculty:', err);
       setError('Failed to load faculty');
@@ -324,6 +350,17 @@ export function SecretaryFaculty() {
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timer);
+  }, [
+    currentPage,
+    filters.status.join(','),
+    filters.position.join(','),
+    filters.employmentType.join(','),
+    search
+  ]);
+
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
   }, [
     filters.status.join(','),
     filters.position.join(','),
@@ -443,19 +480,19 @@ export function SecretaryFaculty() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4">
             <p className="text-sm text-gray-600">Total Faculty</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{calculatedStats.total}</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{totalItems}</p>
           </Card>
           <Card className="p-4">
             <p className="text-sm text-gray-600">Active</p>
-            <p className="text-2xl font-bold text-green-600 mt-1">{calculatedStats.active}</p>
+            <p className="text-2xl font-bold text-green-600 mt-1">{totalActive}</p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-gray-600">On Leave</p>
+            <p className="text-2xl font-bold text-yellow-600 mt-1">{totalOnLeave}</p>
           </Card>
           <Card className="p-4">
             <p className="text-sm text-gray-600">Departments</p>
             <p className="text-2xl font-bold text-blue-600 mt-1">{calculatedStats.departments}</p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-sm text-gray-600">On Leave</p>
-            <p className="text-2xl font-bold text-yellow-600 mt-1">{calculatedStats.onLeave}</p>
           </Card>
         </div>
 
@@ -605,11 +642,41 @@ export function SecretaryFaculty() {
               <Spinner size="lg" />
             </div>
           ) : (
-            <Table
-              data={faculty}
-              columns={columns}
-              onRowClick={handleRowClick}
-            />
+            <>
+              <Table
+                data={faculty}
+                columns={columns}
+                onRowClick={handleRowClick}
+              />
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    Showing {faculty.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} faculty
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </Card>
       </div>

@@ -18,7 +18,7 @@ export function DocumentsTab({ entityId, entityType, onDocumentChange }: Documen
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadData, setUploadData] = useState({
     name: '',
-    category: entityType,
+    category: 'other' as const, // Backend uses: memo, policy, form, report, other
     file: null as File | null,
   });
 
@@ -34,7 +34,8 @@ export function DocumentsTab({ entityId, entityType, onDocumentChange }: Documen
       const response = await secretaryService.getDocuments({
         page: 1,
         limit: 100,
-        category: entityType,
+        // Note: Backend categories are: memo, policy, form, report, other
+        // We fetch all and filter by relatedEntityId instead
       });
       
       // Filter documents for this specific entity
@@ -69,12 +70,12 @@ export function DocumentsTab({ entityId, entityType, onDocumentChange }: Documen
       setUploading(true);
       await secretaryService.uploadDocument({
         file: uploadData.file,
-        category: entityType,
+        category: 'other', // Backend uses: memo, policy, form, report, other
         relatedEntityId: entityId,
       });
       
       setShowUploadForm(false);
-      setUploadData({ name: '', category: entityType, file: null });
+      setUploadData({ name: '', category: 'other', file: null });
       fetchDocuments();
       onDocumentChange?.();
       alert('Document uploaded successfully!');
@@ -203,7 +204,7 @@ export function DocumentsTab({ entityId, entityType, onDocumentChange }: Documen
                 variant="ghost"
                 onClick={() => {
                   setShowUploadForm(false);
-                  setUploadData({ name: '', category: entityType, file: null });
+                  setUploadData({ name: '', category: 'other', file: null });
                 }}
                 disabled={uploading}
                 size="sm"

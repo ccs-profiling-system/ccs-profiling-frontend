@@ -29,6 +29,8 @@ class ChairSchedulesService {
     facultyId?: string;
     day?: string;
     status?: string;
+    startDate?: string;
+    endDate?: string;
   }) {
     const response = await api.get('/chair/schedules', { params: filters });
     return response.data;
@@ -37,6 +39,41 @@ class ChairSchedulesService {
   async getScheduleById(id: string): Promise<Schedule> {
     const response = await api.get(`/chair/schedules/${id}`);
     return response.data.data || response.data;
+  }
+
+  async createSchedule(payload: {
+    instructionId: string;
+    facultyId: string;
+    room: string;
+    day: string;
+    startTime: string;
+    endTime: string;
+    academicYear: string;
+    semester: string;
+    scheduleType?: string;
+  }) {
+    const response = await api.post('/chair/schedules', payload);
+    return response.data;
+  }
+
+  async updateSchedule(id: string, payload: Partial<{
+    instructionId: string;
+    facultyId: string;
+    room: string;
+    day: string;
+    startTime: string;
+    endTime: string;
+    academicYear: string;
+    semester: string;
+    scheduleType: string;
+  }>) {
+    const response = await api.put(`/chair/schedules/${id}`, payload);
+    return response.data;
+  }
+
+  async deleteSchedule(id: string) {
+    const response = await api.delete(`/chair/schedules/${id}`);
+    return response.data;
   }
 
   async approveSchedule(id: string, notes?: string) {

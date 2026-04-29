@@ -38,7 +38,7 @@ export function StudentProfileModal({ isOpen, onClose, studentId }: StudentProfi
       const docsResponse = await secretaryService.getDocuments({
         page: 1,
         limit: 50,
-        category: 'student',
+        // Note: Backend categories are: memo, policy, form, report, other
       });
       setDocuments(docsResponse.data.filter(doc => doc.relatedEntityId === id));
     } catch (err: any) {
@@ -62,7 +62,7 @@ export function StudentProfileModal({ isOpen, onClose, studentId }: StudentProfi
         {
           id: '1',
           name: 'Transcript_of_Records.pdf',
-          category: 'student',
+          category: 'other',
           fileUrl: '/uploads/doc1.pdf',
           fileSize: 2400000,
           fileType: 'PDF',
@@ -73,7 +73,7 @@ export function StudentProfileModal({ isOpen, onClose, studentId }: StudentProfi
         {
           id: '2',
           name: 'Birth_Certificate.pdf',
-          category: 'student',
+          category: 'other',
           fileUrl: '/uploads/doc2.pdf',
           fileSize: 1800000,
           fileType: 'PDF',

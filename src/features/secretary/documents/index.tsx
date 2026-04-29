@@ -1,18 +1,13 @@
 import { useState, useMemo } from 'react';
 import { MainLayout, Modal } from '@/components/layout';
 import { Card, Button, SearchBar, Badge, Spinner, ErrorAlert } from '@/components/ui';
-import { FolderOpen, Upload, Download, Eye, Trash2, FileText, File, CheckSquare, Square, X, FileSpreadsheet, Presentation, Image as ImageIcon, Video, Building2, Filter } from 'lucide-react';
+import { FolderOpen, Upload, Download, Eye, Trash2, FileText, File, CheckSquare, Square, X, FileSpreadsheet, Presentation, Image as ImageIcon, Video } from 'lucide-react';
 import { useDocumentsData } from './useDocumentsData';
 import { UploadModal } from './UploadModal';
 import secretaryService from '@/services/api/secretaryService';
 import type { Document } from '@/types/secretary';
 
 export function SecretaryDocuments() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const { documents, loading, error, search, setSearch, pagination, onPageChange, refetch } = useDocumentsData({ 
-    category: selectedCategory === 'all' ? undefined : selectedCategory 
-  });
-
   // Upload modal
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   
@@ -24,14 +19,14 @@ export function SecretaryDocuments() {
   const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
 
   // Filters
-  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
+    category: '' as string,
     fileType: [] as string[],
   });
 
-  // Category counts - fetch all documents to get accurate counts
-  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
-  const { documents: allDocuments } = useDocumentsData({ category: undefined });
+  const { documents, loading, error, search, setSearch, pagination, onPageChange, refetch } = useDocumentsData({ 
+    category: filters.category || undefined 
+  });
 
   // Apply frontend filtering for file type
   const filteredDocuments = useMemo(() => {
@@ -46,39 +41,13 @@ export function SecretaryDocuments() {
     return filtered;
   }, [documents, filters.fileType]);
 
-  // Calculate category counts from all documents
-  useMemo(() => {
-    const counts: Record<string, number> = {
-      all: allDocuments.length,
-      student: 0,
-      faculty: 0,
-      department: 0,
-      event: 0,
-      research: 0,
-      forms: 0,
-    };
-
-    allDocuments.forEach((doc: Document) => {
-      if (counts[doc.category] !== undefined) {
-        counts[doc.category]++;
-      }
-    });
-
-    setCategoryCounts(counts);
-  }, [allDocuments]);
-
-  const categories = [
-    { value: 'all', label: 'All Documents', icon: FolderOpen, color: 'bg-gray-100 text-gray-700' },
-    { value: 'student', label: 'Student Records', icon: FileText, color: 'bg-blue-100 text-blue-700' },
-    { value: 'faculty', label: 'Faculty Files', icon: FileText, color: 'bg-purple-100 text-purple-700' },
-    { value: 'department', label: 'Department Records', icon: Building2, color: 'bg-indigo-100 text-indigo-700' },
-    { value: 'event', label: 'Event Documents', icon: FileText, color: 'bg-green-100 text-green-700' },
-    { value: 'research', label: 'Research Papers', icon: File, color: 'bg-orange-100 text-orange-700' },
-    { value: 'forms', label: 'Forms', icon: FileText, color: 'bg-pink-100 text-pink-700' },
-  ];
-
   const handleOpenUpload = () => {
     setIsUploadModalOpen(true);
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setFilters({ ...filters, category });
+    setSelectedDocs(new Set());
   };
 
   const handleUploadComplete = () => {
@@ -271,61 +240,99 @@ export function SecretaryDocuments() {
           />
         )}
 
-        {/* Category Tabs */}
-        <div className="border-b border-gray-200">
-          <div className="flex items-center gap-1 overflow-x-auto">
-            {categories.map((category) => {
-              const Icon = category.icon;
-              const count = categoryCounts[category.value] || 0;
-              const isActive = selectedCategory === category.value;
-              
-              return (
-                <button
-                  key={category.value}
-                  onClick={() => {
-                    setSelectedCategory(category.value);
-                    setSelectedDocs(new Set());
-                  }}
-                  className={`flex items-center gap-2 px-4 py-3 font-medium text-sm whitespace-nowrap transition-all relative ${
-                    isActive
-                      ? 'text-primary border-b-2 border-primary bg-primary/5'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-b-2 border-transparent'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{category.label}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Search and Batch Actions Bar */}
+        {/* Search and Filters Bar */}
         <Card>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800">Search & Filters</h3>
-              {filters.fileType.length > 0 && (
-                <p className="text-sm text-gray-500 mt-0.5">
-                  {filters.fileType.length} filter(s) active
-                </p>
-              )}
-            </div>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-            >
-              <Filter className="w-4 h-4" />
-              {showFilters ? 'Hide' : 'Show'} Filters
-            </button>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">Search & Filters</h3>
+            {(filters.category || filters.fileType.length > 0) && (
+              <p className="text-sm text-gray-500 mt-0.5">
+                {(filters.category ? 1 : 0) + filters.fileType.length} filter(s) active
+              </p>
+            )}
           </div>
+
+          {/* Filters - Always Visible */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Document Type
+              </label>
+              <select
+                value={filters.category}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">All Types</option>
+                <option value="memo">Memos</option>
+                <option value="policy">Policies</option>
+                <option value="form">Forms</option>
+                <option value="report">Reports</option>
+                <option value="other">Other Documents</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                File Format
+              </label>
+              <select
+                value={filters.fileType?.[0] ?? ''}
+                onChange={(e) => setFilters({ ...filters, fileType: e.target.value ? [e.target.value] : [] })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">All Formats</option>
+                <option value="PDF">PDF</option>
+                <option value="DOC">Word Document</option>
+                <option value="XLS">Excel Spreadsheet</option>
+                <option value="PPT">PowerPoint</option>
+                <option value="JPG">Image (JPG)</option>
+                <option value="PNG">Image (PNG)</option>
+              </select>
+            </div>
+
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setFilters({ category: '', fileType: [] });
+                  setSearch('');
+                }}
+                className="w-full px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              >
+                Reset All Filters
+              </button>
+            </div>
+          </div>
+
+          {/* Active Filters Summary */}
+          {(filters.category || filters.fileType.length > 0) && (
+            <div className="mb-4 pb-4 border-b border-gray-200">
+              <div className="flex flex-wrap gap-2 items-center">
+                <span className="text-sm font-medium text-gray-700">Active filters:</span>
+                {filters.category && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">
+                    Type: {filters.category.charAt(0).toUpperCase() + filters.category.slice(1)}
+                    <button
+                      onClick={() => setFilters({ ...filters, category: '' })}
+                      className="hover:text-purple-900"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+                {filters.fileType.length > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                    Format: {filters.fileType[0]}
+                    <button
+                      onClick={() => setFilters({ ...filters, fileType: [] })}
+                      className="hover:text-blue-900"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             {/* Select All Checkbox */}
@@ -385,62 +392,6 @@ export function SecretaryDocuments() {
               </div>
             )}
           </div>
-
-          {/* Advanced Filters - Collapsible */}
-          {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 mt-4 border-t border-gray-200">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  File Type
-                </label>
-                <select
-                  value={filters.fileType?.[0] ?? ''}
-                  onChange={(e) => setFilters({ ...filters, fileType: e.target.value ? [e.target.value] : [] })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="">All File Types</option>
-                  <option value="PDF">PDF</option>
-                  <option value="DOC">Word Document</option>
-                  <option value="XLS">Excel Spreadsheet</option>
-                  <option value="PPT">PowerPoint</option>
-                  <option value="JPG">Image (JPG)</option>
-                  <option value="PNG">Image (PNG)</option>
-                </select>
-              </div>
-
-              <div className="flex items-end">
-                <button
-                  onClick={() => {
-                    setFilters({ fileType: [] });
-                    setSearch('');
-                  }}
-                  className="w-full px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Reset All Filters
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Active Filters Summary */}
-          {filters.fileType.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex flex-wrap gap-2 items-center">
-                <span className="text-sm font-medium text-gray-700">Active filters:</span>
-                {filters.fileType.length > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
-                    File Type: {filters.fileType[0]}
-                    <button
-                      onClick={() => setFilters({ ...filters, fileType: [] })}
-                      className="hover:text-blue-900"
-                    >
-                      ×
-                    </button>
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
         </Card>
 
         {/* Documents List */}
@@ -453,7 +404,6 @@ export function SecretaryDocuments() {
             <div className="space-y-3">
               {filteredDocuments.map((doc: Document) => {
                 const isSelected = selectedDocs.has(doc.id);
-                const categoryInfo = categories.find(c => c.value === doc.category);
                 
                 return (
                   <Card
@@ -476,7 +426,7 @@ export function SecretaryDocuments() {
                       </button>
 
                       {/* File Icon */}
-                      <div className={`p-3 rounded-lg flex-shrink-0 ${categoryInfo?.color || 'bg-gray-100 text-gray-700'}`}>
+                      <div className="p-3 rounded-lg flex-shrink-0 bg-blue-100 text-blue-700">
                         {getFileIcon(doc.fileType, doc.name)}
                       </div>
 
@@ -486,7 +436,8 @@ export function SecretaryDocuments() {
                           {doc.name}
                         </h4>
                         <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          <Badge variant="info" size="sm">{doc.fileType}</Badge>
+                          <Badge variant="info" size="sm">{doc.category}</Badge>
+                          <Badge variant="secondary" size="sm">{doc.fileType}</Badge>
                           <span className="text-xs text-gray-500">{formatFileSize(doc.fileSize)}</span>
                           <span className="text-xs text-gray-400">•</span>
                           <span className="text-xs text-gray-500">{formatDate(doc.uploadedAt)}</span>
@@ -562,11 +513,9 @@ export function SecretaryDocuments() {
             <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-700 mb-2">No documents found</h3>
             <p className="text-sm text-gray-500 mb-4">
-              {search
-                ? 'Try adjusting your search terms'
-                : selectedCategory === 'all'
-                ? 'Upload documents to get started'
-                : `No ${categories.find(c => c.value === selectedCategory)?.label.toLowerCase()} available`
+              {search || filters.category || filters.fileType.length > 0
+                ? 'Try adjusting your search or filters'
+                : 'Upload documents to get started'
               }
             </p>
             {!search && (
@@ -585,7 +534,7 @@ export function SecretaryDocuments() {
       <UploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
-        category={selectedCategory}
+        category={filters.category || 'other'}
         onUploadComplete={handleUploadComplete}
       />
 

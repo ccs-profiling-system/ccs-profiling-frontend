@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { MainLayout } from '@/components/layout';
-import { Card, Button, SearchBar, Badge, Spinner, ErrorAlert, Table } from '@/components/ui';
+import { Card, Button, SearchBar, Badge, Spinner, Table } from '@/components/ui';
 import { CheckCircle2, Clock, XCircle, FileCheck, Filter } from 'lucide-react';
 import { ApprovalReviewModal } from './ApprovalReviewModal';
 import approvalsService from '@/services/api/approvalsService';
@@ -30,7 +30,7 @@ export function ChairApprovals() {
         approvalsService.getPendingApprovals({
           status: filterStatus === 'all' ? undefined : filterStatus,
           category: filterCategory === 'all' ? undefined : filterCategory,
-          limit: 1000,
+          limit: 100, // Backend max is 100
         }),
         approvalsService.getApprovalStats(),
       ]);
@@ -281,8 +281,6 @@ export function ChairApprovals() {
             </p>
           </div>
         </div>
-
-        {error && <ErrorAlert message={error} onRetry={fetchData} />}
 
         {/* Stats Cards */}
         {stats && (

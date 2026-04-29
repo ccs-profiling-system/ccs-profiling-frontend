@@ -9,7 +9,7 @@ interface UseDocumentsDataParams {
   category?: string;
 }
 
-export function useDocumentsData({ initialPage = 1, initialLimit = 12, category }: UseDocumentsDataParams = {}) {
+export function useDocumentsData({ initialPage = 1, initialLimit = 10, category }: UseDocumentsDataParams = {}) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [pagination, setPagination] = useState({
     currentPage: initialPage,
@@ -26,100 +26,38 @@ export function useDocumentsData({ initialPage = 1, initialLimit = 12, category 
       setLoading(true);
       setError(null);
       
-      const response = await secretaryService.getDocuments({
+      const params: any = {
         page,
         limit,
-        search: searchQuery,
-        category: cat,
-      });
+      };
+      
+      // Only add parameters if they have values
+      if (searchQuery) params.search = searchQuery;
+      if (cat && cat !== 'all') params.category = cat;
+      
+      console.log('Fetching documents with params:', params);
+      
+      const response = await secretaryService.getDocuments(params);
+      
+      console.log('Documents response:', response);
       
       setDocuments(response.data);
       setPagination(response.pagination);
     } catch (err: any) {
       console.error('Failed to fetch documents:', err);
-      setError(err.response?.data?.message || 'Failed to load documents');
+      console.error('Error response:', err.response?.data);
       
-      // Mock data for development (backend search is handled by API)
-      const mockData: Document[] = [
-        { 
-          id: '1', 
-          name: 'Student_Transcript_JohnDoe.pdf', 
-          category: 'student', 
-          fileUrl: '/uploads/doc1.pdf',
-          fileSize: 2400000,
-          fileType: 'PDF',
-          uploadedBy: 'Secretary', 
-          uploadedAt: '2026-04-15T10:00:00Z'
-        },
-        { 
-          id: '2', 
-          name: 'Faculty_Credentials_DrSmith.pdf', 
-          category: 'faculty', 
-          fileUrl: '/uploads/doc2.pdf',
-          fileSize: 1800000,
-          fileType: 'PDF',
-          uploadedBy: 'Secretary', 
-          uploadedAt: '2026-04-14T14:30:00Z'
-        },
-        { 
-          id: '3', 
-          name: 'Event_Report_Symposium.docx', 
-          category: 'event', 
-          fileUrl: '/uploads/doc3.docx',
-          fileSize: 3200000,
-          fileType: 'DOCX',
-          uploadedBy: 'Secretary', 
-          uploadedAt: '2026-04-13T09:15:00Z'
-        },
-        { 
-          id: '4', 
-          name: 'Research_Paper_AI.pdf', 
-          category: 'research', 
-          fileUrl: '/uploads/doc4.pdf',
-          fileSize: 5100000,
-          fileType: 'PDF',
-          uploadedBy: 'Secretary', 
-          uploadedAt: '2026-04-12T16:45:00Z'
-        },
-        { 
-          id: '5', 
-          name: 'Enrollment_Form_2026.pdf', 
-          category: 'forms', 
-          fileUrl: '/uploads/doc5.pdf',
-          fileSize: 1200000,
-          fileType: 'PDF',
-          uploadedBy: 'Secretary', 
-          uploadedAt: '2026-04-11T11:20:00Z'
-        },
-        { 
-          id: '6', 
-          name: 'Department_Budget_2026.xlsx', 
-          category: 'department', 
-          fileUrl: '/uploads/doc6.xlsx',
-          fileSize: 850000,
-          fileType: 'XLSX',
-          uploadedBy: 'Secretary', 
-          uploadedAt: '2026-04-10T09:30:00Z'
-        },
-      ];
-      
-      // Apply category filter (search is handled by backend when available)
-      let filtered = cat && cat !== 'all' 
-        ? mockData.filter(d => d.category === cat)
-        : mockData;
-      
-      // Apply search filter for mock data only
-      if (searchQuery) {
-        filtered = filtered.filter(d => 
-          d.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+      // Try to get detailed error message
+      if (err.response?.data?.error) {
+        console.error('Detailed error:', err.response.data.error);
       }
       
-      setDocuments(filtered);
+      setError(err.response?.data?.message || err.response?.data?.error?.message || 'Failed to load documents');
+      setDocuments([]);
       setPagination({
         currentPage: page,
-        totalPages: Math.ceil(filtered.length / limit),
-        totalItems: filtered.length,
+        totalPages: 1,
+        totalItems: 0,
         itemsPerPage: limit,
       });
     } finally {

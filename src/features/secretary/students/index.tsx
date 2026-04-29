@@ -13,7 +13,8 @@ import { GraduationCap, Filter, Plus } from 'lucide-react';
 import { ProfileLayout } from '@/components/ui/ProfileLayout';
 import { StudentForm } from '@/features/admin/students/StudentForm';
 import { DocumentsTab } from '../components/DocumentsTab';
-import studentsService from '@/services/api/studentsService';
+import secretaryService from '@/services/api/secretaryService';
+import studentsService from '@/services/api/studentsService'; // Keep for detailed student data
 import type { Student, AcademicRecord, SubjectEnrollment, StudentActivity, Violation, StudentSkill, StudentAffiliation } from '@/types/students';
 import type { Column } from '@/components/ui/Table';
 
@@ -271,6 +272,14 @@ export function SecretaryStudents() {
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalActive, setTotalActive] = useState(0);
+  const [totalInactive, setTotalInactive] = useState(0);
+  const itemsPerPage = 10;
+
   // Filters
   const [filters, setFilters] = useState({
     status: [] as string[],
@@ -289,24 +298,86 @@ export function SecretaryStudents() {
       setLoading(true);
       setError(null);
 
-      const filterParams = {
-        status: filters.status.length > 0 ? filters.status[0] as any : undefined,
-        program: filters.program.length > 0 ? filters.program[0] : undefined,
-        yearLevel: filters.yearLevel.length > 0 ? filters.yearLevel[0] : undefined,
-        skill: filters.skill.length > 0 ? filters.skill : undefined,
-        search: search || undefined,
+      // Build query parameters that match backend expectations
+      const queryParams: any = {
+        page: currentPage,
+        limit: itemsPerPage,
       };
+      
+      // Add search if present
+      if (search) {
+        queryParams.search = search;
+      }
+      
+      // Add filters if present (backend expects year_level, program, status)
+      if (filters.status.length > 0) {
+        queryParams.status = filters.status[0];
+      }
+      if (filters.program.length > 0) {
+        queryParams.program = filters.program[0];
+      }
+      if (filters.yearLevel.length > 0) {
+        queryParams.year_level = Number(filters.yearLevel[0]);
+      }
 
-      const [studentsData, statsData] = await Promise.all([
-        studentsService.getStudents(filterParams, 1, 1000),
-        studentsService.getStudentStats(),
-      ]);
+      console.log('Fetching students with params:', queryParams);
 
-      setStudents(studentsData.data);
-      setStats(statsData);
+      // Use secretary service for student list
+      const studentsResponse = await secretaryService.getStudents(queryParams);
+      
+      console.log('Students response:', studentsResponse);
+      
+      // Map the response data to Student type
+      const mappedStudents: Student[] = studentsResponse.data.map((s: any) => ({
+        id: s.id,
+        studentId: s.studentId,
+        firstName: s.firstName,
+        lastName: s.lastName,
+        email: s.email,
+        program: s.program,
+        yearLevel: s.yearLevel,
+        section: s.section,
+        status: s.status,
+        enrollmentDate: s.enrollmentDate,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+      }));
+
+      setStudents(mappedStudents);
+      setTotalPages(studentsResponse.pagination.totalPages);
+      setTotalItems(studentsResponse.pagination.totalItems);
+      
+      // Fetch total active/inactive counts (without pagination)
+      try {
+        const [activeResponse, inactiveResponse] = await Promise.all([
+          secretaryService.getStudents({ page: 1, limit: 1, status: 'active' }),
+          secretaryService.getStudents({ page: 1, limit: 1, status: 'inactive' }),
+        ]);
+        setTotalActive(activeResponse.pagination.totalItems);
+        setTotalInactive(inactiveResponse.pagination.totalItems);
+      } catch (countErr) {
+        console.warn('Failed to fetch status counts');
+      }
+      
+      // Get stats from studentsService (admin endpoint) as fallback
+      try {
+        const statsData = await studentsService.getStudentStats();
+        setStats(statsData);
+      } catch (statsErr) {
+        console.warn('Failed to fetch stats, using calculated stats');
+        setStats(null);
+      }
     } catch (err: any) {
-      console.error('Failed to fetch students:', err);
-      setError('Failed to load students');
+      console.error('Failed to fetch students - Full error:', err);
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+      
+      const errorMessage = err.response?.data?.error?.message 
+        || err.response?.data?.message 
+        || err.message 
+        || 'Failed to load students';
+      
+      setError(`${errorMessage}. Status: ${err.response?.status || 'unknown'}`);
     } finally {
       setLoading(false);
     }
@@ -345,6 +416,18 @@ export function SecretaryStudents() {
     }, 500); // 500ms debounce
 
     return () => clearTimeout(timer);
+  }, [
+    currentPage,
+    filters.status.join(','),
+    filters.program.join(','),
+    filters.yearLevel.join(','),
+    filters.skill.join(','),
+    search
+  ]);
+
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
   }, [
     filters.status.join(','),
     filters.program.join(','),
@@ -416,8 +499,25 @@ export function SecretaryStudents() {
     setEditStudent(null);
     // Refresh the selected student if it's still open
     if (selectedStudent) {
-      studentsService.getStudentById(selectedStudent.id)
-        .then(updated => setSelectedStudent(updated))
+      secretaryService.getStudentById(selectedStudent.id)
+        .then(updated => {
+          // Map the response to Student type
+          const mappedStudent: Student = {
+            id: updated.id,
+            studentId: updated.studentId,
+            firstName: updated.firstName,
+            lastName: updated.lastName,
+            email: updated.email || '',
+            program: updated.program,
+            yearLevel: updated.yearLevel,
+            section: updated.section,
+            status: updated.status?.toLowerCase() as Student['status'],
+            enrollmentDate: updated.enrollmentDate,
+            createdAt: updated.createdAt,
+            updatedAt: updated.updatedAt,
+          };
+          setSelectedStudent(mappedStudent);
+        })
         .catch(() => {});
     }
   };
@@ -425,11 +525,13 @@ export function SecretaryStudents() {
   // Calculate stats from filtered data
   const calculatedStats = useMemo(() => {
     const activeCount = students.filter(s => s.status === 'active').length;
+    const inactiveCount = students.filter(s => s.status === 'inactive').length;
     const programsSet = new Set(students.map(s => s.program).filter(Boolean));
     
     return {
       total: students.length,
       active: activeCount,
+      inactive: inactiveCount,
       programs: programsSet.size,
       filtered: false, // Backend handles filtering
     };
@@ -469,19 +571,19 @@ export function SecretaryStudents() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4">
             <p className="text-sm text-gray-600">Total Students</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{calculatedStats.total}</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{totalItems}</p>
           </Card>
           <Card className="p-4">
             <p className="text-sm text-gray-600">Active</p>
-            <p className="text-2xl font-bold text-green-600 mt-1">{calculatedStats.active}</p>
+            <p className="text-2xl font-bold text-green-600 mt-1">{totalActive}</p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-sm text-gray-600">Inactive</p>
+            <p className="text-2xl font-bold text-red-600 mt-1">{totalInactive}</p>
           </Card>
           <Card className="p-4">
             <p className="text-sm text-gray-600">Programs</p>
             <p className="text-2xl font-bold text-blue-600 mt-1">{calculatedStats.programs}</p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-sm text-gray-600">This Month</p>
-            <p className="text-2xl font-bold text-purple-600 mt-1">{stats?.new_this_month || 0}</p>
           </Card>
         </div>
 
@@ -652,11 +754,41 @@ export function SecretaryStudents() {
               <Spinner size="lg" />
             </div>
           ) : (
-            <Table
-              data={students}
-              columns={columns}
-              onRowClick={handleRowClick}
-            />
+            <>
+              <Table
+                data={students}
+                columns={columns}
+                onRowClick={handleRowClick}
+              />
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    Showing {students.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} students
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </Card>
       </div>

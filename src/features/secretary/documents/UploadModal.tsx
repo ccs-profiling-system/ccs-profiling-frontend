@@ -22,7 +22,7 @@ const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB (increased for video files)
 
 // Comprehensive file type support
 const ALLOWED_TYPES = {
-  student: [
+  memo: [
     // Documents
     '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt',
     // Spreadsheets
@@ -34,7 +34,7 @@ const ALLOWED_TYPES = {
     // Videos
     '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm'
   ],
-  faculty: [
+  policy: [
     // Documents
     '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt',
     // Spreadsheets
@@ -46,49 +46,37 @@ const ALLOWED_TYPES = {
     // Videos
     '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm'
   ],
-  department: [
-    // Documents
-    '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt',
-    // Spreadsheets
-    '.xls', '.xlsx', '.csv', '.ods',
-    // Presentations
-    '.ppt', '.pptx', '.odp',
-    // Images
-    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
-    // Videos
-    '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm'
-  ],
-  event: [
-    // Documents
-    '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt',
-    // Spreadsheets
-    '.xls', '.xlsx', '.csv', '.ods',
-    // Presentations
-    '.ppt', '.pptx', '.odp',
-    // Images
-    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
-    // Videos
-    '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm'
-  ],
-  research: [
-    // Documents
-    '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt',
-    // Spreadsheets
-    '.xls', '.xlsx', '.csv', '.ods',
-    // Presentations
-    '.ppt', '.pptx', '.odp',
-    // Images
-    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
-    // Videos
-    '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm'
-  ],
-  forms: [
+  form: [
     // Documents
     '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt',
     // Spreadsheets
     '.xls', '.xlsx', '.csv', '.ods',
     // Images
     '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'
+  ],
+  report: [
+    // Documents
+    '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt',
+    // Spreadsheets
+    '.xls', '.xlsx', '.csv', '.ods',
+    // Presentations
+    '.ppt', '.pptx', '.odp',
+    // Images
+    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
+    // Videos
+    '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm'
+  ],
+  other: [
+    // Documents
+    '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt',
+    // Spreadsheets
+    '.xls', '.xlsx', '.csv', '.ods',
+    // Presentations
+    '.ppt', '.pptx', '.odp',
+    // Images
+    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
+    // Videos
+    '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm'
   ],
   all: [
     // Documents

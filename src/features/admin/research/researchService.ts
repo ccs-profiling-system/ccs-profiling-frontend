@@ -1,60 +1,66 @@
 import api from '@/services/api/axios';
 import type { Research, CreateResearchPayload, UpdateResearchPayload } from './types';
 
+const BASE_URL = '/admin/research';
+
 export async function getResearch(): Promise<Research[]> {
-  // Fetch all research with a high limit to get everything
-  const response = await api.get<Research[] | { data: Research[]; meta?: any }>('/admin/research', {
-    params: { limit: 1000 } // High limit to get all research
-  });
+  const response = await api.get<Research[] | { data: Research[] }>(BASE_URL);
   // Handle both direct array and wrapped response
   const data = Array.isArray(response.data) ? response.data : response.data.data;
   return Array.isArray(data) ? data : [];
 }
 
 export async function getResearchById(id: string): Promise<Research> {
-  const response = await api.get<Research | { data: Research }>(`/admin/research/${id}`);
+  const response = await api.get<Research | { data: Research }>(`${BASE_URL}/${id}`);
   // Handle both direct object and wrapped response
   const data = 'data' in response.data ? response.data.data : response.data;
   return data;
 }
 
 export async function createResearch(payload: CreateResearchPayload): Promise<Research> {
-  // Send as JSON instead of FormData since backend doesn't handle file uploads yet
-  const requestData = {
-    title: payload.title,
-    abstract: payload.abstract,
-    research_type: payload.category, // Map category to research_type
-    status: payload.status,
-    start_date: new Date().toISOString().split('T')[0], // Current date as start_date
-    author_ids: payload.authors, // Send as array
-    adviser_ids: payload.adviser ? [payload.adviser] : [], // Convert to array
-  };
-  
-  const response = await api.post<Research | { data: Research }>('/admin/research', requestData);
+  const formData = buildFormData(payload);
+  const response = await api.post<Research | { data: Research }>(BASE_URL, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   // Handle both direct object and wrapped response
   const data = 'data' in response.data ? response.data.data : response.data;
   return data;
 }
 
 export async function updateResearch(id: string, payload: UpdateResearchPayload): Promise<Research> {
-  // Send as JSON
-  const requestData: any = {};
-  
-  if (payload.title !== undefined) requestData.title = payload.title;
-  if (payload.abstract !== undefined) requestData.abstract = payload.abstract;
-  if (payload.category !== undefined) requestData.research_type = payload.category;
-  if (payload.status !== undefined) requestData.status = payload.status;
-  
-  const response = await api.put<Research | { data: Research }>(`/admin/research/${id}`, requestData);
+  const formData = buildFormData(payload);
+  const response = await api.put<Research | { data: Research }>(`${BASE_URL}/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   // Handle both direct object and wrapped response
   const data = 'data' in response.data ? response.data.data : response.data;
   return data;
 }
 
 export async function deleteResearch(id: string): Promise<void> {
-  await api.delete(`/admin/research/${id}`);
+  await api.delete(`${BASE_URL}/${id}`);
 }
 
 export async function deleteResearchFile(researchId: string, fileId: string): Promise<void> {
-  await api.delete(`/admin/research/${researchId}/files/${fileId}`);
+  await api.delete(`${BASE_URL}/${researchId}/files/${fileId}`);
+}
+
+function buildFormData(payload: CreateResearchPayload | UpdateResearchPayload): FormData {
+  const formData = new FormData();
+
+  if (payload.title !== undefined) formData.append('title', payload.title);
+  if (payload.abstract !== undefined) formData.append('abstract', payload.abstract);
+  if (payload.category !== undefined) formData.append('category', payload.category);
+  if (payload.status !== undefined) formData.append('status', payload.status);
+  if (payload.adviser !== undefined) formData.append('adviser', payload.adviser);
+
+  if (payload.authors !== undefined) {
+    payload.authors.forEach((authorId) => formData.append('authors[]', authorId));
+  }
+
+  if (payload.files !== undefined) {
+    payload.files.forEach((file) => formData.append('files', file));
+  }
+
+  return formData;
 }

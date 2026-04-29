@@ -73,7 +73,7 @@ const secretaryResearchService = {
       page,
       pageSize,
     };
-    const response = await api.get('/api/secretary/research', { params });
+    const response = await api.get('/secretary/research', { params });
     return response.data;
   },
 
@@ -111,7 +111,7 @@ const secretaryResearchService = {
       });
     }
     
-    const response = await api.post('/api/secretary/research', formData, {
+    const response = await api.post('/secretary/research', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -218,7 +218,7 @@ const secretaryResearchService = {
     by_program: Record<string, number>;
     by_category: Record<string, number>;
   }> {
-    const response = await api.get('/api/secretary/research/stats');
+    const response = await api.get('/secretary/research/stats');
     return response.data;
   },
 };

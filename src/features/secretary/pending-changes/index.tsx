@@ -22,6 +22,12 @@ export function SecretaryPendingChanges() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedItem, setSelectedItem] = useState<PendingItem | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
+
   // Filters
   const [filters, setFilters] = useState({
     status: [] as string[],
@@ -35,9 +41,21 @@ export function SecretaryPendingChanges() {
 
       // Fetch both pending changes and pending events
       const [changesData, eventsData] = await Promise.all([
-        approvalsService.getMyPendingChanges().catch(() => []),
-        secretaryService.getEvents({ page: 1, limit: 100 }).then(res => res.data).catch(() => []),
+        approvalsService.getMyPendingChanges().catch((err) => {
+          console.warn('Failed to fetch pending changes:', err);
+          return [];
+        }),
+        secretaryService.getEvents({ page: 1, limit: 100 }).then(res => {
+          console.log('Events data:', res);
+          return res.data;
+        }).catch((err) => {
+          console.warn('Failed to fetch events:', err);
+          return [];
+        }),
       ]);
+
+      console.log('Pending changes:', changesData);
+      console.log('Filtered events:', eventsData);
 
       // Combine and mark items
       const combinedItems: PendingItem[] = [
@@ -47,74 +65,17 @@ export function SecretaryPendingChanges() {
           .map((event: Event) => ({ ...event, itemType: 'event' as const })),
       ];
 
+      console.log('Combined items:', combinedItems);
+
       setItems(combinedItems);
+      setTotalItems(combinedItems.length);
+      setTotalPages(Math.ceil(combinedItems.length / itemsPerPage));
     } catch (err: any) {
       console.error('Failed to fetch pending items:', err);
       setError('Failed to load pending items');
-      
-      // Mock data for development
-      const mockChanges: PendingItem[] = [
-        {
-          id: '1',
-          entityType: 'student',
-          entityId: 'student-1',
-          entityName: 'John Doe',
-          changeType: 'update',
-          changes: {
-            email: 'john.doe.new@example.com',
-            yearLevel: 3,
-          },
-          originalData: {
-            email: 'john.doe@example.com',
-            yearLevel: 2,
-          },
-          submittedBy: 'current-user',
-          submittedByName: 'You',
-          submittedAt: '2026-04-21T10:30:00Z',
-          status: 'pending',
-          itemType: 'change',
-        },
-        {
-          id: '2',
-          entityType: 'faculty',
-          entityId: 'faculty-1',
-          entityName: 'Dr. Smith',
-          changeType: 'update',
-          changes: {
-            position: 'Associate Professor',
-          },
-          originalData: {
-            position: 'Assistant Professor',
-          },
-          submittedBy: 'current-user',
-          submittedByName: 'You',
-          submittedAt: '2026-04-20T14:15:00Z',
-          status: 'approved',
-          reviewedBy: 'chair-1',
-          reviewedByName: 'Dr. Chair',
-          reviewedAt: '2026-04-21T09:00:00Z',
-          itemType: 'change',
-        },
-        {
-          id: '3',
-          title: 'Web Development Workshop',
-          description: 'Learn modern web development',
-          eventType: 'workshop',
-          startDate: '2026-05-15T09:00:00Z',
-          endDate: '2026-05-15T17:00:00Z',
-          location: 'CCS Lab 1',
-          organizer: 'CCS Department',
-          targetAudience: ['students'],
-          maxParticipants: 30,
-          status: 'pending',
-          submittedBy: 'current-user',
-          submittedByName: 'You',
-          submittedAt: '2026-04-20T10:00:00Z',
-          createdAt: '2026-04-20T10:00:00Z',
-          itemType: 'event',
-        } as any,
-      ];
-      setItems(mockChanges);
+      setItems([]);
+      setTotalItems(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -127,6 +88,15 @@ export function SecretaryPendingChanges() {
     }, 500);
 
     return () => clearTimeout(timer);
+  }, [
+    filters.status.join(','),
+    filters.itemType.join(','),
+    search
+  ]);
+
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
   }, [
     filters.status.join(','),
     filters.itemType.join(','),
@@ -193,8 +163,11 @@ export function SecretaryPendingChanges() {
       });
     }
 
-    return filtered;
-  }, [items, filters, search]);
+    // Apply pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  }, [items, filters, search, currentPage]);
 
   const stats = useMemo(() => {
     return {
@@ -496,13 +469,43 @@ export function SecretaryPendingChanges() {
               <Spinner size="lg" />
             </div>
           ) : filteredItems.length > 0 ? (
-            <Table
-              data={filteredItems}
-              columns={columns}
-              onRowClick={(item) => {
-                setSelectedItem(item);
-              }}
-            />
+            <>
+              <Table
+                data={filteredItems}
+                columns={columns}
+                onRowClick={(item) => {
+                  setSelectedItem(item);
+                }}
+              />
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    Showing {filteredItems.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} items
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center h-64 text-gray-500">
               <Clock className="w-16 h-16 text-gray-300 mb-4" />

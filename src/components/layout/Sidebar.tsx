@@ -35,6 +35,7 @@ export function Sidebar({ isOpen, onClose, variant = 'admin' }: SidebarProps) {
     { to: '/chair/research', label: 'Research', icon: FlaskConical },
     { to: '/chair/approvals', label: 'Approvals', icon: CheckCircle },
     { to: '/chair/reports', label: 'Reports', icon: FileText },
+    { to: '/chair/instructions', label: 'Instructions', icon: BookOpen },
   ];
 
   const secretaryLinks = [
@@ -44,8 +45,9 @@ export function Sidebar({ isOpen, onClose, variant = 'admin' }: SidebarProps) {
     { to: '/secretary/schedules', label: 'Schedules', icon: Calendar },
     { to: '/secretary/events', label: 'Events', icon: Briefcase },
     { to: '/secretary/research', label: 'Research', icon: FlaskConical },
+    { to: '/secretary/curriculum', label: 'Curriculum', icon: BookOpen },
     { to: '/secretary/documents', label: 'Documents', icon: FileText },
-    { to: '/secretary/reports', label: 'Reports', icon: BookOpen },
+    { to: '/secretary/reports', label: 'Reports', icon: FileText },
     { to: '/secretary/pending-changes', label: 'Pendings', icon: Clock },
   ];
 

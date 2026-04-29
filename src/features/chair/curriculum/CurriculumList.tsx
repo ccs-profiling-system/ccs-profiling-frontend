@@ -17,17 +17,23 @@ import { CurriculumForm } from './CurriculumForm';
 import { SubjectForm } from './SubjectForm';
 import { SubjectDetailsPanel } from './SubjectDetailsPanel';
 import instructionsService from '@/services/api/instructionsService';
+import chairCurriculumService from '@/services/api/chair/chairCurriculumService';
 import type { Curriculum, Subject } from '@/types/instructions';
 
 interface CurriculumListProps {
   searchQuery: string;
+  viewOnly?: boolean;
+  useChairService?: boolean;
 }
 
-export function CurriculumList({ searchQuery }: CurriculumListProps) {
+export function CurriculumList({ searchQuery, viewOnly = false, useChairService = true }: CurriculumListProps) {
   const [curriculum, setCurriculum] = useState<Curriculum[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedCurriculum, setExpandedCurriculum] = useState<Set<string>>(new Set());
+  
+  // Select the appropriate service based on context
+  const service = useChairService ? chairCurriculumService : instructionsService;
   
   // Modals
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -46,13 +52,13 @@ export function CurriculumList({ searchQuery }: CurriculumListProps) {
     try {
       setLoading(true);
       setError(null);
-      const response = await instructionsService.getCurriculum();
+      const response = await service.getCurriculum();
       
       // Fetch subjects for each curriculum
       const curriculumWithSubjects = await Promise.all(
         response.data.map(async (curr) => {
           try {
-            const subjectsResponse = await instructionsService.getSubjects({ 
+            const subjectsResponse = await service.getSubjects({ 
               curriculum_id: curr.id 
             });
             return { ...curr, subjects: subjectsResponse.data };
@@ -257,29 +263,31 @@ export function CurriculumList({ searchQuery }: CurriculumListProps) {
                       </div>
                     </button>
                     
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleAddSubject(curr)}
-                        className="p-2 hover:bg-primary/10 rounded-lg transition"
-                        title="Add Subject"
-                      >
-                        <Plus className="w-4 h-4 text-primary" />
-                      </button>
-                      <button
-                        onClick={() => handleEditCurriculum(curr)}
-                        className="p-2 hover:bg-primary/10 rounded-lg transition"
-                        title="Edit"
-                      >
-                        <Edit2 className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteCurriculum(curr)}
-                        className="p-2 hover:bg-red-100 rounded-lg transition"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </button>
-                    </div>
+                    {!viewOnly && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleAddSubject(curr)}
+                          className="p-2 hover:bg-primary/10 rounded-lg transition"
+                          title="Add Subject"
+                        >
+                          <Plus className="w-4 h-4 text-primary" />
+                        </button>
+                        <button
+                          onClick={() => handleEditCurriculum(curr)}
+                          className="p-2 hover:bg-primary/10 rounded-lg transition"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-4 h-4 text-gray-600" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCurriculum(curr)}
+                          className="p-2 hover:bg-red-100 rounded-lg transition"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {curr.description && (
@@ -294,12 +302,14 @@ export function CurriculumList({ searchQuery }: CurriculumListProps) {
                       <div className="p-6 text-center text-gray-500">
                         <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                         <p className="mb-2">No subjects added yet</p>
-                        <button
-                          onClick={() => handleAddSubject(curr)}
-                          className="text-primary hover:text-primary-dark font-medium"
-                        >
-                          Add the first subject
-                        </button>
+                        {!viewOnly && (
+                          <button
+                            onClick={() => handleAddSubject(curr)}
+                            className="text-primary hover:text-primary-dark font-medium"
+                          >
+                            Add the first subject
+                          </button>
+                        )}
                       </div>
                     ) : (
                       curr.subjects.map((subject) => (

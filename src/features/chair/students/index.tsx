@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/Card';
 import { Table, Column } from '@/components/ui/Table';
@@ -8,13 +8,16 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
+import { ErrorAlert } from '@/components/ui/ErrorAlert';
 import chairStudentsService from '@/services/api/chair/chairStudentsService';
-import { Check, X } from 'lucide-react';
+import { Check, X, Users, GraduationCap, TrendingUp } from 'lucide-react';
 import type { Student } from '@/types/students';
 
 export function ChairStudents() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({
     program: '',
@@ -22,10 +25,11 @@ export function ChairStudents() {
     status: '',
   });
   
-  // Pagination
+  // Pagination - matching secretary portal pattern
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10; // Fixed like secretary portal
   
   const [approvalModal, setApprovalModal] = useState<{
     student: Student;
@@ -34,17 +38,33 @@ export function ChairStudents() {
   const [notes, setNotes] = useState('');
   const [processing, setProcessing] = useState(false);
 
+  // Reset to page 1 when filters or search change
   useEffect(() => {
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   }, [filters, search]);
 
   useEffect(() => {
     loadStudents();
-  }, [filters, search, currentPage, itemsPerPage]);
+  }, [filters, search, currentPage]);
+
+  // Fetch stats on mount
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const statsData = await chairStudentsService.getStudentStats();
+      setStats(statsData);
+    } catch (err) {
+      console.warn('Failed to fetch stats:', err);
+    }
+  };
 
   const loadStudents = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await chairStudentsService.getStudents(
         {
           ...filters,
@@ -56,8 +76,10 @@ export function ChairStudents() {
       
       setStudents(response.data || []);
       setTotalItems(response.total || 0);
-    } catch (err) {
-      // Show empty state instead of error for 404
+      setTotalPages(Math.ceil((response.total || 0) / itemsPerPage));
+    } catch (err: any) {
+      console.error('Failed to load students:', err);
+      setError(err.response?.data?.message || 'Failed to load students');
       setStudents([]);
       setTotalItems(0);
     } finally {
@@ -78,13 +100,28 @@ export function ChairStudents() {
       setApprovalModal(null);
       setNotes('');
       loadStudents();
+      loadStats(); // Refresh stats after approval
     } catch (err) {
-      // Approval failed silently - could add toast notification here
       console.error('Approval action failed:', err);
+      alert(`Failed to ${approvalModal.action} student. Please try again.`);
     } finally {
       setProcessing(false);
     }
   };
+
+  // Calculate stats from current data
+  const calculatedStats = useMemo(() => {
+    const activeCount = students.filter(s => s.status === 'active').length;
+    const pendingCount = students.filter(s => s.status === 'inactive').length; // Changed from pending_approval
+    const programs = new Set(students.map(s => s.program).filter(Boolean)).size;
+    
+    return {
+      total: totalItems,
+      active: activeCount,
+      pending: pendingCount,
+      programs: programs,
+    };
+  }, [students, totalItems]);
 
   const columns: Column<Student>[] = [
     {
@@ -145,6 +182,71 @@ export function ChairStudents() {
   return (
     <MainLayout title="Student Management" variant="chair">
       <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Student Records</h1>
+          <p className="text-sm text-gray-600 mt-0.5">
+            {calculatedStats.total} total students
+          </p>
+        </div>
+
+        {error && <ErrorAlert message={error} onRetry={loadStudents} />}
+
+        {/* Stats Cards - Secretary Portal Style */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-4 hover:shadow-xl transition-all">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600">Total Students</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{calculatedStats.total}</p>
+                <p className="text-xs text-gray-500 mt-1">In department</p>
+              </div>
+              <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
+                <Users className="w-6 h-6" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4 hover:shadow-xl transition-all">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600">Active</p>
+                <p className="text-3xl font-bold text-green-600 mt-2">{calculatedStats.active}</p>
+                <p className="text-xs text-gray-500 mt-1">Currently enrolled</p>
+              </div>
+              <div className="p-3 rounded-lg bg-green-100 text-green-600">
+                <GraduationCap className="w-6 h-6" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4 hover:shadow-xl transition-all">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600">Pending Approval</p>
+                <p className="text-3xl font-bold text-yellow-600 mt-2">{calculatedStats.pending}</p>
+                <p className="text-xs text-gray-500 mt-1">Awaiting review</p>
+              </div>
+              <div className="p-3 rounded-lg bg-yellow-100 text-yellow-600">
+                <Check className="w-6 h-6" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4 hover:shadow-xl transition-all">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600">Programs</p>
+                <p className="text-3xl font-bold text-purple-600 mt-2">{calculatedStats.programs}</p>
+                <p className="text-xs text-gray-500 mt-1">Active programs</p>
+              </div>
+              <div className="p-3 rounded-lg bg-purple-100 text-purple-600">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+            </div>
+          </Card>
+        </div>
+
         <Card className="p-6">
           <div className="space-y-4">
             <SearchBar
@@ -203,15 +305,33 @@ export function ChairStudents() {
           ) : (
             <>
               <Table data={students} columns={columns} />
-              {totalItems > 0 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={Math.ceil(totalItems / itemsPerPage)}
-                  totalItems={totalItems}
-                  pageSize={itemsPerPage}
-                  onPageChange={setCurrentPage}
-                  onPageSizeChange={setItemsPerPage}
-                />
+              
+              {/* Pagination Controls - Secretary Portal Style */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    Showing {students.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} students
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
               )}
             </>
           )}

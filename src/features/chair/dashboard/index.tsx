@@ -1,20 +1,17 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
-import chairDashboardService, { type ChairDashboardStats } from '@/services/api/chair/chairDashboardService';
+import { ErrorAlert } from '@/components/ui/ErrorAlert';
+import { useDashboardData } from './useDashboardData';
 import {
   GraduationCap,
   Users,
   Calendar,
   FlaskConical,
   CalendarDays,
-  Clock,
-  TrendingUp,
-  TrendingDown,
   CheckCircle,
   FileText,
   AlertCircle,
@@ -24,36 +21,7 @@ import {
 export function ChairDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [stats, setStats] = useState<ChairDashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
-    try {
-      setLoading(true);
-      const data = await chairDashboardService.getDashboardStats();
-      setStats(data);
-    } catch (err) {
-      // Show empty state instead of error for 404 (backend not implemented)
-      setStats({
-        totalStudents: 0,
-        totalFaculty: 0,
-        activeSchedules: 0,
-        ongoingResearch: 0,
-        upcomingEvents: 0,
-        pendingApprovals: 0,
-        studentsByProgram: {},
-        studentsByYear: {},
-        facultyBySpecialization: {},
-        recentActivities: [],
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { stats, loading, error, refetch } = useDashboardData();
 
   if (loading) {
     return (
@@ -65,10 +33,18 @@ export function ChairDashboard() {
     );
   }
 
-
-
   return (
     <MainLayout title="Dashboard" variant="chair">
+      {error && (
+        <div className="mb-6">
+          <ErrorAlert
+            title="Connection Error"
+            message={error}
+            onRetry={refetch}
+            onDismiss={() => {}}
+          />
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         {/* Main Content - Left Column */}
         <div className="lg:col-span-8 space-y-4 sm:space-y-6">
@@ -157,114 +133,6 @@ export function ChairDashboard() {
               </div>
             </Card>
           </div>
-
-          {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Students by Program */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-primary" />
-                Students by Program
-              </h3>
-              {stats?.studentsByProgram && Object.keys(stats.studentsByProgram).length > 0 ? (
-                <div className="space-y-3">
-                  {Object.entries(stats.studentsByProgram).map(([program, count]) => (
-                    <div key={program} className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">{program}</span>
-                      <div className="flex items-center gap-3">
-                        <div className="w-32 bg-gray-200 rounded-full h-2.5">
-                          <div
-                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-2.5 rounded-full transition-all duration-500"
-                            style={{
-                              width: `${(count / (stats?.totalStudents || 1)) * 100}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="text-sm font-bold text-gray-900 w-12 text-right">
-                          {count}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 text-center py-8">No program data available</p>
-              )}
-            </Card>
-
-            {/* Students by Year Level */}
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                Students by Year Level
-              </h3>
-              {stats?.studentsByYear && Object.keys(stats.studentsByYear).length > 0 ? (
-                <div className="space-y-3">
-                  {Object.entries(stats.studentsByYear).map(([year, count]) => (
-                    <div key={year} className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">Year {year}</span>
-                      <div className="flex items-center gap-3">
-                        <div className="w-32 bg-gray-200 rounded-full h-2.5">
-                          <div
-                            className="bg-gradient-to-r from-purple-500 to-purple-600 h-2.5 rounded-full transition-all duration-500"
-                            style={{
-                              width: `${(count / (stats?.totalStudents || 1)) * 100}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="text-sm font-bold text-gray-900 w-12 text-right">
-                          {count}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 text-center py-8">No year level data available</p>
-              )}
-            </Card>
-          </div>
-
-          {/* Recent Activities */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
-              Recent Activities
-            </h3>
-            <div className="space-y-3">
-              {stats?.recentActivities && stats.recentActivities.length > 0 ? (
-                stats.recentActivities.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-3 p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all"
-                  >
-                    <div className={`p-2.5 rounded-lg ${
-                      activity.type === 'approval' ? 'bg-green-100' :
-                      activity.type === 'rejection' ? 'bg-red-100' : 'bg-blue-100'
-                    }`}>
-                      {activity.type === 'approval' && <TrendingUp className="w-5 h-5 text-green-600" />}
-                      {activity.type === 'rejection' && <TrendingDown className="w-5 h-5 text-red-600" />}
-                      {activity.type === 'update' && <Clock className="w-5 h-5 text-blue-600" />}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-800">{activity.description}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(activity.timestamp).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-12">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-3">
-                    <Clock className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <p className="text-sm text-gray-500">No recent activities</p>
-                  <p className="text-xs text-gray-400 mt-1">Activity will appear here as you manage your department</p>
-                </div>
-              )}
-            </div>
-          </Card>
         </div>
 
         {/* Right Column - Aside */}
@@ -331,41 +199,6 @@ export function ChairDashboard() {
                 >
                   View All Events
                 </Button>
-              </div>
-            )}
-          </Card>
-
-          {/* Faculty Overview */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
-              Faculty Overview
-            </h3>
-            {stats?.facultyBySpecialization && Object.keys(stats.facultyBySpecialization).length > 0 ? (
-              <div className="space-y-3">
-                {Object.entries(stats.facultyBySpecialization).map(([spec, count]) => (
-                  <div key={spec} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <span className="text-sm font-medium text-gray-700">{spec}</span>
-                    <span className="text-sm font-bold text-primary">{count}</span>
-                  </div>
-                ))}
-                <Button 
-                  onClick={() => navigate('/chair/faculty')}
-                  variant="ghost"
-                  size="sm"
-                  fullWidth
-                  icon={<ArrowRight className="w-4 h-4" />}
-                  iconPosition="right"
-                >
-                  View All Faculty
-                </Button>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-3">
-                  <Users className="w-6 h-6 text-gray-400" />
-                </div>
-                <p className="text-sm text-gray-500">No faculty data available</p>
               </div>
             )}
           </Card>

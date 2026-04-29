@@ -29,8 +29,10 @@ export function exportToCSV<T>(config: ExportConfig<T>): void {
     columns.map((col) => {
       if (col.render) {
         const rendered = col.render(item);
+        // Ensure rendered is a string before calling replace
+        const renderedStr = String(rendered || '');
         // Strip HTML tags for CSV
-        return rendered.replace(/<[^>]*>/g, '');
+        return renderedStr.replace(/<[^>]*>/g, '');
       }
       return String((item as any)[col.key] || '');
     })
@@ -102,8 +104,10 @@ export function exportToPDF<T>(config: ExportConfig<T>): void {
     columns.map((col) => {
       if (col.render) {
         const rendered = col.render(item);
+        // Ensure rendered is a string before calling replace
+        const renderedStr = String(rendered || '');
         // Strip HTML tags for PDF
-        return rendered.replace(/<[^>]*>/g, '');
+        return renderedStr.replace(/<[^>]*>/g, '');
       }
       return String((item as any)[col.key] || '—');
     })

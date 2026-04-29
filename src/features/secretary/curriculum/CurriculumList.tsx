@@ -17,17 +17,22 @@ import { CurriculumForm } from './CurriculumForm';
 import { SubjectForm } from './SubjectForm';
 import { SubjectDetailsPanel } from './SubjectDetailsPanel';
 import instructionsService from '@/services/api/instructionsService';
+import secretaryCurriculumService from '@/services/api/secretary/secretaryCurriculumService';
 import type { Curriculum, Subject } from '@/types/instructions';
 
 interface CurriculumListProps {
   searchQuery: string;
   readOnly?: boolean;
+  useSecretaryService?: boolean;
 }
 
-export function CurriculumList({ searchQuery, readOnly = false }: CurriculumListProps) {
+export function CurriculumList({ searchQuery, readOnly = false, useSecretaryService = false }: CurriculumListProps) {
   const [curriculum, setCurriculum] = useState<Curriculum[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Select the appropriate service based on context
+  const service = useSecretaryService ? secretaryCurriculumService : instructionsService;
   const [expandedCurriculum, setExpandedCurriculum] = useState<Set<string>>(new Set());
   
   // Modals
@@ -47,13 +52,13 @@ export function CurriculumList({ searchQuery, readOnly = false }: CurriculumList
     try {
       setLoading(true);
       setError(null);
-      const response = await instructionsService.getCurriculum();
+      const response = await service.getCurriculum();
       
       // Fetch subjects for each curriculum
       const curriculumWithSubjects = await Promise.all(
         response.data.map(async (curr) => {
           try {
-            const subjectsResponse = await instructionsService.getSubjects({ 
+            const subjectsResponse = await service.getSubjects({ 
               curriculum_id: curr.id 
             });
             return { ...curr, subjects: subjectsResponse.data };

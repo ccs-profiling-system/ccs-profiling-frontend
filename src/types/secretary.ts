@@ -23,7 +23,9 @@ export interface StudentRecord {
   email?: string;
   program: string;
   yearLevel: number;
+  section?: string;
   status: 'Active' | 'Inactive' | 'Graduated';
+  enrollmentDate?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -62,7 +64,7 @@ export interface ClassSchedule {
 export interface Document {
   id: string;
   name: string;
-  category: 'student' | 'faculty' | 'event' | 'research' | 'forms' | 'department';
+  category: 'memo' | 'policy' | 'form' | 'report' | 'other';
   fileUrl: string;
   fileSize: number;
   fileType: string;
@@ -134,7 +136,7 @@ export interface ClassScheduleInput {
 
 export interface DocumentUpload {
   file: File;
-  category: 'student' | 'faculty' | 'event' | 'research' | 'forms' | 'department';
+  category: 'memo' | 'policy' | 'form' | 'report' | 'other';
   relatedEntityId?: string;
   description?: string;
 }

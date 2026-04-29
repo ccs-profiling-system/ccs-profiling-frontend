@@ -4,8 +4,8 @@ import type { Person } from './types';
 export async function getPeople(): Promise<Person[]> {
   try {
     const [studentsRes, facultyRes] = await Promise.all([
-      api.get<{ data: any[] } | any[]>('/admin/students'),
-      api.get<{ data: any[] } | any[]>('/admin/faculty'),
+      api.get<Person[]>('/admin/students'),
+      api.get<Person[]>('/admin/faculty'),
     ]);
 
     // Handle both wrapped and direct array responses

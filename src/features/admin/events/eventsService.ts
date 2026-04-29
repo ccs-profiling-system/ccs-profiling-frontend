@@ -97,8 +97,9 @@ export interface EventFilters {
 export async function getEvents(filters?: EventFilters): Promise<EventsResponse> {
   try {
     const params = new URLSearchParams();
+    // Use high limit to get all events
+    params.append('limit', '1000');
     if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.limit) params.append('limit', filters.limit.toString());
     if (filters?.search) params.append('search', filters.search);
     if (filters?.event_type) params.append('event_type', filters.event_type);
     
@@ -108,7 +109,7 @@ export async function getEvents(filters?: EventFilters): Promise<EventsResponse>
     let events: any[] = [];
     let meta: PaginationMeta = {
       page: 1,
-      limit: 10,
+      limit: 1000,
       total: 0,
       totalPages: 1,
     };
