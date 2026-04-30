@@ -12,8 +12,9 @@ import type {
  * Transform backend approval (snake_case) to frontend format (camelCase)
  */
 function transformApproval(backendApproval: BackendApproval): PendingChange {
-  // Derive entity name from change_details or use entity_id as fallback
+  // Use entity_name from backend if available, otherwise derive from change_details
   const entityName = 
+    (backendApproval as any).entity_name || // Backend enriched name
     backendApproval.change_details?.title ||
     backendApproval.change_details?.name ||
     backendApproval.change_details?.first_name && backendApproval.change_details?.last_name
@@ -52,7 +53,7 @@ function transformApproval(backendApproval: BackendApproval): PendingChange {
 
 // Base URLs
 const SECRETARY_BASE = '/secretary/approvals';
-const ADMIN_BASE = '/admin/approvals';
+const ADMIN_BASE = '/approvals'; // Admin uses /approvals, not /admin/approvals
 const CHAIR_BASE = '/approvals/department'; // Chair uses /approvals/department, not /chair/approvals
 
 // ============================================================================
@@ -193,8 +194,30 @@ export const getAdminPendingApprovals = async (params?: {
   entityType?: 'student' | 'faculty' | 'event' | 'research' | 'profile';
   search?: string;
 }): Promise<PaginatedApprovals> => {
-  const response = await api.get(`${ADMIN_BASE}/pending`, { params });
-  return response.data;
+  // Transform frontend params to backend params
+  const backendParams: any = {};
+  
+  if (params?.page) backendParams.page = params.page;
+  if (params?.limit) backendParams.pageSize = params.limit; // Backend uses pageSize, not limit
+  if (params?.category) backendParams.category = params.category;
+  if (params?.entityType) backendParams.entity_type = params.entityType; // Backend uses entity_type
+  if (params?.search) backendParams.search = params.search;
+  // Note: status filter is not sent for /pending endpoint as it only returns pending items
+  
+  const response = await api.get(`${ADMIN_BASE}/pending`, { params: backendParams });
+  
+  const backendData = response.data.data as BackendApproval[];
+  const transformedData = backendData.map(transformApproval);
+  
+  return {
+    data: transformedData,
+    pagination: response.data.pagination || {
+      currentPage: params?.page || 1,
+      totalPages: 1,
+      totalItems: transformedData.length,
+      itemsPerPage: params?.limit || 20,
+    },
+  };
 };
 
 /**
@@ -202,7 +225,15 @@ export const getAdminPendingApprovals = async (params?: {
  */
 export const getAdminApprovalStats = async (): Promise<ApprovalStats> => {
   const response = await api.get(`${ADMIN_BASE}/stats`);
-  return response.data;
+  const backendStats = response.data.data || response.data;
+  
+  // Transform backend stats format to frontend format
+  return {
+    pending: backendStats.countsByStatus?.pending || 0,
+    approved: backendStats.countsByStatus?.approved || 0,
+    rejected: backendStats.countsByStatus?.rejected || 0,
+    total: backendStats.totalApprovals || 0,
+  };
 };
 
 /**
@@ -309,7 +340,15 @@ export const getPendingApprovals = async (params?: {
  */
 export const getApprovalStats = async (): Promise<ApprovalStats> => {
   const response = await api.get(`${CHAIR_BASE}/stats`);
-  return response.data;
+  const backendStats = response.data.data || response.data;
+  
+  // Transform backend stats format to frontend format
+  return {
+    pending: backendStats.countsByStatus?.pending || 0,
+    approved: backendStats.countsByStatus?.approved || 0,
+    rejected: backendStats.countsByStatus?.rejected || 0,
+    total: backendStats.totalApprovals || 0,
+  };
 };
 
 /**

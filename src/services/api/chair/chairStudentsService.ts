@@ -78,7 +78,7 @@ class ChairStudentsService {
     } catch (error) {
       // Fallback: calculate stats from student list if endpoint doesn't exist
       console.warn('Stats endpoint not available, calculating from list');
-      const studentsResponse = await this.getStudents({}, 1, 1000);
+      const studentsResponse = await this.getStudents({}, 1, 100);
       const students = studentsResponse.data;
       
       return {

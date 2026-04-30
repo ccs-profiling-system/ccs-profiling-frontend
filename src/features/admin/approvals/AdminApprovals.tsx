@@ -27,12 +27,12 @@ export function AdminApprovals() {
       setError(null);
 
       const [approvalsData, statsData] = await Promise.all([
-        approvalsService.getPendingApprovals({
+        approvalsService.getAdminPendingApprovals({ // Use admin-specific pending approvals endpoint
           status: filterStatus === 'all' ? undefined : filterStatus,
           category: filterCategory === 'all' ? undefined : filterCategory,
-          limit: 1000,
+          limit: 100, // Backend max is 100
         }),
-        approvalsService.getApprovalStats(),
+        approvalsService.getAdminApprovalStats(), // Use admin-specific stats endpoint
       ]);
 
       setApprovals(approvalsData.data);
