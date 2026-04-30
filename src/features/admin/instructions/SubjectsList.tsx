@@ -305,7 +305,7 @@ export function SubjectsList({ searchQuery }: SubjectsListProps) {
                                 </div>
                                 <div className="flex items-center gap-3 text-xs text-gray-600 mb-2">
                                   <span>{subject.units} units</span>
-                                  <span>{subject.hours.lecture}L + {subject.hours.laboratory}Lab</span>
+                                  <span>{subject.hours?.lecture || 0}L + {subject.hours?.laboratory || 0}Lab</span>
                                   <span>{getCurriculumName(subject.curriculum_id)}</span>
                                 </div>
                                 {subject.description && (
@@ -383,7 +383,7 @@ export function SubjectsList({ searchQuery }: SubjectsListProps) {
                                 </div>
                                 <div className="flex items-center gap-3 text-xs text-gray-600 mb-2">
                                   <span>{subject.units} units</span>
-                                  <span>{subject.hours.lecture}L + {subject.hours.laboratory}Lab</span>
+                                  <span>{subject.hours?.lecture || 0}L + {subject.hours?.laboratory || 0}Lab</span>
                                   <span>{getCurriculumName(subject.curriculum_id)}</span>
                                 </div>
                                 {subject.description && (

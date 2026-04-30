@@ -184,7 +184,7 @@ export function SubjectDetailsPanel({
               <span className="font-semibold">Year Level:</span> {subject.yearLevel}
             </div>
             <div>
-              <span className="font-semibold">Hours:</span> {subject.hours.lecture}L + {subject.hours.laboratory}Lab
+              <span className="font-semibold">Hours:</span> {subject.hours?.lecture || 0}L + {subject.hours?.laboratory || 0}Lab
             </div>
             {curriculumCode && (
               <div>

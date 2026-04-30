@@ -328,7 +328,7 @@ export function CurriculumList({ searchQuery }: CurriculumListProps) {
                                   </span>
                                   <span>Sem {subject.semester}</span>
                                   <span>Year {subject.yearLevel}</span>
-                                  <span>{subject.hours.lecture}L + {subject.hours.laboratory}Lab</span>
+                                  <span>{subject.hours?.lecture || 0}L + {subject.hours?.laboratory || 0}Lab</span>
                                   {(subject.prerequisites?.length || 0) > 0 && (
                                     <span className="flex items-center gap-1">
                                       <AlertCircle className="w-3 h-3 text-orange-500" />
