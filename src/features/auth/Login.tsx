@@ -12,6 +12,13 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Quick fill credentials for demo
+  const fillCredentials = (demoEmail: string, demoPassword: string) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setError(null);
+  };
+
   const getRoleRedirect = (role: string): string => {
     switch (role) {
       case 'faculty':         return '/faculty/dashboard';
@@ -121,6 +128,54 @@ export function Login() {
                   {error}
                 </div>
               )}
+
+              {/* Demo Credentials */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-xs font-semibold text-blue-900 mb-2">Demo Credentials (Click to fill):</p>
+                <div className="space-y-1.5">
+                  <button
+                    type="button"
+                    onClick={() => fillCredentials('admin@ccs.edu', 'pass1234')}
+                    className="w-full text-left px-3 py-1.5 bg-white hover:bg-blue-100 border border-blue-200 rounded text-xs transition-colors"
+                  >
+                    <span className="font-medium text-blue-900">Admin:</span>{' '}
+                    <span className="font-mono text-blue-700">admin@ccs.edu</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fillCredentials('chair.cs@ccs.edu', 'pass1234')}
+                    className="w-full text-left px-3 py-1.5 bg-white hover:bg-blue-100 border border-blue-200 rounded text-xs transition-colors"
+                  >
+                    <span className="font-medium text-blue-900">Chair:</span>{' '}
+                    <span className="font-mono text-blue-700">chair.cs@ccs.edu</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fillCredentials('secretary@ccs.edu', 'pass1234')}
+                    className="w-full text-left px-3 py-1.5 bg-white hover:bg-blue-100 border border-blue-200 rounded text-xs transition-colors"
+                  >
+                    <span className="font-medium text-blue-900">Secretary:</span>{' '}
+                    <span className="font-mono text-blue-700">secretary@ccs.edu</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fillCredentials('john.doe@ccs.edu', 'pass1234')}
+                    className="w-full text-left px-3 py-1.5 bg-white hover:bg-blue-100 border border-blue-200 rounded text-xs transition-colors"
+                  >
+                    <span className="font-medium text-blue-900">Faculty:</span>{' '}
+                    <span className="font-mono text-blue-700">john.doe@ccs.edu</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fillCredentials('student1@ccs.edu', 'pass1234')}
+                    className="w-full text-left px-3 py-1.5 bg-white hover:bg-blue-100 border border-blue-200 rounded text-xs transition-colors"
+                  >
+                    <span className="font-medium text-blue-900">Student:</span>{' '}
+                    <span className="font-mono text-blue-700">student1@ccs.edu</span>
+                  </button>
+                  <p className="text-xs text-blue-600 mt-2 text-center">All passwords: <span className="font-mono font-semibold">pass1234</span></p>
+                </div>
+              </div>
 
               <button
                 type="submit"
